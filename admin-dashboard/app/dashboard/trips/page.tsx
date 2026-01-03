@@ -1,188 +1,211 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { MapPin, Eye } from 'lucide-react';
+import { MapPin, Eye, RefreshCw } from 'lucide-react';
 import DataTable from '@/components/ui/DataTable';
-import { Trip } from '@/types';
+import { tripsApi } from '@/lib/api';
 
-// Mock data
-const mockTrips: Trip[] = [
-  {
-    _id: '1001',
-    passenger: {
-      _id: 'p1',
-      name: 'سارة أحمد',
-      phone: '+201111111111',
-      role: 'passenger',
-      isActive: true,
-      isVerified: true,
-      totalTrips: 45,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    driver: {
-      _id: 'd1',
-      name: 'أحمد محمد',
-      phone: '+201234567890',
-      role: 'driver',
-      isActive: true,
-      isVerified: true,
-      status: 'approved',
-      driverStatus: 'online',
-      vehicleType: 'economy',
-      vehicle: {
-        make: 'Toyota',
-        model: 'Corolla',
-        year: 2020,
-        color: 'أبيض',
-        plateNumber: 'أ ب ج 1234',
-      },
-      documents: {},
-      totalTrips: 150,
-      rating: 4.8,
-      completionRate: 95,
-      earnings: 15000,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    pickup: {
-      latitude: 30.45,
-      longitude: 30.9667,
-      address: 'الباجور، المنوفية',
-    },
-    dropoff: {
-      latitude: 30.46,
-      longitude: 30.98,
-      address: 'ميدان الباجور',
-    },
-    rideType: 'economy',
-    status: 'completed',
-    fare: {
-      baseFare: 10,
-      distanceFare: 15,
-      timeFare: 5,
-      surgeFare: 0,
-      discount: 0,
-      total: 30,
-    },
-    distance: 5.2,
-    duration: 15,
-    rating: {
-      score: 5,
-      comment: 'رحلة ممتازة',
-      ratedAt: new Date().toISOString(),
-    },
-    createdAt: new Date().toISOString(),
-    completedAt: new Date().toISOString(),
-  },
-];
+interface Trip {
+  _id: string;
+  passenger?: {
+    user?: {
+      name: string;
+      phone: string;
+    };
+  };
+  driver?: {
+    user?: {
+      name: string;
+      phone: string;
+    };
+  };
+  pickup: {
+    address: string;
+    coordinates?: {
+      lat: number;
+      lng: number;
+    };
+  };
+  dropoff: {
+    address: string;
+    coordinates?: {
+      lat: number;
+      lng: number;
+    };
+  };
+  rideType: string;
+  status: string;
+  fare: {
+    baseFare: number;
+    distanceFare: number;
+    timeFare: number;
+    surgeFare: number;
+    discount: number;
+    total: number;
+    platformFee: number;
+    driverEarnings: number;
+  };
+  distance: number;
+  duration: number;
+  createdAt: string;
+  completedAt?: string;
+  cancelledAt?: string;
+}
 
-const columns: ColumnDef<Trip, unknown>[] = [
-  {
-    accessorKey: '_id',
-    header: 'رقم الرحلة',
-    cell: ({ row }) => `#${row.original._id}`,
-  },
-  {
-    accessorKey: 'passenger',
-    header: 'الراكب',
-    cell: ({ row }) => row.original.passenger.name,
-  },
-  {
-    accessorKey: 'driver',
-    header: 'السائق',
-    cell: ({ row }) => row.original.driver?.name || '-',
-  },
-  {
-    accessorKey: 'pickup',
-    header: 'من',
-    cell: ({ row }) => (
-      <div className="max-w-[150px] truncate" title={row.original.pickup.address}>
-        {row.original.pickup.address}
-      </div>
-    ),
-  },
-  {
-    accessorKey: 'dropoff',
-    header: 'إلى',
-    cell: ({ row }) => (
-      <div className="max-w-[150px] truncate" title={row.original.dropoff.address}>
-        {row.original.dropoff.address}
-      </div>
-    ),
-  },
-  {
-    accessorKey: 'status',
-    header: 'الحالة',
-    cell: ({ row }) => {
-      const statusStyles: Record<string, string> = {
-        pending: 'bg-amber-100 text-amber-700',
-        searching: 'bg-blue-100 text-blue-700',
-        accepted: 'bg-purple-100 text-purple-700',
-        arriving: 'bg-cyan-100 text-cyan-700',
-        arrived: 'bg-indigo-100 text-indigo-700',
-        in_progress: 'bg-blue-100 text-blue-700',
-        completed: 'bg-emerald-100 text-emerald-700',
-        cancelled: 'bg-red-100 text-red-700',
-      };
-      const statusLabels: Record<string, string> = {
-        pending: 'في الانتظار',
-        searching: 'جاري البحث',
-        accepted: 'مقبولة',
-        arriving: 'في الطريق',
-        arrived: 'وصل',
-        in_progress: 'جارية',
-        completed: 'مكتملة',
-        cancelled: 'ملغاة',
-      };
-      return (
-        <span
-          className={`px-3 py-1 rounded-full text-sm ${
-            statusStyles[row.original.status]
-          }`}
-        >
-          {statusLabels[row.original.status]}
-        </span>
-      );
-    },
-  },
-  {
-    accessorKey: 'fare',
-    header: 'الأجرة',
-    cell: ({ row }) => `${row.original.fare.total} ج.م`,
-  },
-  {
-    accessorKey: 'createdAt',
-    header: 'التاريخ',
-    cell: ({ row }) =>
-      new Date(row.original.createdAt).toLocaleDateString('ar-EG'),
-  },
-  {
-    id: 'actions',
-    header: 'إجراءات',
-    cell: () => (
-      <button
-        className="p-2 text-slate-500 hover:bg-slate-100 rounded-lg"
-        title="عرض التفاصيل"
-      >
-        <Eye size={18} />
-      </button>
-    ),
-  },
-];
+interface TripStats {
+  total: number;
+  completed: number;
+  cancelled: number;
+  inProgress: number;
+}
 
 export default function TripsPage() {
   const [trips, setTrips] = useState<Trip[]>([]);
+  const [stats, setStats] = useState<TripStats>({ total: 0, completed: 0, cancelled: 0, inProgress: 0 });
   const [isLoading, setIsLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState<string>('');
+  const [dateFilter, setDateFilter] = useState<string>('');
+
+  const fetchTrips = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const params: { status?: string; from?: string; to?: string } = {};
+      if (statusFilter) params.status = statusFilter;
+      if (dateFilter) {
+        params.from = dateFilter;
+        params.to = dateFilter;
+      }
+
+      const [tripsResponse, statsResponse] = await Promise.all([
+        tripsApi.getAll(params),
+        tripsApi.getStats(params),
+      ]);
+
+      if (tripsResponse.data.success) {
+        setTrips(tripsResponse.data.data.trips);
+      }
+      if (statsResponse.data.success) {
+        setStats(statsResponse.data.data.stats);
+      }
+    } catch (err) {
+      console.error('Failed to fetch trips:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [statusFilter, dateFilter]);
 
   useEffect(() => {
-    // TODO: Fetch trips from API
-    setTimeout(() => {
-      setTrips(mockTrips);
-      setIsLoading(false);
-    }, 500);
-  }, []);
+    fetchTrips();
+  }, [fetchTrips]);
+
+  const columns: ColumnDef<Trip, unknown>[] = [
+    {
+      accessorKey: '_id',
+      header: 'رقم الرحلة',
+      cell: ({ row }) => `#${row.original._id.slice(-6).toUpperCase()}`,
+    },
+    {
+      accessorKey: 'passenger',
+      header: 'الراكب',
+      cell: ({ row }) => row.original.passenger?.user?.name || '-',
+    },
+    {
+      accessorKey: 'driver',
+      header: 'السائق',
+      cell: ({ row }) => row.original.driver?.user?.name || '-',
+    },
+    {
+      accessorKey: 'pickup',
+      header: 'من',
+      cell: ({ row }) => (
+        <div className="max-w-[150px] truncate" title={row.original.pickup.address}>
+          {row.original.pickup.address}
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'dropoff',
+      header: 'إلى',
+      cell: ({ row }) => (
+        <div className="max-w-[150px] truncate" title={row.original.dropoff.address}>
+          {row.original.dropoff.address}
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'rideType',
+      header: 'نوع الرحلة',
+      cell: ({ row }) => {
+        const types: Record<string, string> = {
+          economy: 'اقتصادي',
+          comfort: 'مريح',
+          family: 'عائلي',
+          tuktuk: 'توكتوك',
+          motorcycle: 'موتوسيكل',
+        };
+        return types[row.original.rideType] || row.original.rideType;
+      },
+    },
+    {
+      accessorKey: 'status',
+      header: 'الحالة',
+      cell: ({ row }) => {
+        const statusStyles: Record<string, string> = {
+          pending: 'bg-amber-100 text-amber-700',
+          searching: 'bg-blue-100 text-blue-700',
+          accepted: 'bg-purple-100 text-purple-700',
+          arriving: 'bg-cyan-100 text-cyan-700',
+          arrived: 'bg-indigo-100 text-indigo-700',
+          in_progress: 'bg-blue-100 text-blue-700',
+          completed: 'bg-emerald-100 text-emerald-700',
+          cancelled: 'bg-red-100 text-red-700',
+        };
+        const statusLabels: Record<string, string> = {
+          pending: 'في الانتظار',
+          searching: 'جاري البحث',
+          accepted: 'مقبولة',
+          arriving: 'في الطريق',
+          arrived: 'وصل',
+          in_progress: 'جارية',
+          completed: 'مكتملة',
+          cancelled: 'ملغاة',
+        };
+        return (
+          <span
+            className={`px-3 py-1 rounded-full text-sm ${
+              statusStyles[row.original.status] || 'bg-slate-100 text-slate-700'
+            }`}
+          >
+            {statusLabels[row.original.status] || row.original.status}
+          </span>
+        );
+      },
+    },
+    {
+      accessorKey: 'fare',
+      header: 'الأجرة',
+      cell: ({ row }) => `${(row.original.fare?.total || 0).toFixed(2)} ج.م`,
+    },
+    {
+      accessorKey: 'createdAt',
+      header: 'التاريخ',
+      cell: ({ row }) =>
+        new Date(row.original.createdAt).toLocaleDateString('ar-EG'),
+    },
+    {
+      id: 'actions',
+      header: 'إجراءات',
+      cell: () => (
+        <button
+          className="p-2 text-slate-500 hover:bg-slate-100 rounded-lg"
+          title="عرض التفاصيل"
+        >
+          <Eye size={18} />
+        </button>
+      ),
+    },
+  ];
 
   if (isLoading) {
     return (
@@ -197,7 +220,11 @@ export default function TripsPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-slate-900">الرحلات</h1>
         <div className="flex gap-2">
-          <select className="px-4 py-2 border border-slate-200 rounded-lg bg-white">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-4 py-2 border border-slate-200 rounded-lg bg-white"
+          >
             <option value="">جميع الحالات</option>
             <option value="pending">في الانتظار</option>
             <option value="in_progress">جارية</option>
@@ -206,8 +233,17 @@ export default function TripsPage() {
           </select>
           <input
             type="date"
+            value={dateFilter}
+            onChange={(e) => setDateFilter(e.target.value)}
             className="px-4 py-2 border border-slate-200 rounded-lg bg-white"
           />
+          <button
+            onClick={fetchTrips}
+            className="p-2 border border-slate-200 rounded-lg bg-white hover:bg-slate-50"
+            title="تحديث"
+          >
+            <RefreshCw size={20} className="text-slate-600" />
+          </button>
         </div>
       </div>
 
@@ -220,7 +256,7 @@ export default function TripsPage() {
             </div>
             <div>
               <p className="text-sm text-slate-500">إجمالي الرحلات</p>
-              <p className="text-xl font-bold text-slate-900">5,420</p>
+              <p className="text-xl font-bold text-slate-900">{stats.total.toLocaleString('ar-EG')}</p>
             </div>
           </div>
         </div>
@@ -231,7 +267,7 @@ export default function TripsPage() {
             </div>
             <div>
               <p className="text-sm text-slate-500">مكتملة</p>
-              <p className="text-xl font-bold text-slate-900">4,850</p>
+              <p className="text-xl font-bold text-slate-900">{stats.completed.toLocaleString('ar-EG')}</p>
             </div>
           </div>
         </div>
@@ -242,7 +278,7 @@ export default function TripsPage() {
             </div>
             <div>
               <p className="text-sm text-slate-500">جارية</p>
-              <p className="text-xl font-bold text-slate-900">12</p>
+              <p className="text-xl font-bold text-slate-900">{stats.inProgress.toLocaleString('ar-EG')}</p>
             </div>
           </div>
         </div>
@@ -253,7 +289,7 @@ export default function TripsPage() {
             </div>
             <div>
               <p className="text-sm text-slate-500">ملغاة</p>
-              <p className="text-xl font-bold text-slate-900">320</p>
+              <p className="text-xl font-bold text-slate-900">{stats.cancelled.toLocaleString('ar-EG')}</p>
             </div>
           </div>
         </div>
