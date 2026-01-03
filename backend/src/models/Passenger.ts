@@ -1,5 +1,5 @@
 import mongoose, { Schema, Model, Types } from 'mongoose';
-import { IPassenger, PaymentMethod, SavedPlace, GeoPoint } from '../types';
+import { IPassenger, PaymentMethod, SavedPlace, GeoPoint, EmergencyContact, SafetyPreferences } from '../types';
 
 // GeoPoint Schema
 const geoPointSchema = new Schema<GeoPoint>(
@@ -41,6 +41,67 @@ const savedPlaceSchema = new Schema<SavedPlace>(
     },
   },
   { _id: true }
+);
+
+// Emergency Contact Schema
+const emergencyContactSchema = new Schema<EmergencyContact>(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    phone: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    relationship: {
+      type: String,
+      enum: ['parent', 'spouse', 'sibling', 'friend', 'other'],
+      default: 'other',
+    },
+    notifyOnTrip: {
+      type: Boolean,
+      default: true,
+    },
+    notifyOnSOS: {
+      type: Boolean,
+      default: true,
+    },
+  },
+  { _id: true }
+);
+
+// Safety Preferences Schema
+const safetyPreferencesSchema = new Schema<SafetyPreferences>(
+  {
+    autoShareTrips: {
+      type: Boolean,
+      default: false,
+    },
+    shareWithContacts: {
+      type: [Schema.Types.ObjectId],
+      default: [],
+    },
+    sendETAUpdates: {
+      type: Boolean,
+      default: true,
+    },
+    sosGestureEnabled: {
+      type: Boolean,
+      default: true,
+    },
+    nightModeAlerts: {
+      type: Boolean,
+      default: true,
+    },
+    recordTrips: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  { _id: false }
 );
 
 // Passenger Schema
@@ -95,6 +156,18 @@ const passengerSchema = new Schema<IPassenger>(
       type: Number,
       default: 0,
       min: 0,
+    },
+    emergencyContacts: {
+      type: [emergencyContactSchema],
+      default: [],
+      validate: [
+        (val: EmergencyContact[]) => val.length <= 5,
+        'Maximum 5 emergency contacts allowed',
+      ],
+    },
+    safetyPreferences: {
+      type: safetyPreferencesSchema,
+      default: () => ({}),
     },
   },
   {

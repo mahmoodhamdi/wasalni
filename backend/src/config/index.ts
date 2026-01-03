@@ -74,6 +74,7 @@ export const config = {
     ),
     sosPhone: process.env.SOS_PHONE || '122',
     supportPhone: process.env.SUPPORT_PHONE || '01000000000',
+    frontendUrl: process.env.FRONTEND_URL || 'https://wasalni.app',
   },
 
   // Fare Settings

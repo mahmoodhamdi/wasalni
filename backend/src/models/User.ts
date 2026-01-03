@@ -7,9 +7,15 @@ const emergencyContactSchema = new Schema<EmergencyContact>(
   {
     name: { type: String, required: true },
     phone: { type: String, required: true },
-    relation: { type: String, required: true },
+    relationship: {
+      type: String,
+      enum: ['parent', 'spouse', 'sibling', 'friend', 'other'],
+      default: 'other',
+    },
+    notifyOnTrip: { type: Boolean, default: true },
+    notifyOnSOS: { type: Boolean, default: true },
   },
-  { _id: false }
+  { _id: true }
 );
 
 // User Schema
