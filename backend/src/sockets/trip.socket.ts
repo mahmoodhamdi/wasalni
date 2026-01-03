@@ -3,6 +3,7 @@ import { Types } from 'mongoose';
 import { logger } from '../utils/logger';
 import Trip from '../models/Trip';
 import Driver from '../models/Driver';
+import User from '../models/User';
 import {
   matchingEvents,
   driverAccept,
@@ -10,6 +11,7 @@ import {
   getDriverPendingTrip,
 } from '../services/matching.service';
 import locationService from '../services/location.service';
+import * as notificationService from '../services/notification.service';
 import { emitToUser, emitToDriver, emitToTrip, getIO } from '../config/socket';
 
 // Helper to extract ID string from ObjectId or populated document
@@ -80,13 +82,24 @@ export const initializeTripSocket = (io: SocketServer): void => {
             .lean();
 
           if (trip) {
-            // Notify passenger
+            // Notify passenger via socket
             emitToUser(trip.passengerId.toString(), 'trip:accepted', {
               tripId: trip._id.toString(),
               tripNumber: trip.tripNumber,
               driver: trip.driverId,
               status: trip.status,
             });
+
+            // Send push notification to passenger
+            const passenger = await Trip.findById(tripId).populate('passengerId').lean() as any;
+            if (passenger?.passengerId?.user) {
+              await notificationService.sendTripNotification(
+                new Types.ObjectId(passenger.passengerId.user),
+                trip._id as Types.ObjectId,
+                trip.tripNumber,
+                'driver_found'
+              );
+            }
 
             // Confirm to driver
             socket.emit('trip:accept:success', {
@@ -181,15 +194,25 @@ export const initializeTripSocket = (io: SocketServer): void => {
         const { tripId, passengerId, reason } = data;
         logger.info(`Passenger ${passengerId} cancelling trip ${tripId}`);
 
-        const trip = await Trip.findById(tripId);
+        const trip = await Trip.findById(tripId).populate('driverId').lean() as any;
         if (trip && trip.driverId) {
-          // Notify driver
-          emitToDriver(trip.driverId.toString(), 'trip:cancelled', {
+          // Notify driver via socket
+          emitToDriver(trip.driverId._id.toString(), 'trip:cancelled', {
             tripId,
             cancelledBy: 'passenger',
             reason: reason || 'Passenger cancelled',
             reasonAr: 'الراكب ألغى الرحلة',
           });
+
+          // Send push notification to driver
+          if (trip.driverId.user) {
+            await notificationService.sendTripNotification(
+              new Types.ObjectId(trip.driverId.user),
+              new Types.ObjectId(tripId),
+              trip.tripNumber,
+              'trip_cancelled_by_passenger'
+            );
+          }
         }
       } catch (error) {
         logger.error(`Error handling passenger cancellation: ${error}`);
@@ -202,15 +225,25 @@ export const initializeTripSocket = (io: SocketServer): void => {
         const { tripId, driverId, reason } = data;
         logger.info(`Driver ${driverId} cancelling trip ${tripId}`);
 
-        const trip = await Trip.findById(tripId);
+        const trip = await Trip.findById(tripId).populate('passengerId').lean() as any;
         if (trip) {
-          // Notify passenger
-          emitToUser(trip.passengerId.toString(), 'trip:cancelled', {
+          // Notify passenger via socket
+          emitToUser(trip.passengerId._id.toString(), 'trip:cancelled', {
             tripId,
             cancelledBy: 'driver',
             reason: reason || 'Driver cancelled',
             reasonAr: 'السائق ألغى الرحلة',
           });
+
+          // Send push notification to passenger
+          if (trip.passengerId.user) {
+            await notificationService.sendTripNotification(
+              new Types.ObjectId(trip.passengerId.user),
+              new Types.ObjectId(tripId),
+              trip.tripNumber,
+              'trip_cancelled_by_driver'
+            );
+          }
         }
       } catch (error) {
         logger.error(`Error handling driver cancellation: ${error}`);
@@ -249,6 +282,18 @@ export const initializeTripSocket = (io: SocketServer): void => {
             location,
             timestamp: new Date(),
           });
+
+          // Send push notification to all admins
+          const admins = await User.find({ role: 'admin' }).select('_id').lean();
+          if (admins.length > 0) {
+            const adminIds = admins.map(a => a._id as Types.ObjectId);
+            await notificationService.sendSOSAlert(
+              adminIds,
+              new Types.ObjectId(tripId),
+              userType === 'passenger' ? 'Passenger' : 'Driver',
+              `Lat: ${location.lat}, Lng: ${location.lng}`
+            );
+          }
         }
       } catch (error) {
         logger.error(`Error handling SOS: ${error}`);
@@ -338,8 +383,19 @@ const setupMatchingEventListeners = (): void => {
         timeout: 15, // Driver has 15 seconds to respond
       };
 
-      // Send to driver
+      // Send to driver via socket
       emitToDriver(driverId, 'trip:request', payload);
+
+      // Send push notification to driver
+      const driver = await Driver.findById(driverId).lean() as any;
+      if (driver?.user) {
+        await notificationService.sendTripNotification(
+          new Types.ObjectId(driver.user),
+          trip._id as Types.ObjectId,
+          trip.tripNumber,
+          'new_trip_request'
+        );
+      }
 
       logger.debug(`Sent trip request to driver ${driverId}`);
     } catch (error) {
@@ -405,7 +461,7 @@ export const emitTripStatusChange = async (
       ...additionalData,
     };
 
-    // Notify passenger
+    // Notify passenger via socket
     emitToUser(extractId(trip.passengerId), `trip:${status}`, payload);
 
     // Notify driver if assigned
@@ -418,6 +474,27 @@ export const emitTripStatusChange = async (
 
     // Broadcast to trip room
     emitToTrip(tripId, 'trip:status:changed', payload);
+
+    // Send push notifications based on status
+    const statusToEvent: Record<string, string> = {
+      driver_arriving: 'driver_arriving',
+      driver_arrived: 'driver_arrived',
+      trip_started: 'trip_started',
+      trip_completed: 'trip_completed',
+    };
+
+    if (statusToEvent[status]) {
+      // Populate passenger for notification
+      const fullTrip = await Trip.findById(tripId).populate('passengerId').lean() as any;
+      if (fullTrip?.passengerId?.user) {
+        await notificationService.sendTripNotification(
+          new Types.ObjectId(fullTrip.passengerId.user),
+          new Types.ObjectId(tripId),
+          trip.tripNumber,
+          statusToEvent[status]
+        );
+      }
+    }
 
     logger.info(`Trip ${tripId} status changed to ${status}`);
   } catch (error) {

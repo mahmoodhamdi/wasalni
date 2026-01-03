@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -105,7 +106,30 @@ class StorageService {
   Future<void> setLanguage(String language) async {
     await _prefs.setString(_keyLanguage, language);
   }
+
+  // FCM Token
+  static const String _keyFCMToken = 'fcm_token';
+
+  Future<void> setFCMToken(String token) async {
+    await _secureStorage.write(key: _keyFCMToken, value: token);
+  }
+
+  Future<String?> getFCMToken() async {
+    return await _secureStorage.read(key: _keyFCMToken);
+  }
+
+  Future<void> clearFCMToken() async {
+    await _secureStorage.delete(key: _keyFCMToken);
+  }
+
+  // Alias for getAccessToken
+  Future<String?> getToken() async {
+    return await getAccessToken();
+  }
 }
 
 // Global instance
 final storageService = StorageService();
+
+// Provider
+final storageServiceProvider = Provider<StorageService>((ref) => storageService);
