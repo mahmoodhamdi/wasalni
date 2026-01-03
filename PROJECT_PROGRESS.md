@@ -1,6 +1,6 @@
 # Wasalni - Project Progress
 
-## Overall Progress: 40/55 Milestones (73%)
+## Overall Progress: 41/55 Milestones (75%)
 
 ---
 
@@ -50,10 +50,10 @@
 - [x] 4.11 Driver - Earnings
 - [x] 4.12 Phase 4 Testing
 
-## Phase 5: Safety & Features (2/7) 🚧 IN PROGRESS
+## Phase 5: Safety & Features (3/7) 🚧 IN PROGRESS
 - [x] 5.1 Backend - Safety
 - [x] 5.2 Flutter - Safety
-- [ ] 5.3 Backend - Scheduled
+- [x] 5.3 Backend - Scheduled
 - [ ] 5.4 Flutter - Scheduled
 - [ ] 5.5 Backend - Promos
 - [ ] 5.6 Flutter - Promos
@@ -91,7 +91,7 @@
 
 ## Current Status
 
-**Phase 5 In Progress!** Safety features complete (2/7), working on scheduled rides
+**Phase 5 In Progress!** Scheduled rides backend complete (3/7), working on Flutter scheduled UI
 **Last Updated:** 2026-01-03
 **Blockers:** None
 
@@ -101,7 +101,34 @@
 
 ### 2026-01-03
 
-#### Phase 5: Safety & Features (2/7 In Progress)
+#### Phase 5: Safety & Features (3/7 In Progress)
+- [x] **5.3 Backend - Scheduled** - Complete scheduled rides backend:
+  - Created scheduled.service.ts with comprehensive scheduling features:
+    - createScheduledTrip - Create trip with advance time validation (30 min to 7 days)
+    - getUpcomingScheduledTrips - List upcoming trips with pagination and driver info
+    - getScheduledTripDetails - Get full trip details with populated driver/passenger
+    - modifyScheduledTime - Update scheduled time (before driver assignment)
+    - cancelScheduledTrip - Cancel with tiered cancellation fees
+    - getTripsForDispatch - Find trips needing driver assignment
+    - startScheduledTripSearch - Initiate driver search for scheduled trip
+    - getScheduledTripsStats - Get statistics for date range
+    - getAvailableTimeSlots - Get available booking slots for a date
+  - Created scheduled.controller.ts with API endpoints:
+    - POST /scheduled - Create scheduled trip
+    - GET /scheduled - List upcoming trips
+    - GET /scheduled/stats - Get trip statistics
+    - GET /scheduled/slots - Get available time slots
+    - GET /scheduled/:tripId - Get trip details
+    - PATCH /scheduled/:tripId/time - Modify scheduled time
+    - POST /scheduled/:tripId/cancel - Cancel scheduled trip
+  - Created scheduled.validator.ts with input validation:
+    - Location validation (pickup, dropoff, stops)
+    - Ride type validation (economy, comfort, family, tuktuk, motorcycle)
+    - Scheduled time validation (30 min to 7 days range)
+    - Payment method and promo code validation
+  - Created scheduled.routes.ts with passenger-only routes
+  - Updated app.ts with scheduled routes registration
+
 - [x] **5.2 Flutter - Safety** - Complete passenger app safety features:
   - Created safety_provider.dart with state management:
     - EmergencyContact and SafetyPreferences models
@@ -490,11 +517,11 @@ wasalni/
 ## Stats
 
 - Total Milestones: 55
-- Completed: 40
-- In Progress: 1 (Phase 5 Scheduled Rides)
-- Remaining: 15
+- Completed: 41
+- In Progress: 1 (Phase 5 Flutter Scheduled)
+- Remaining: 14
 - Phase 1 Progress: 100%
 - Phase 2 Progress: 100%
 - Phase 3 Progress: 100%
 - Phase 4 Progress: 100% (12/12)
-- Phase 5 Progress: 29% (2/7)
+- Phase 5 Progress: 43% (3/7)
