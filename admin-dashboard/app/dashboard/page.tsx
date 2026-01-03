@@ -1,33 +1,64 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Users, Car, MapPin, DollarSign, Clock, CheckCircle } from 'lucide-react';
+import { Users, Car, MapPin, DollarSign, Clock, CheckCircle, TrendingUp, AlertCircle } from 'lucide-react';
 import StatsCard from '@/components/ui/StatsCard';
-import { DashboardStats } from '@/types';
+import { dashboardApi } from '@/lib/api';
 
-// Mock data for now
-const mockStats: DashboardStats = {
-  totalPassengers: 1250,
-  totalDrivers: 85,
-  activeDrivers: 32,
-  totalTrips: 5420,
-  completedTrips: 4850,
-  cancelledTrips: 320,
-  totalRevenue: 125000,
-  todayRevenue: 3500,
-  pendingDriverApprovals: 5,
+interface DashboardStats {
+  totalPassengers: number;
+  totalDrivers: number;
+  activeDrivers: number;
+  pendingDrivers: number;
+  totalTrips: number;
+  completedTrips: number;
+  cancelledTrips: number;
+  activeTrips: number;
+  totalRevenue: number;
+  todayRevenue: number;
+  weekRevenue: number;
+  monthRevenue: number;
+  avgRating: number;
+}
+
+const defaultStats: DashboardStats = {
+  totalPassengers: 0,
+  totalDrivers: 0,
+  activeDrivers: 0,
+  pendingDrivers: 0,
+  totalTrips: 0,
+  completedTrips: 0,
+  cancelledTrips: 0,
+  activeTrips: 0,
+  totalRevenue: 0,
+  todayRevenue: 0,
+  weekRevenue: 0,
+  monthRevenue: 0,
+  avgRating: 0,
 };
 
 export default function DashboardPage() {
-  const [stats, setStats] = useState<DashboardStats>(mockStats);
+  const [stats, setStats] = useState<DashboardStats>(defaultStats);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // TODO: Fetch real stats from API
-    setTimeout(() => {
-      setStats(mockStats);
-      setIsLoading(false);
-    }, 500);
+    const fetchStats = async () => {
+      try {
+        setIsLoading(true);
+        const response = await dashboardApi.getStats();
+        if (response.data.success) {
+          setStats(response.data.data.stats);
+        }
+      } catch (err: any) {
+        console.error('Failed to fetch stats:', err);
+        setError('فشل في تحميل الإحصائيات');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchStats();
   }, []);
 
   if (isLoading) {
@@ -76,16 +107,21 @@ export default function DashboardPage() {
       </div>
 
       {/* Second Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatsCard
           title="طلبات انتظار الموافقة"
-          value={stats.pendingDriverApprovals}
+          value={stats.pendingDrivers}
           icon={Clock}
         />
         <StatsCard
           title="الرحلات المكتملة"
-          value={`${((stats.completedTrips / stats.totalTrips) * 100).toFixed(1)}%`}
+          value={stats.totalTrips > 0 ? `${((stats.completedTrips / stats.totalTrips) * 100).toFixed(1)}%` : '0%'}
           icon={CheckCircle}
+        />
+        <StatsCard
+          title="متوسط التقييم"
+          value={stats.avgRating > 0 ? `${stats.avgRating.toFixed(1)} ★` : '-'}
+          icon={TrendingUp}
         />
         <StatsCard
           title="إجمالي الإيرادات"
@@ -94,6 +130,14 @@ export default function DashboardPage() {
         />
       </div>
 
+      {/* Error Message */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
+          <AlertCircle size={20} />
+          <span>{error}</span>
+        </div>
+      )}
+
       {/* Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Pending Approvals */}
@@ -101,9 +145,9 @@ export default function DashboardPage() {
           <h3 className="text-lg font-semibold text-slate-900 mb-4">
             طلبات انتظار الموافقة
           </h3>
-          {stats.pendingDriverApprovals > 0 ? (
+          {stats.pendingDrivers > 0 ? (
             <div className="space-y-4">
-              {[1, 2, 3].slice(0, stats.pendingDriverApprovals).map((i) => (
+              {[1, 2, 3].slice(0, Math.min(stats.pendingDrivers, 3)).map((i) => (
                 <div
                   key={i}
                   className="flex items-center justify-between p-3 bg-slate-50 rounded-lg"
