@@ -280,8 +280,30 @@ class ApiService {
   }
 
   // Promo Codes
-  Future<Response> validatePromoCode(String code) async {
-    return await _dio.post('/promo/validate', data: {'code': code});
+  Future<Response> validatePromoCode({
+    required String code,
+    required double fare,
+    required String rideType,
+  }) async {
+    return await _dio.post('/promo/validate', data: {
+      'code': code,
+      'fare': fare,
+      'rideType': rideType,
+    });
+  }
+
+  Future<Response> getAvailablePromos({String? rideType, double? fare}) async {
+    return await _dio.get('/promo/available', queryParameters: {
+      if (rideType != null) 'rideType': rideType,
+      if (fare != null) 'fare': fare,
+    });
+  }
+
+  Future<Response> getPromoHistory({int page = 1, int limit = 20}) async {
+    return await _dio.get('/promo/history', queryParameters: {
+      'page': page,
+      'limit': limit,
+    });
   }
 
   // Notifications

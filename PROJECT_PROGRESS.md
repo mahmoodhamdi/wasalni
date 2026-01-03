@@ -1,6 +1,6 @@
 # Wasalni - Project Progress
 
-## Overall Progress: 43/55 Milestones (78%)
+## Overall Progress: 44/55 Milestones (80%)
 
 ---
 
@@ -50,13 +50,13 @@
 - [x] 4.11 Driver - Earnings
 - [x] 4.12 Phase 4 Testing
 
-## Phase 5: Safety & Features (5/7) 🚧 IN PROGRESS
+## Phase 5: Safety & Features (6/7) 🚧 IN PROGRESS
 - [x] 5.1 Backend - Safety
 - [x] 5.2 Flutter - Safety
 - [x] 5.3 Backend - Scheduled
 - [x] 5.4 Flutter - Scheduled
 - [x] 5.5 Backend - Promos
-- [ ] 5.6 Flutter - Promos
+- [x] 5.6 Flutter - Promos
 - [ ] 5.7 Phase 5 Testing
 
 ## Phase 6: Admin Dashboard (0/8)
@@ -91,7 +91,7 @@
 
 ## Current Status
 
-**Phase 5 In Progress!** Promo codes backend complete (5/7), working on Flutter promo UI
+**Phase 5 In Progress!** Flutter promo UI complete (6/7), moving to Phase 5 testing
 **Last Updated:** 2026-01-03
 **Blockers:** None
 
@@ -101,7 +101,40 @@
 
 ### 2026-01-03
 
-#### Phase 5: Safety & Features (5/7 In Progress)
+#### Phase 5: Safety & Features (6/7 In Progress)
+- [x] **5.6 Flutter - Promos** - Complete passenger app promo codes UI:
+  - Created promo_provider.dart with state management:
+    - PromoCode model with discount type (percentage/fixed)
+    - PromoUsage model for usage history
+    - PromoValidationResult for validation feedback
+    - PromoState with available promos, usage history, applied promo
+    - Load available promos with ride type and fare filters
+    - Load usage history with pagination
+    - Validate promo codes with full context
+    - Apply/remove promo for current ride
+    - Calculate discounted fare
+  - Created promos_screen.dart with full UI:
+    - Tab view for Available/History
+    - Promo code input field with validation
+    - Available promos cards with:
+      - Discount display (percentage or fixed)
+      - Code with copy-to-clipboard
+      - Conditions (min fare, max discount, ride types)
+      - Expiry date and "expiring soon" badge
+    - Usage history list with pagination
+    - Empty states for no promos/no history
+    - Pull-to-refresh functionality
+  - Created promo_code_input.dart reusable widget:
+    - Expandable promo code entry
+    - Applied promo display with remove option
+    - Validation feedback inline
+    - AppliedPromoDisplay compact widget for booking summary
+  - Updated api_service.dart with promo endpoints:
+    - validatePromoCode - Validate with code, fare, rideType
+    - getAvailablePromos - Get promos with optional filters
+    - getPromoHistory - Get usage history with pagination
+  - Updated router.dart with /promos route
+
 - [x] **5.5 Backend - Promos** - Complete promo codes backend:
   - Created promo.service.ts with comprehensive promo management:
     - validatePromoCode - Validate promo for user with all checks
@@ -571,11 +604,11 @@ wasalni/
 ## Stats
 
 - Total Milestones: 55
-- Completed: 43
-- In Progress: 1 (Phase 5 Flutter Promos)
-- Remaining: 12
+- Completed: 44
+- In Progress: 1 (Phase 5 Testing)
+- Remaining: 11
 - Phase 1 Progress: 100%
 - Phase 2 Progress: 100%
 - Phase 3 Progress: 100%
 - Phase 4 Progress: 100% (12/12)
-- Phase 5 Progress: 71% (5/7)
+- Phase 5 Progress: 86% (6/7)
