@@ -1,6 +1,6 @@
 # Wasalni - Project Progress
 
-## Overall Progress: 42/55 Milestones (76%)
+## Overall Progress: 43/55 Milestones (78%)
 
 ---
 
@@ -50,12 +50,12 @@
 - [x] 4.11 Driver - Earnings
 - [x] 4.12 Phase 4 Testing
 
-## Phase 5: Safety & Features (4/7) 🚧 IN PROGRESS
+## Phase 5: Safety & Features (5/7) 🚧 IN PROGRESS
 - [x] 5.1 Backend - Safety
 - [x] 5.2 Flutter - Safety
 - [x] 5.3 Backend - Scheduled
 - [x] 5.4 Flutter - Scheduled
-- [ ] 5.5 Backend - Promos
+- [x] 5.5 Backend - Promos
 - [ ] 5.6 Flutter - Promos
 - [ ] 5.7 Phase 5 Testing
 
@@ -91,7 +91,7 @@
 
 ## Current Status
 
-**Phase 5 In Progress!** Scheduled rides complete (4/7), working on promo codes
+**Phase 5 In Progress!** Promo codes backend complete (5/7), working on Flutter promo UI
 **Last Updated:** 2026-01-03
 **Blockers:** None
 
@@ -101,7 +101,32 @@
 
 ### 2026-01-03
 
-#### Phase 5: Safety & Features (4/7 In Progress)
+#### Phase 5: Safety & Features (5/7 In Progress)
+- [x] **5.5 Backend - Promos** - Complete promo codes backend:
+  - Created promo.service.ts with comprehensive promo management:
+    - validatePromoCode - Validate promo for user with all checks
+    - applyPromoToTrip - Apply promo and record usage
+    - getAvailablePromos - Get available promos for user with filters
+    - getPromoUsageHistory - Get user's promo usage with pagination
+    - createPromoCode - Admin create promo (percentage/fixed discount)
+    - updatePromoCode - Admin update promo settings
+    - deactivatePromoCode - Admin deactivate promo
+    - getAllPromoCodes - Admin list all promos
+    - getPromoStats - Admin get usage statistics
+  - Created promo.controller.ts with API endpoints:
+    - POST /promo/validate - Validate promo code
+    - GET /promo/available - Get available promos for user
+    - GET /promo/history - Get user's promo usage history
+    - POST /promo - Create promo (Admin)
+    - GET /promo - List all promos (Admin)
+    - GET /promo/:id - Get promo details (Admin)
+    - GET /promo/:id/stats - Get promo statistics (Admin)
+    - PUT /promo/:id - Update promo (Admin)
+    - DELETE /promo/:id - Deactivate promo (Admin)
+  - Created promo.validator.ts with input validation
+  - Created promo.routes.ts with user and admin routes
+  - Updated app.ts with promo routes registration
+
 - [x] **5.4 Flutter - Scheduled** - Complete passenger app scheduled rides UI:
   - Created scheduled_provider.dart with state management:
     - ScheduledTrip, TripLocation, DriverInfo, TimeSlot models
@@ -546,11 +571,11 @@ wasalni/
 ## Stats
 
 - Total Milestones: 55
-- Completed: 42
-- In Progress: 1 (Phase 5 Promo Codes)
-- Remaining: 13
+- Completed: 43
+- In Progress: 1 (Phase 5 Flutter Promos)
+- Remaining: 12
 - Phase 1 Progress: 100%
 - Phase 2 Progress: 100%
 - Phase 3 Progress: 100%
 - Phase 4 Progress: 100% (12/12)
-- Phase 5 Progress: 57% (4/7)
+- Phase 5 Progress: 71% (5/7)
