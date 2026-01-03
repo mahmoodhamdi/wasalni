@@ -6,6 +6,11 @@ import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import { config } from './config';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
+import authRoutes from './routes/auth.routes';
+import locationRoutes from './routes/location.routes';
+import fareRoutes from './routes/fare.routes';
+import tripRoutes from './routes/trip.routes';
+import driverRoutes from './routes/driver.routes';
 
 // Create Express app
 const app: Application = express();
@@ -74,13 +79,13 @@ app.get('/api', (_req: Request, res: Response) => {
   });
 });
 
-// API Routes (to be added)
-// app.use(`/api/${config.apiVersion}/auth`, authRoutes);
+// API Routes
+app.use(`/api/${config.apiVersion}/auth`, authRoutes);
+app.use(`/api/${config.apiVersion}/location`, locationRoutes);
+app.use(`/api/${config.apiVersion}/fare`, fareRoutes);
+app.use(`/api/${config.apiVersion}/trips`, tripRoutes);
+app.use(`/api/${config.apiVersion}/driver`, driverRoutes);
 // app.use(`/api/${config.apiVersion}/users`, userRoutes);
-// app.use(`/api/${config.apiVersion}/drivers`, driverRoutes);
-// app.use(`/api/${config.apiVersion}/trips`, tripRoutes);
-// app.use(`/api/${config.apiVersion}/fare`, fareRoutes);
-// app.use(`/api/${config.apiVersion}/maps`, mapsRoutes);
 // app.use(`/api/${config.apiVersion}/admin`, adminRoutes);
 
 // 404 handler
