@@ -135,6 +135,29 @@ export const sendValidationError = (
   );
 };
 
+// Helper functions that return response objects (for use without res parameter)
+export const successResponse = <T>(
+  data: T,
+  message: string = 'Success',
+  messageAr: string = 'تم بنجاح'
+): ApiResponse<T> => ({
+  success: true,
+  message,
+  messageAr,
+  data,
+});
+
+export const errorResponse = (
+  message: string = 'An error occurred',
+  messageAr: string = 'حدث خطأ',
+  errors?: unknown
+): ApiResponse => ({
+  success: false,
+  message,
+  messageAr,
+  errors: errors as Array<{ field: string; message: string }>,
+});
+
 export default {
   sendSuccess,
   sendCreated,
@@ -146,4 +169,6 @@ export default {
   sendNotFound,
   sendConflict,
   sendValidationError,
+  successResponse,
+  errorResponse,
 };
