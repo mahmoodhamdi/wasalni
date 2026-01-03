@@ -132,3 +132,48 @@ export const locationApi = {
   getDriverLocation: (driverId: string) =>
     api.get(`/location/drivers/${driverId}`),
 };
+
+// Finance API
+export const financeApi = {
+  getStats: () =>
+    api.get('/admin/finance/stats'),
+
+  getRevenueChart: (days?: number) =>
+    api.get('/admin/finance/revenue-chart', { params: { days } }),
+};
+
+// Promos API
+export const promosApi = {
+  getAll: (params?: { page?: number; limit?: number; active?: boolean }) =>
+    api.get('/promo', { params }),
+
+  getById: (id: string) =>
+    api.get(`/promo/${id}`),
+
+  create: (data: Record<string, unknown>) =>
+    api.post('/promo', data),
+
+  update: (id: string, data: Record<string, unknown>) =>
+    api.put(`/promo/${id}`, data),
+
+  deactivate: (id: string) =>
+    api.delete(`/promo/${id}`),
+
+  getStats: (id: string) =>
+    api.get(`/promo/${id}/stats`),
+};
+
+// Zones API
+export const zonesApi = {
+  getAll: () =>
+    api.get('/admin/settings/zones'),
+
+  create: (data: Record<string, unknown>) =>
+    api.post('/admin/settings/zones', data),
+
+  update: (id: string, data: Record<string, unknown>) =>
+    api.put(`/admin/settings/zones/${id}`, data),
+
+  delete: (id: string) =>
+    api.delete(`/admin/settings/zones/${id}`),
+};

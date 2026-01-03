@@ -12,6 +12,9 @@ import {
   LogOut,
   Menu,
   X,
+  DollarSign,
+  Tag,
+  MapPinned,
 } from 'lucide-react';
 import { useSidebarStore, useAuthStore } from '@/lib/store';
 
@@ -21,6 +24,9 @@ const menuItems = [
   { href: '/dashboard/drivers', label: 'السائقين', icon: Car },
   { href: '/dashboard/trips', label: 'الرحلات', icon: MapPin },
   { href: '/dashboard/map', label: 'الخريطة الحية', icon: Map },
+  { href: '/dashboard/finance', label: 'المالية', icon: DollarSign },
+  { href: '/dashboard/promos', label: 'العروض', icon: Tag },
+  { href: '/dashboard/zones', label: 'المناطق والأسعار', icon: MapPinned },
   { href: '/dashboard/settings', label: 'الإعدادات', icon: Settings },
 ];
 

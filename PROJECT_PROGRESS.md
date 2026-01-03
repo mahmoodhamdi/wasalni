@@ -1,6 +1,6 @@
 # Wasalni - Project Progress
 
-## Overall Progress: 45/55 Milestones (82%)
+## Overall Progress: 47/55 Milestones (85%)
 
 ---
 
@@ -59,9 +59,9 @@
 - [x] 5.6 Flutter - Promos
 - [x] 5.7 Phase 5 Testing
 
-## Phase 6: Admin Dashboard (0/8)
-- [ ] 6.1 Admin - Layout
-- [ ] 6.2 Admin - Drivers
+## Phase 6: Admin Dashboard (2/8)
+- [x] 6.1 Admin - Layout
+- [x] 6.2 Admin - Drivers
 - [ ] 6.3 Admin - Passengers
 - [ ] 6.4 Admin - Trips
 - [ ] 6.5 Admin - Finance
@@ -91,7 +91,7 @@
 
 ## Current Status
 
-**Phase 5 Complete!** All safety and features milestones done. Moving to Phase 6: Admin Dashboard
+**Phase 6 In Progress!** Admin Dashboard - Backend admin API and driver management complete.
 **Last Updated:** 2026-01-03
 **Blockers:** None
 
@@ -100,6 +100,36 @@
 ## Milestone Log
 
 ### 2026-01-03
+
+#### Phase 6: Admin Dashboard (2/8 Complete)
+- [x] **6.2 Admin - Drivers** - Complete driver management with real API:
+  - Updated drivers page with real API integration
+  - Driver listing with status filter (pending, approved, suspended, rejected)
+  - Approve driver functionality
+  - Reject driver with reason prompt
+  - Suspend driver with reason prompt
+  - Activate suspended driver
+  - Action loading states and refresh
+  - Status badges with Arabic labels
+  - Vehicle info display
+
+- [x] **6.1 Admin - Layout** - Enhanced admin dashboard layout and backend:
+  - Created backend admin service (admin.service.ts):
+    - getDashboardStats - Aggregate stats from all collections
+    - getPassengers - List passengers with pagination and search
+    - getDrivers - List drivers with status filter
+    - approveDriver / rejectDriver / suspendDriver / activateDriver
+    - togglePassengerActive - Enable/disable passenger accounts
+    - getTrips - List trips with filters
+    - getFinanceStats - Revenue and transaction stats
+    - getFareSettings / updateFareSettings
+    - getZones / createZone / updateZone / deleteZone
+  - Created admin controller (admin.controller.ts) with API endpoints
+  - Created admin routes (admin.routes.ts) with admin-only middleware
+  - Updated app.ts with admin routes registration
+  - Enhanced sidebar with new menu items (Finance, Promos, Zones)
+  - Updated lib/api.ts with Finance, Promos, Zones API endpoints
+  - Connected dashboard page to real API for live stats
 
 #### Phase 5: Safety & Features (7/7 Complete)
 - [x] **5.7 Phase 5 Testing** - All components verified:
@@ -615,11 +645,12 @@ wasalni/
 ## Stats
 
 - Total Milestones: 55
-- Completed: 45
-- In Progress: 0
-- Remaining: 10
+- Completed: 47
+- In Progress: 1
+- Remaining: 7
 - Phase 1 Progress: 100%
 - Phase 2 Progress: 100%
 - Phase 3 Progress: 100%
 - Phase 4 Progress: 100% (12/12)
 - Phase 5 Progress: 100% (7/7)
+- Phase 6 Progress: 25% (2/8)
