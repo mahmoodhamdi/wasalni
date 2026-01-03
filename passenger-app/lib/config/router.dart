@@ -10,6 +10,9 @@ import '../screens/auth/register_screen.dart';
 import '../screens/home/home_screen.dart';
 import '../screens/home/location_picker_screen.dart';
 import '../screens/booking/booking_screen.dart';
+import '../screens/booking/searching_screen.dart';
+import '../screens/trip/trip_screen.dart';
+import '../screens/trip/trip_complete_screen.dart';
 
 // Router provider
 final routerProvider = Provider<GoRouter>((ref) {
@@ -73,10 +76,23 @@ final routerProvider = Provider<GoRouter>((ref) {
         name: 'booking',
         builder: (context, state) => const BookingScreen(),
       ),
+      GoRoute(
+        path: '/searching',
+        name: 'searching',
+        builder: (context, state) => const SearchingScreen(),
+      ),
+      GoRoute(
+        path: '/trip',
+        name: 'trip',
+        builder: (context, state) => const TripScreen(),
+      ),
+      GoRoute(
+        path: '/trip-complete',
+        name: 'trip-complete',
+        builder: (context, state) => const TripCompleteScreen(),
+      ),
 
       // TODO: Add more routes as screens are created
-      // - /searching
-      // - /trip/:id
       // - /profile
       // - /settings
       // - /history

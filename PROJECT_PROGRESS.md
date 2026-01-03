@@ -1,6 +1,6 @@
 # Wasalni - Project Progress
 
-## Overall Progress: 31/55 Milestones (56%)
+## Overall Progress: 35/55 Milestones (64%)
 
 ---
 
@@ -36,16 +36,16 @@
 - [x] 3.7 Admin - Live Map
 - [x] 3.8 Phase 3 Testing
 
-## Phase 4: Fare & Booking (5/12) 🚧 IN PROGRESS
+## Phase 4: Fare & Booking (9/12) 🚧 IN PROGRESS
 - [x] 4.1 Backend - Fare Service
 - [x] 4.2 Backend - Trip Service
 - [x] 4.3 Backend - Matching Service
 - [x] 4.4 Backend - Trip Controller
 - [x] 4.5 Backend - Socket.io
-- [ ] 4.6 Flutter - Booking 1
-- [ ] 4.7 Flutter - Booking 2
-- [ ] 4.8 Flutter - Trip Tracking
-- [ ] 4.9 Flutter - Completion
+- [x] 4.6 Flutter - Booking 1
+- [x] 4.7 Flutter - Booking 2
+- [x] 4.8 Flutter - Trip Tracking
+- [x] 4.9 Flutter - Completion
 - [ ] 4.10 Driver - Trip Flow
 - [ ] 4.11 Driver - Earnings
 - [ ] 4.12 Phase 4 Testing
@@ -91,7 +91,7 @@
 
 ## Current Status
 
-**Phase 4 In Progress!** Backend complete (5/12), working on Flutter booking flow
+**Phase 4 In Progress!** Passenger app booking flow complete (9/12), working on Driver app trip flow
 **Last Updated:** 2026-01-03
 **Blockers:** None
 
@@ -153,6 +153,51 @@
   - Integration with matching service events
   - Updated socket.ts with admin rooms, connection tracking
   - Added removeDriverLocation to location service
+
+- [x] **4.6 Flutter - Booking Part 1** - Created booking confirmation flow:
+  - Updated api_service.dart with fare and trip endpoints
+  - Updated trip_provider.dart with full state management
+  - FareEstimate, DriverInfo, RouteInfo, FareBreakdown classes
+  - Socket event listeners for real-time updates
+  - Created booking_screen.dart with:
+    - Map with pickup/dropoff markers
+    - Ride type selection cards
+    - Fare estimates display
+    - Payment method selection
+    - Promo code validation
+    - Booking confirmation
+
+- [x] **4.7 Flutter - Booking Part 2** - Created driver search flow:
+  - Created searching_screen.dart with:
+    - Animated pulse indicator
+    - Trip summary display
+    - Cancel functionality
+    - Socket listeners for driver assignment
+    - Navigation to trip screen on driver found
+  - Updated router.dart with /searching and /trip routes
+
+- [x] **4.8 Flutter - Trip Tracking** - Created trip tracking screen:
+  - Created trip_screen.dart with:
+    - Real-time map with driver marker
+    - Route polyline decoding and display
+    - Driver location updates
+    - Trip status display (arriving, arrived, in progress)
+    - Driver info card with call/message buttons
+    - Trip details card with pickup/dropoff
+    - SOS emergency button
+    - Cancel trip functionality
+    - Navigation to completion on trip end
+
+- [x] **4.9 Flutter - Trip Completion** - Created trip completion screen:
+  - Created trip_complete_screen.dart with:
+    - Success animation
+    - Fare breakdown display
+    - Tip selection (5, 10, 20, 50 ج.م)
+    - Star rating (1-5) with Arabic labels
+    - Comment text field
+    - Submit rating functionality
+    - Skip option
+    - Navigation back to home
 
 #### Phase 3: Maps & Location (8/8 Complete)
 - [x] **3.1 Backend - Location Service** - Created location.service.ts:
@@ -338,10 +383,10 @@ wasalni/
 ## Stats
 
 - Total Milestones: 55
-- Completed: 31
-- In Progress: 7 (Phase 4 Flutter)
-- Remaining: 24
+- Completed: 35
+- In Progress: 3 (Phase 4 Driver App)
+- Remaining: 20
 - Phase 1 Progress: 100%
 - Phase 2 Progress: 100%
 - Phase 3 Progress: 100%
-- Phase 4 Progress: 42% (5/12)
+- Phase 4 Progress: 75% (9/12)
