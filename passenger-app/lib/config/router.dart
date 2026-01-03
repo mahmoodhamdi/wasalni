@@ -17,6 +17,7 @@ import '../screens/safety/emergency_contacts_screen.dart';
 import '../screens/safety/safety_settings_screen.dart';
 import '../screens/scheduled/scheduled_trips_screen.dart';
 import '../screens/scheduled/schedule_trip_screen.dart';
+import '../screens/promo/promos_screen.dart';
 
 // Router provider
 final routerProvider = Provider<GoRouter>((ref) {
@@ -118,6 +119,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/schedule-trip',
         name: 'schedule-trip',
         builder: (context, state) => const ScheduleTripScreen(),
+      ),
+
+      // Promo Routes
+      GoRoute(
+        path: '/promos',
+        name: 'promos',
+        builder: (context, state) => const PromosScreen(),
       ),
 
       // TODO: Add more routes as screens are created
