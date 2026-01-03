@@ -13,6 +13,8 @@ import '../screens/booking/booking_screen.dart';
 import '../screens/booking/searching_screen.dart';
 import '../screens/trip/trip_screen.dart';
 import '../screens/trip/trip_complete_screen.dart';
+import '../screens/safety/emergency_contacts_screen.dart';
+import '../screens/safety/safety_settings_screen.dart';
 
 // Router provider
 final routerProvider = Provider<GoRouter>((ref) {
@@ -90,6 +92,18 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/trip-complete',
         name: 'trip-complete',
         builder: (context, state) => const TripCompleteScreen(),
+      ),
+
+      // Safety Routes
+      GoRoute(
+        path: '/safety-settings',
+        name: 'safety-settings',
+        builder: (context, state) => const SafetySettingsScreen(),
+      ),
+      GoRoute(
+        path: '/emergency-contacts',
+        name: 'emergency-contacts',
+        builder: (context, state) => const EmergencyContactsScreen(),
       ),
 
       // TODO: Add more routes as screens are created
