@@ -1,6 +1,6 @@
 # Wasalni - Project Progress
 
-## Overall Progress: 41/55 Milestones (75%)
+## Overall Progress: 42/55 Milestones (76%)
 
 ---
 
@@ -50,11 +50,11 @@
 - [x] 4.11 Driver - Earnings
 - [x] 4.12 Phase 4 Testing
 
-## Phase 5: Safety & Features (3/7) 🚧 IN PROGRESS
+## Phase 5: Safety & Features (4/7) 🚧 IN PROGRESS
 - [x] 5.1 Backend - Safety
 - [x] 5.2 Flutter - Safety
 - [x] 5.3 Backend - Scheduled
-- [ ] 5.4 Flutter - Scheduled
+- [x] 5.4 Flutter - Scheduled
 - [ ] 5.5 Backend - Promos
 - [ ] 5.6 Flutter - Promos
 - [ ] 5.7 Phase 5 Testing
@@ -91,7 +91,7 @@
 
 ## Current Status
 
-**Phase 5 In Progress!** Scheduled rides backend complete (3/7), working on Flutter scheduled UI
+**Phase 5 In Progress!** Scheduled rides complete (4/7), working on promo codes
 **Last Updated:** 2026-01-03
 **Blockers:** None
 
@@ -101,7 +101,36 @@
 
 ### 2026-01-03
 
-#### Phase 5: Safety & Features (3/7 In Progress)
+#### Phase 5: Safety & Features (4/7 In Progress)
+- [x] **5.4 Flutter - Scheduled** - Complete passenger app scheduled rides UI:
+  - Created scheduled_provider.dart with state management:
+    - ScheduledTrip, TripLocation, DriverInfo, TimeSlot models
+    - ScheduledTripStatus enum with Arabic display names
+    - ScheduledTripsStats for trip statistics
+    - Load upcoming trips with pagination
+    - Load available time slots by date
+    - Create, modify, and cancel scheduled trips
+  - Created scheduled_trips_screen.dart:
+    - List of upcoming scheduled trips with pull-to-refresh
+    - Trip cards with status badges (upcoming, searching, assigned, cancelled)
+    - Date/time formatting with "Today" and "Tomorrow" labels
+    - Driver info display when assigned
+    - Cancel and modify actions
+    - Empty state with CTA to schedule
+    - Infinite scroll pagination
+  - Created schedule_trip_screen.dart:
+    - Date and time pickers with validation (30 min to 7 days)
+    - Pickup and dropoff location selection via location picker
+    - Ride type selector (economy, comfort, family)
+    - Payment method selector (cash, wallet, card)
+    - Optional notes field
+    - Info about driver search timing
+  - Updated api_service.dart with scheduled endpoints:
+    - getScheduledTrips, getScheduledSlots, getScheduledStats
+    - createScheduledTrip, modifyScheduledTime, cancelScheduledTrip
+    - Added apiServiceProvider for Riverpod integration
+  - Updated router.dart with scheduled routes
+
 - [x] **5.3 Backend - Scheduled** - Complete scheduled rides backend:
   - Created scheduled.service.ts with comprehensive scheduling features:
     - createScheduledTrip - Create trip with advance time validation (30 min to 7 days)
@@ -517,11 +546,11 @@ wasalni/
 ## Stats
 
 - Total Milestones: 55
-- Completed: 41
-- In Progress: 1 (Phase 5 Flutter Scheduled)
-- Remaining: 14
+- Completed: 42
+- In Progress: 1 (Phase 5 Promo Codes)
+- Remaining: 13
 - Phase 1 Progress: 100%
 - Phase 2 Progress: 100%
 - Phase 3 Progress: 100%
 - Phase 4 Progress: 100% (12/12)
-- Phase 5 Progress: 43% (3/7)
+- Phase 5 Progress: 57% (4/7)

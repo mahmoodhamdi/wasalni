@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../config/app_config.dart';
 
@@ -344,7 +345,69 @@ class ApiService {
       'response': response,
     });
   }
+
+  // Scheduled Trips Endpoints
+  Future<Response> getScheduledTrips({int page = 1, int limit = 10}) async {
+    return await _dio.get('/scheduled', queryParameters: {
+      'page': page,
+      'limit': limit,
+    });
+  }
+
+  Future<Response> getScheduledSlots(DateTime date) async {
+    return await _dio.get('/scheduled/slots', queryParameters: {
+      'date': date.toIso8601String().split('T')[0],
+    });
+  }
+
+  Future<Response> getScheduledStats({DateTime? startDate, DateTime? endDate}) async {
+    return await _dio.get('/scheduled/stats', queryParameters: {
+      if (startDate != null) 'startDate': startDate.toIso8601String(),
+      if (endDate != null) 'endDate': endDate.toIso8601String(),
+    });
+  }
+
+  Future<Response> getScheduledTripDetails(String tripId) async {
+    return await _dio.get('/scheduled/$tripId');
+  }
+
+  Future<Response> createScheduledTrip({
+    required Map<String, dynamic> pickup,
+    required Map<String, dynamic> dropoff,
+    required String rideType,
+    required String scheduledTime,
+    String? paymentMethod,
+    String? promoCode,
+    String? notes,
+  }) async {
+    return await _dio.post('/scheduled', data: {
+      'pickup': pickup,
+      'dropoff': dropoff,
+      'rideType': rideType,
+      'scheduledTime': scheduledTime,
+      if (paymentMethod != null) 'paymentMethod': paymentMethod,
+      if (promoCode != null) 'promoCode': promoCode,
+      if (notes != null) 'notes': notes,
+    });
+  }
+
+  Future<Response> modifyScheduledTime(String tripId, DateTime newTime) async {
+    return await _dio.patch('/scheduled/$tripId/time', data: {
+      'scheduledTime': newTime.toIso8601String(),
+    });
+  }
+
+  Future<Response> cancelScheduledTrip(String tripId, {String? reason}) async {
+    return await _dio.post('/scheduled/$tripId/cancel', data: {
+      if (reason != null) 'reason': reason,
+    });
+  }
 }
 
 // Global instance
 final apiService = ApiService();
+
+// Riverpod provider
+final apiServiceProvider = Provider<ApiService>((ref) {
+  return apiService;
+});
