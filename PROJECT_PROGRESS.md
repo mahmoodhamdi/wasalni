@@ -1,6 +1,6 @@
 # Wasalni - Project Progress
 
-## Overall Progress: 38/55 Milestones (69%)
+## Overall Progress: 39/55 Milestones (71%)
 
 ---
 
@@ -50,8 +50,8 @@
 - [x] 4.11 Driver - Earnings
 - [x] 4.12 Phase 4 Testing
 
-## Phase 5: Safety & Features (0/7)
-- [ ] 5.1 Backend - Safety
+## Phase 5: Safety & Features (1/7) 🚧 IN PROGRESS
+- [x] 5.1 Backend - Safety
 - [ ] 5.2 Flutter - Safety
 - [ ] 5.3 Backend - Scheduled
 - [ ] 5.4 Flutter - Scheduled
@@ -91,7 +91,7 @@
 
 ## Current Status
 
-**Phase 4 Complete!** 12/12 milestones done, ready for Phase 5
+**Phase 5 In Progress!** Safety backend complete (1/7)
 **Last Updated:** 2026-01-03
 **Blockers:** None
 
@@ -101,7 +101,35 @@
 
 ### 2026-01-03
 
-#### Phase 4: Fare & Booking (5/12 In Progress)
+#### Phase 5: Safety & Features (1/7 In Progress)
+- [x] **5.1 Backend - Safety** - Complete safety features:
+  - Created safety.service.ts with comprehensive safety features:
+    - Emergency contacts CRUD (add, update, remove, get)
+    - Safety preferences management
+    - Trip share link generation with secure tokens
+    - Enhanced SOS with emergency contact notifications
+    - SOS resolve functionality for admins
+    - Driver verification checks
+    - Safety tips generation (night mode, new driver, long trip)
+    - Safety check sending and response handling
+    - Auto-share trips with emergency contacts
+  - Created safety.controller.ts with API endpoints:
+    - GET/POST/PUT/DELETE emergency contacts
+    - GET/PUT safety preferences
+    - POST trip share link generation
+    - GET trip for public tracking
+    - POST trigger SOS
+    - POST resolve SOS (admin)
+    - GET verify driver
+    - GET safety tips
+    - POST safety check response
+  - Created safety.validator.ts with input validation
+  - Created safety.routes.ts with protected routes
+  - Updated Passenger model with emergencyContacts and safetyPreferences
+  - Updated Trip model with share tokens and enhanced SOS fields
+  - Updated types/index.ts with EmergencyContact and SafetyPreferences interfaces
+
+#### Phase 4: Fare & Booking (12/12 Complete)
 - [x] **4.1 Backend - Fare Service** - Created fare.service.ts:
   - calculateFare - Full fare calculation with ride type configs
   - Surge pricing based on demand/time
@@ -440,10 +468,11 @@ wasalni/
 ## Stats
 
 - Total Milestones: 55
-- Completed: 38
-- In Progress: 0
-- Remaining: 17
+- Completed: 39
+- In Progress: 1 (Phase 5 Flutter Safety)
+- Remaining: 16
 - Phase 1 Progress: 100%
 - Phase 2 Progress: 100%
 - Phase 3 Progress: 100%
 - Phase 4 Progress: 100% (12/12)
+- Phase 5 Progress: 14% (1/7)

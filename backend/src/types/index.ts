@@ -75,9 +75,22 @@ export interface GeoPolygon {
 
 // Emergency Contact
 export interface EmergencyContact {
+  _id?: Types.ObjectId;
   name: string;
   phone: string;
-  relation: string;
+  relationship: 'parent' | 'spouse' | 'sibling' | 'friend' | 'other';
+  notifyOnTrip: boolean;
+  notifyOnSOS: boolean;
+}
+
+// Safety Preferences
+export interface SafetyPreferences {
+  autoShareTrips: boolean;
+  shareWithContacts: Types.ObjectId[];
+  sendETAUpdates: boolean;
+  sosGestureEnabled: boolean;
+  nightModeAlerts: boolean;
+  recordTrips: boolean;
 }
 
 // Saved Place
@@ -169,6 +182,8 @@ export interface IPassenger extends IBaseDocument {
   favoriteDrivers: Types.ObjectId[];
   rating: number;
   totalRatings: number;
+  emergencyContacts: EmergencyContact[];
+  safetyPreferences: SafetyPreferences;
 }
 
 // Driver Interface

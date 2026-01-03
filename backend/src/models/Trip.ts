@@ -137,6 +137,22 @@ export interface ITrip {
   sharedWith: TripShare[];
   sosTriggered: boolean;
   sosAt?: Date;
+  sosTriggeredBy?: 'passenger' | 'driver';
+  sosLocation?: GeoPoint;
+  sosResolved?: boolean;
+  sosResolvedAt?: Date;
+  sosResolvedBy?: Types.ObjectId;
+  sosNotes?: string;
+  shareToken?: string;
+  shareTokenExpiry?: Date;
+  safetyChecks?: {
+    type: 'departure' | 'arrival' | 'periodic' | 'route_deviation';
+    message: string;
+    responseRequired: boolean;
+    respondedAt?: Date;
+    response?: 'safe' | 'need_help';
+  }[];
+  lastSafetyCheck?: Date;
   passengerRating?: TripRating;
   driverRating?: TripRating;
   hasIssue: boolean;
@@ -447,6 +463,37 @@ const tripSchema = new Schema<ITrip>(
       default: false,
     },
     sosAt: Date,
+    sosTriggeredBy: {
+      type: String,
+      enum: ['passenger', 'driver'],
+    },
+    sosLocation: geoPointSchema,
+    sosResolved: {
+      type: Boolean,
+      default: false,
+    },
+    sosResolvedAt: Date,
+    sosResolvedBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+    },
+    sosNotes: String,
+    shareToken: String,
+    shareTokenExpiry: Date,
+    safetyChecks: [{
+      type: {
+        type: String,
+        enum: ['departure', 'arrival', 'periodic', 'route_deviation'],
+      },
+      message: String,
+      responseRequired: Boolean,
+      respondedAt: Date,
+      response: {
+        type: String,
+        enum: ['safe', 'need_help'],
+      },
+    }],
+    lastSafetyCheck: Date,
     passengerRating: tripRatingSchema,
     driverRating: tripRatingSchema,
     hasIssue: {
