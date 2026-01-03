@@ -18,6 +18,10 @@ import '../screens/safety/safety_settings_screen.dart';
 import '../screens/scheduled/scheduled_trips_screen.dart';
 import '../screens/scheduled/schedule_trip_screen.dart';
 import '../screens/promo/promos_screen.dart';
+import '../screens/profile/profile_screen.dart';
+import '../screens/settings/settings_screen.dart';
+import '../screens/history/trip_history_screen.dart';
+import '../screens/help/help_screen.dart';
 
 // Router provider
 final routerProvider = Provider<GoRouter>((ref) {
@@ -128,10 +132,27 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const PromosScreen(),
       ),
 
-      // TODO: Add more routes as screens are created
-      // - /profile
-      // - /settings
-      // - /history
+      // Profile & Settings Routes
+      GoRoute(
+        path: '/profile',
+        name: 'profile',
+        builder: (context, state) => const ProfileScreen(),
+      ),
+      GoRoute(
+        path: '/settings',
+        name: 'settings',
+        builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: '/history',
+        name: 'history',
+        builder: (context, state) => const TripHistoryScreen(),
+      ),
+      GoRoute(
+        path: '/help',
+        name: 'help',
+        builder: (context, state) => const HelpScreen(),
+      ),
     ],
     errorBuilder: (context, state) => Scaffold(
       body: Center(

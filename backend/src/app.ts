@@ -15,6 +15,7 @@ import safetyRoutes from './routes/safety.routes';
 import scheduledRoutes from './routes/scheduled.routes';
 import promoRoutes from './routes/promo.routes';
 import adminRoutes from './routes/admin.routes';
+import notificationRoutes from './routes/notification.routes';
 
 // Create Express app
 const app: Application = express();
@@ -93,6 +94,7 @@ app.use(`/api/${config.apiVersion}/safety`, safetyRoutes);
 app.use(`/api/${config.apiVersion}/scheduled`, scheduledRoutes);
 app.use(`/api/${config.apiVersion}/promo`, promoRoutes);
 app.use(`/api/${config.apiVersion}/admin`, adminRoutes);
+app.use(`/api/${config.apiVersion}/notifications`, notificationRoutes);
 
 // 404 handler
 app.use(notFoundHandler);

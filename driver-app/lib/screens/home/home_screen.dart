@@ -7,9 +7,11 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 
 import '../../config/theme.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/trip_provider.dart';
 import '../../services/location_service.dart';
 import '../../services/api_service.dart';
+import '../../services/storage_service.dart';
 import '../../widgets/wasalni_map.dart';
 import '../../widgets/trip_request_dialog.dart';
 
@@ -621,16 +623,24 @@ class _EarningCard extends StatelessWidget {
 }
 
 // Profile Tab
-class _ProfileTab extends StatelessWidget {
+class _ProfileTab extends ConsumerWidget {
   const _ProfileTab();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userName = storageService.getUserName() ?? 'سائق';
+    final userPhone = storageService.getUserPhone() ?? '+201000000000';
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('حسابي'),
         actions: [
-          IconButton(icon: const Icon(Icons.settings_outlined), onPressed: () {}),
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () {
+              // TODO: Navigate to settings
+            },
+          ),
         ],
       ),
       body: SingleChildScrollView(
@@ -656,14 +666,27 @@ class _ProfileTab extends StatelessWidget {
                   CircleAvatar(
                     radius: 35.r,
                     backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                    child: Icon(Icons.person, size: 35.sp, color: AppColors.primary),
+                    child: Text(
+                      userName.isNotEmpty ? userName[0].toUpperCase() : 'س',
+                      style: TextStyle(
+                        fontSize: 24.sp,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
+                      ),
+                    ),
                   ),
                   SizedBox(width: 16.w),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('سائق', style: AppTextStyles.heading3),
+                        Text(userName, style: AppTextStyles.heading3),
+                        SizedBox(height: 4.h),
+                        Text(
+                          userPhone,
+                          style: AppTextStyles.caption,
+                          textDirection: TextDirection.ltr,
+                        ),
                         SizedBox(height: 4.h),
                         Row(
                           children: [
@@ -697,18 +720,38 @@ class _ProfileTab extends StatelessWidget {
             SizedBox(height: 24.h),
 
             // Menu Items
-            _ProfileMenuItem(icon: Icons.directions_car_outlined, title: 'بيانات المركبة', onTap: () {}),
-            _ProfileMenuItem(icon: Icons.description_outlined, title: 'المستندات', onTap: () {}),
-            _ProfileMenuItem(icon: Icons.account_balance_outlined, title: 'الحساب البنكي', onTap: () {}),
-            _ProfileMenuItem(icon: Icons.help_outline, title: 'المساعدة والدعم', onTap: () {}),
-            _ProfileMenuItem(icon: Icons.info_outline, title: 'عن التطبيق', onTap: () {}),
+            _ProfileMenuItem(
+              icon: Icons.directions_car_outlined,
+              title: 'بيانات المركبة',
+              onTap: () {},
+            ),
+            _ProfileMenuItem(
+              icon: Icons.description_outlined,
+              title: 'المستندات',
+              onTap: () => context.push('/documents'),
+            ),
+            _ProfileMenuItem(
+              icon: Icons.account_balance_outlined,
+              title: 'الحساب البنكي',
+              onTap: () {},
+            ),
+            _ProfileMenuItem(
+              icon: Icons.help_outline,
+              title: 'المساعدة والدعم',
+              onTap: () {},
+            ),
+            _ProfileMenuItem(
+              icon: Icons.info_outline,
+              title: 'عن التطبيق',
+              onTap: () => _showAboutDialog(context),
+            ),
             SizedBox(height: 24.h),
 
             // Logout Button
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
-                onPressed: () {},
+                onPressed: () => _showLogoutDialog(context, ref),
                 icon: const Icon(Icons.logout, color: AppColors.error),
                 label: Text('تسجيل الخروج', style: AppTextStyles.button.copyWith(color: AppColors.error)),
                 style: OutlinedButton.styleFrom(side: const BorderSide(color: AppColors.error)),
@@ -717,6 +760,51 @@ class _ProfileTab extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('تسجيل الخروج'),
+        content: const Text('هل أنت متأكد من رغبتك في تسجيل الخروج؟'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('إلغاء'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await ref.read(authProvider.notifier).logout();
+              if (context.mounted) {
+                context.go('/welcome');
+              }
+            },
+            child: const Text('تسجيل الخروج', style: TextStyle(color: AppColors.error)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAboutDialog(BuildContext context) {
+    showAboutDialog(
+      context: context,
+      applicationName: 'وصّلني للسائقين',
+      applicationVersion: '1.0.0',
+      applicationIcon: Icon(
+        Icons.local_taxi,
+        size: 48.sp,
+        color: AppColors.primary,
+      ),
+      children: [
+        const Text(
+          'تطبيق وصّلني للسائقين - خدمات النقل المحلية في منطقة الباجور.',
+          textAlign: TextAlign.center,
+        ),
+      ],
     );
   }
 }

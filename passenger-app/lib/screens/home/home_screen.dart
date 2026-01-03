@@ -6,9 +6,11 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 
 import '../../config/theme.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/trip_provider.dart';
 import '../../services/api_service.dart';
 import '../../services/location_service.dart';
+import '../../services/storage_service.dart';
 import '../../widgets/wasalni_map.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -446,20 +448,21 @@ class _TripsTab extends StatelessWidget {
 }
 
 // Profile Tab
-class _ProfileTab extends StatelessWidget {
+class _ProfileTab extends ConsumerWidget {
   const _ProfileTab();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userName = storageService.getUserName() ?? 'مستخدم';
+    final userPhone = storageService.getUserPhone() ?? '+201000000000';
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('حسابي'),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings_outlined),
-            onPressed: () {
-              // TODO: Navigate to settings
-            },
+            onPressed: () => context.push('/settings'),
           ),
         ],
       ),
@@ -486,10 +489,13 @@ class _ProfileTab extends StatelessWidget {
                   CircleAvatar(
                     radius: 35.r,
                     backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                    child: Icon(
-                      Icons.person,
-                      size: 35.sp,
-                      color: AppColors.primary,
+                    child: Text(
+                      userName.isNotEmpty ? userName[0].toUpperCase() : 'م',
+                      style: TextStyle(
+                        fontSize: 24.sp,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
+                      ),
                     ),
                   ),
                   SizedBox(width: 16.w),
@@ -497,23 +503,19 @@ class _ProfileTab extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'مستخدم',
-                          style: AppTextStyles.heading3,
-                        ),
+                        Text(userName, style: AppTextStyles.heading3),
                         SizedBox(height: 4.h),
                         Text(
-                          '+201000000000',
+                          userPhone,
                           style: AppTextStyles.caption,
+                          textDirection: TextDirection.ltr,
                         ),
                       ],
                     ),
                   ),
                   IconButton(
                     icon: const Icon(Icons.edit_outlined),
-                    onPressed: () {
-                      // TODO: Edit profile
-                    },
+                    onPressed: () => context.push('/profile'),
                   ),
                 ],
               ),
@@ -522,34 +524,29 @@ class _ProfileTab extends StatelessWidget {
 
             // Menu Items
             _ProfileMenuItem(
-              icon: Icons.location_on_outlined,
-              title: 'الأماكن المحفوظة',
-              onTap: () {},
+              icon: Icons.history,
+              title: 'سجل الرحلات',
+              onTap: () => context.push('/history'),
             ),
             _ProfileMenuItem(
-              icon: Icons.payment_outlined,
-              title: 'طرق الدفع',
-              onTap: () {},
+              icon: Icons.schedule,
+              title: 'الرحلات المجدولة',
+              onTap: () => context.push('/scheduled-trips'),
             ),
             _ProfileMenuItem(
               icon: Icons.local_offer_outlined,
-              title: 'العروض والخصومات',
-              onTap: () {},
+              title: 'الأكواد الترويجية',
+              onTap: () => context.push('/promos'),
             ),
             _ProfileMenuItem(
-              icon: Icons.people_outline,
-              title: 'دعوة صديق',
-              onTap: () {},
+              icon: Icons.security_outlined,
+              title: 'الأمان والخصوصية',
+              onTap: () => context.push('/safety-settings'),
             ),
             _ProfileMenuItem(
               icon: Icons.help_outline,
               title: 'المساعدة والدعم',
-              onTap: () {},
-            ),
-            _ProfileMenuItem(
-              icon: Icons.info_outline,
-              title: 'عن التطبيق',
-              onTap: () {},
+              onTap: () => context.push('/help'),
             ),
             SizedBox(height: 24.h),
 
@@ -557,9 +554,7 @@ class _ProfileTab extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
-                onPressed: () {
-                  // TODO: Logout
-                },
+                onPressed: () => _showLogoutDialog(context, ref),
                 icon: const Icon(Icons.logout, color: AppColors.error),
                 label: Text(
                   'تسجيل الخروج',
@@ -572,6 +567,32 @@ class _ProfileTab extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('تسجيل الخروج'),
+        content: const Text('هل أنت متأكد من رغبتك في تسجيل الخروج؟'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('إلغاء'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await ref.read(authProvider.notifier).logout();
+              if (context.mounted) {
+                context.go('/welcome');
+              }
+            },
+            child: const Text('تسجيل الخروج', style: TextStyle(color: AppColors.error)),
+          ),
+        ],
       ),
     );
   }
