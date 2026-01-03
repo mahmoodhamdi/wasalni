@@ -1,0 +1,94 @@
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+*.log
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# TypeScript
+*.tsbuildinfo
+
+# Testing
+coverage/
+.nyc_output/
+
+# Backend specific
+backend/logs/
+backend/uploads/
+
+# Flutter specific
+passenger-app/.dart_tool/
+passenger-app/.packages
+passenger-app/build/
+passenger-app/.flutter-plugins
+passenger-app/.flutter-plugins-dependencies
+passenger-app/.metadata
+passenger-app/pubspec.lock
+passenger-app/ios/
+passenger-app/android/.gradle/
+passenger-app/android/app/build/
+passenger-app/android/build/
+passenger-app/android/local.properties
+passenger-app/android/key.properties
+passenger-app/android/*.jks
+
+driver-app/.dart_tool/
+driver-app/.packages
+driver-app/build/
+driver-app/.flutter-plugins
+driver-app/.flutter-plugins-dependencies
+driver-app/.metadata
+driver-app/pubspec.lock
+driver-app/ios/
+driver-app/android/.gradle/
+driver-app/android/app/build/
+driver-app/android/build/
+driver-app/android/local.properties
+driver-app/android/key.properties
+driver-app/android/*.jks
+
+# Firebase
+google-services.json
+GoogleService-Info.plist
+firebase-debug.log
+.firebase/
+
+# Secrets and credentials
+*.pem
+*.key
+credentials.json
+service-account.json
+
+# Misc
+*.bak
+*.tmp
+*.temp
