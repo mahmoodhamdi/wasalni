@@ -217,7 +217,7 @@ class _SummaryTab extends StatelessWidget {
                     child: _StatCard(
                       icon: Icons.timer,
                       label: 'ساعات العمل',
-                      value: '${earningsState.summary!.totalHours.toStringAsFixed(1)}',
+                      value: earningsState.summary!.totalHours.toStringAsFixed(1),
                     ),
                   ),
                 ],
