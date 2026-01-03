@@ -296,6 +296,54 @@ class ApiService {
   Future<Response> updateFCMToken(String token) async {
     return await _dio.put('/auth/fcm-token', data: {'token': token});
   }
+
+  // Safety Endpoints
+  Future<Response> getEmergencyContacts() async {
+    return await _dio.get('/safety/emergency-contacts');
+  }
+
+  Future<Response> addEmergencyContact(Map<String, dynamic> contact) async {
+    return await _dio.post('/safety/emergency-contacts', data: contact);
+  }
+
+  Future<Response> updateEmergencyContact(String contactId, Map<String, dynamic> updates) async {
+    return await _dio.put('/safety/emergency-contacts/$contactId', data: updates);
+  }
+
+  Future<Response> removeEmergencyContact(String contactId) async {
+    return await _dio.delete('/safety/emergency-contacts/$contactId');
+  }
+
+  Future<Response> getSafetyPreferences() async {
+    return await _dio.get('/safety/preferences');
+  }
+
+  Future<Response> updateSafetyPreferences(Map<String, dynamic> preferences) async {
+    return await _dio.put('/safety/preferences', data: preferences);
+  }
+
+  Future<Response> generateTripShareLink(String tripId, {int expirationHours = 24}) async {
+    return await _dio.post('/safety/trips/$tripId/share', data: {
+      'expirationHours': expirationHours,
+    });
+  }
+
+  Future<Response> verifyDriver(String driverId) async {
+    return await _dio.get('/safety/verify-driver/$driverId');
+  }
+
+  Future<Response> getSafetyTips({bool isNewDriver = false, bool isLongTrip = false}) async {
+    return await _dio.get('/safety/tips', queryParameters: {
+      'isNewDriver': isNewDriver.toString(),
+      'isLongTrip': isLongTrip.toString(),
+    });
+  }
+
+  Future<Response> respondToSafetyCheck(String tripId, String response) async {
+    return await _dio.post('/safety/trips/$tripId/safety-check', data: {
+      'response': response,
+    });
+  }
 }
 
 // Global instance

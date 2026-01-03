@@ -1,6 +1,6 @@
 # Wasalni - Project Progress
 
-## Overall Progress: 39/55 Milestones (71%)
+## Overall Progress: 40/55 Milestones (73%)
 
 ---
 
@@ -50,9 +50,9 @@
 - [x] 4.11 Driver - Earnings
 - [x] 4.12 Phase 4 Testing
 
-## Phase 5: Safety & Features (1/7) 🚧 IN PROGRESS
+## Phase 5: Safety & Features (2/7) 🚧 IN PROGRESS
 - [x] 5.1 Backend - Safety
-- [ ] 5.2 Flutter - Safety
+- [x] 5.2 Flutter - Safety
 - [ ] 5.3 Backend - Scheduled
 - [ ] 5.4 Flutter - Scheduled
 - [ ] 5.5 Backend - Promos
@@ -91,7 +91,7 @@
 
 ## Current Status
 
-**Phase 5 In Progress!** Safety backend complete (1/7)
+**Phase 5 In Progress!** Safety features complete (2/7), working on scheduled rides
 **Last Updated:** 2026-01-03
 **Blockers:** None
 
@@ -101,7 +101,29 @@
 
 ### 2026-01-03
 
-#### Phase 5: Safety & Features (1/7 In Progress)
+#### Phase 5: Safety & Features (2/7 In Progress)
+- [x] **5.2 Flutter - Safety** - Complete passenger app safety features:
+  - Created safety_provider.dart with state management:
+    - EmergencyContact and SafetyPreferences models
+    - TripShareLink model for share links
+    - CRUD operations for emergency contacts
+    - Safety preferences management
+    - SOS triggering and safety check responses
+  - Created emergency_contacts_screen.dart:
+    - List view of emergency contacts
+    - Add/edit contact bottom sheet
+    - Delete confirmation dialog
+    - Contact notification settings (trip/SOS)
+  - Created safety_settings_screen.dart:
+    - Auto-share trips toggle
+    - ETA updates toggle
+    - SOS gesture settings
+    - Night mode alerts
+    - Trip recording (coming soon)
+    - Safety tips section
+  - Updated api_service.dart with safety endpoints
+  - Updated router.dart with safety routes
+
 - [x] **5.1 Backend - Safety** - Complete safety features:
   - Created safety.service.ts with comprehensive safety features:
     - Emergency contacts CRUD (add, update, remove, get)
@@ -468,11 +490,11 @@ wasalni/
 ## Stats
 
 - Total Milestones: 55
-- Completed: 39
-- In Progress: 1 (Phase 5 Flutter Safety)
-- Remaining: 16
+- Completed: 40
+- In Progress: 1 (Phase 5 Scheduled Rides)
+- Remaining: 15
 - Phase 1 Progress: 100%
 - Phase 2 Progress: 100%
 - Phase 3 Progress: 100%
 - Phase 4 Progress: 100% (12/12)
-- Phase 5 Progress: 14% (1/7)
+- Phase 5 Progress: 29% (2/7)
