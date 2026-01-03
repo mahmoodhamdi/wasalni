@@ -60,7 +60,7 @@ export const dashboardApi = {
 
 // Passengers API
 export const passengersApi = {
-  getAll: (params?: { page?: number; limit?: number; search?: string }) =>
+  getAll: (params?: { page?: number; limit?: number; search?: string; status?: string }) =>
     api.get('/admin/passengers', { params }),
 
   getById: (id: string) =>
