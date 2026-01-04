@@ -10,7 +10,10 @@
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
     "format": "prettier --write src/**/*.ts",
-    "test": "jest"
+    "test": "jest",
+    "seed": "ts-node src/seeds/index.ts",
+    "seed:fresh": "ts-node src/seeds/index.ts --fresh",
+    "docs:generate": "ts-node -e \"import { swaggerSpec } from './src/config/swagger'; require('fs').writeFileSync('./src/docs/swagger.json', JSON.stringify(swaggerSpec, null, 2)); console.log('Swagger JSON generated');\""
   },
   "keywords": [
     "wasalni",
@@ -22,6 +25,8 @@
   "license": "ISC",
   "dependencies": {
     "@googlemaps/google-maps-services-js": "^3.4.2",
+    "@types/swagger-jsdoc": "^6.0.4",
+    "@types/swagger-ui-express": "^4.1.8",
     "axios": "^1.13.2",
     "bcryptjs": "^3.0.3",
     "bull": "^4.16.5",
@@ -43,6 +48,8 @@
     "multer": "^2.0.2",
     "redis": "^5.10.0",
     "socket.io": "^4.8.3",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
     "uuid": "^13.0.0"
   },
   "devDependencies": {

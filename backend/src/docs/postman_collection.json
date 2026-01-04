@@ -1,0 +1,856 @@
+{
+  "info": {
+    "name": "Wasalni API",
+    "description": "وصّلني - Ride-hailing API for Bagour city and surrounding areas\n\n## Quick Start\n1. Set environment variables (baseUrl, token)\n2. Use 'Send OTP' then 'Verify OTP' to get auth token\n3. Token will be auto-saved to environment\n\n## Test Credentials\n- Admin: +201000000000 (password: admin123)\n- Passenger: +201111111111\n- Driver: +201222222221\n- OTP (when SMS_PROVIDER=mock): 123456",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api/v1"
+    },
+    {
+      "key": "token",
+      "value": ""
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "description": "Authentication & Authorization endpoints",
+      "item": [
+        {
+          "name": "Send OTP",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+201111111111\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/auth/send-otp"
+          }
+        },
+        {
+          "name": "Verify OTP",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.accessToken) {",
+                  "    pm.environment.set('token', jsonData.data.accessToken);",
+                  "    pm.environment.set('refreshToken', jsonData.data.refreshToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+201111111111\",\n  \"code\": \"123456\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/auth/verify-otp"
+          }
+        },
+        {
+          "name": "Register Passenger",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+201999999999\",\n  \"name\": \"Test User\",\n  \"email\": \"test@example.com\",\n  \"gender\": \"male\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/auth/register/passenger"
+          }
+        },
+        {
+          "name": "Register Driver",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+201888888888\",\n  \"name\": \"New Driver\",\n  \"vehicleType\": \"economy\",\n  \"vehicleMake\": \"Toyota\",\n  \"vehicleModel\": \"Corolla\",\n  \"vehicleYear\": 2020,\n  \"vehicleColor\": \"White\",\n  \"vehiclePlate\": \"ABC 123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/auth/register/driver"
+          }
+        },
+        {
+          "name": "Admin Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.accessToken) {",
+                  "    pm.environment.set('token', jsonData.data.accessToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@wasalni.com\",\n  \"password\": \"admin123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/auth/admin/login"
+          }
+        },
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/auth/profile"
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Name\",\n  \"email\": \"updated@example.com\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/auth/profile"
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/auth/refresh"
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/auth/logout"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Trips",
+      "description": "Trip management endpoints",
+      "item": [
+        {
+          "name": "Create Trip",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pickup\": {\n    \"address\": \"ميدان التحرير، القاهرة\",\n    \"coordinates\": {\n      \"lat\": 30.0444,\n      \"lng\": 31.2357\n    }\n  },\n  \"dropoff\": {\n    \"address\": \"سيتي ستارز\",\n    \"coordinates\": {\n      \"lat\": 30.0725,\n      \"lng\": 31.3425\n    }\n  },\n  \"rideType\": \"economy\",\n  \"paymentMethod\": \"cash\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/trips"
+          }
+        },
+        {
+          "name": "Get My Trips",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/trips?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["trips"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Active Trip",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/trips/active"
+          }
+        },
+        {
+          "name": "Get Trip by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/trips/:tripId"
+          }
+        },
+        {
+          "name": "Cancel Trip",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"تغيرت خططي\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/trips/:tripId/cancel"
+          }
+        },
+        {
+          "name": "Rate Trip",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 5,\n  \"comment\": \"سائق ممتاز\",\n  \"tip\": 10\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/trips/:tripId/rate"
+          }
+        },
+        {
+          "name": "Trigger SOS",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Need help!\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/trips/:tripId/sos"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Driver",
+      "description": "Driver-specific endpoints",
+      "item": [
+        {
+          "name": "Get Available Trips",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/driver/trips/available"
+          }
+        },
+        {
+          "name": "Get Active Trip",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/driver/trips/active"
+          }
+        },
+        {
+          "name": "Accept Trip",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": "{{baseUrl}}/driver/trips/:tripId/accept"
+          }
+        },
+        {
+          "name": "Reject Trip",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"مشغول\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/driver/trips/:tripId/reject"
+          }
+        },
+        {
+          "name": "Update Trip Status",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"driver_arrived\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/driver/trips/:tripId/status"
+          }
+        },
+        {
+          "name": "Complete Trip",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": "{{baseUrl}}/driver/trips/:tripId/complete"
+          }
+        },
+        {
+          "name": "Rate Passenger",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 5,\n  \"comment\": \"راكب محترم\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/driver/trips/:tripId/rate"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Fare",
+      "description": "Fare calculation and settings",
+      "item": [
+        {
+          "name": "Get Fare Estimate",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pickup\": {\n    \"lat\": 30.0444,\n    \"lng\": 31.2357\n  },\n  \"dropoff\": {\n    \"lat\": 30.0725,\n    \"lng\": 31.3425\n  },\n  \"rideType\": \"economy\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/fare/estimate"
+          }
+        },
+        {
+          "name": "Get Fare Settings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/fare/settings"
+          }
+        },
+        {
+          "name": "Validate Promo Code",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"WELCOME50\",\n  \"fare\": 50,\n  \"rideType\": \"economy\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/fare/promo/validate"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Location",
+      "description": "Location and maps services",
+      "item": [
+        {
+          "name": "Search Places",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/location/search?query=ميدان التحرير",
+              "host": ["{{baseUrl}}"],
+              "path": ["location", "search"],
+              "query": [{ "key": "query", "value": "ميدان التحرير" }]
+            }
+          }
+        },
+        {
+          "name": "Get Place Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/location/place/:placeId"
+          }
+        },
+        {
+          "name": "Get Address from Coordinates",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/location/address?lat=30.0444&lng=31.2357",
+              "host": ["{{baseUrl}}"],
+              "path": ["location", "address"],
+              "query": [
+                { "key": "lat", "value": "30.0444" },
+                { "key": "lng", "value": "31.2357" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Nearby Drivers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/location/drivers/nearby?lat=30.0444&lng=31.2357&radius=5",
+              "host": ["{{baseUrl}}"],
+              "path": ["location", "drivers", "nearby"],
+              "query": [
+                { "key": "lat", "value": "30.0444" },
+                { "key": "lng", "value": "31.2357" },
+                { "key": "radius", "value": "5" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Driver Location",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"lat\": 30.0444,\n  \"lng\": 31.2357,\n  \"heading\": 90,\n  \"speed\": 30\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/location/update"
+          }
+        },
+        {
+          "name": "Set Driver Online Status",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isOnline\": true\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/location/status"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Safety",
+      "description": "Safety features and SOS",
+      "item": [
+        {
+          "name": "Get Emergency Contacts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/safety/emergency-contacts"
+          }
+        },
+        {
+          "name": "Add Emergency Contact",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"أحمد\",\n  \"phone\": \"+201234567890\",\n  \"relationship\": \"brother\",\n  \"notifyOnTrip\": true,\n  \"notifyOnSOS\": true\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/safety/emergency-contacts"
+          }
+        },
+        {
+          "name": "Get Safety Preferences",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/safety/preferences"
+          }
+        },
+        {
+          "name": "Update Safety Preferences",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"autoShareTrips\": true,\n  \"sendETAUpdates\": true,\n  \"sosGestureEnabled\": true,\n  \"nightModeAlerts\": true\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/safety/preferences"
+          }
+        },
+        {
+          "name": "Generate Trip Share Link",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/safety/trips/:tripId/share"
+          }
+        },
+        {
+          "name": "Verify Driver",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/safety/verify-driver/:driverId"
+          }
+        },
+        {
+          "name": "Get Safety Tips",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/safety/tips"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Promo",
+      "description": "Promotional codes",
+      "item": [
+        {
+          "name": "Validate Promo",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"WELCOME50\",\n  \"fare\": 50,\n  \"rideType\": \"economy\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/promo/validate"
+          }
+        },
+        {
+          "name": "Get Available Promos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/promo/available"
+          }
+        },
+        {
+          "name": "Get Promo History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/promo/history"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Scheduled",
+      "description": "Scheduled rides",
+      "item": [
+        {
+          "name": "Create Scheduled Trip",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pickup\": {\n    \"address\": \"المنزل\",\n    \"coordinates\": { \"lat\": 30.0131, \"lng\": 31.2001 }\n  },\n  \"dropoff\": {\n    \"address\": \"مطار القاهرة\",\n    \"coordinates\": { \"lat\": 30.1219, \"lng\": 31.4015 }\n  },\n  \"rideType\": \"comfort\",\n  \"scheduledAt\": \"2025-01-15T08:00:00Z\",\n  \"paymentMethod\": \"card\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/scheduled"
+          }
+        },
+        {
+          "name": "Get Upcoming Scheduled Trips",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/scheduled"
+          }
+        },
+        {
+          "name": "Get Available Time Slots",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/scheduled/slots?date=2025-01-15",
+              "host": ["{{baseUrl}}"],
+              "path": ["scheduled", "slots"],
+              "query": [{ "key": "date", "value": "2025-01-15" }]
+            }
+          }
+        },
+        {
+          "name": "Cancel Scheduled Trip",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"تغيرت خططي\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/scheduled/:tripId/cancel"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "description": "Push notifications",
+      "item": [
+        {
+          "name": "Get Notifications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/notifications?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Unread Count",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/notifications/unread-count"
+          }
+        },
+        {
+          "name": "Mark as Read",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": "{{baseUrl}}/notifications/:notificationId/read"
+          }
+        },
+        {
+          "name": "Mark All as Read",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": "{{baseUrl}}/notifications/read-all"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "description": "Admin dashboard APIs",
+      "item": [
+        {
+          "name": "Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/admin/stats"
+          }
+        },
+        {
+          "name": "List Drivers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/drivers?page=1&limit=20&status=approved",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "drivers"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" },
+                { "key": "status", "value": "approved" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Pending Drivers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/admin/drivers/pending"
+          }
+        },
+        {
+          "name": "Approve Driver",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": "{{baseUrl}}/admin/drivers/:driverId/approve"
+          }
+        },
+        {
+          "name": "Reject Driver",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"المستندات غير صالحة\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/admin/drivers/:driverId/reject"
+          }
+        },
+        {
+          "name": "Suspend Driver",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"مخالفات متكررة\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/admin/drivers/:driverId/suspend"
+          }
+        },
+        {
+          "name": "Activate Driver",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": "{{baseUrl}}/admin/drivers/:driverId/activate"
+          }
+        },
+        {
+          "name": "List Passengers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/passengers?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "passengers"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Toggle Passenger Active",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": "{{baseUrl}}/admin/passengers/:passengerId/toggle-active"
+          }
+        },
+        {
+          "name": "List Trips",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/trips?page=1&limit=20&status=completed",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "trips"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" },
+                { "key": "status", "value": "completed" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Finance Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/admin/finance/stats"
+          }
+        },
+        {
+          "name": "Get Revenue Chart",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/finance/revenue-chart?days=30",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "finance", "revenue-chart"],
+              "query": [{ "key": "days", "value": "30" }]
+            }
+          }
+        },
+        {
+          "name": "Get Fare Settings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/admin/settings/fares"
+          }
+        },
+        {
+          "name": "Update Fare Settings",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"baseFare\": 12,\n  \"perKmRate\": 3.5,\n  \"minimumFare\": 18\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/admin/settings/fares/:fareId"
+          }
+        },
+        {
+          "name": "Get Zones",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/admin/settings/zones"
+          }
+        },
+        {
+          "name": "Create Zone",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"New Zone\",\n  \"nameAr\": \"منطقة جديدة\",\n  \"surgeMultiplier\": 1.2,\n  \"isActive\": true\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/admin/settings/zones"
+          }
+        }
+      ]
+    }
+  ]
+}
