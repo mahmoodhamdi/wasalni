@@ -1,16 +1,45 @@
+/// App configuration with environment-aware settings
 class AppConfig {
   static const String appName = 'وصّلني للسائقين';
   static const String appNameEn = 'Wasalni Driver';
   static const String appTagline = 'كسب أكثر معنا';
   static const String appVersion = '1.0.0';
 
-  // API
-  static const String apiBaseUrl = 'http://localhost:5000/api/v1';
-  static const String socketUrl = 'http://localhost:5000';
+  // Environment - change this for different builds
+  static const AppEnvironment environment = AppEnvironment.development;
+
+  // API URLs based on environment
+  static String get apiBaseUrl {
+    switch (environment) {
+      case AppEnvironment.development:
+        return 'http://10.0.2.2:5000/api/v1'; // Android emulator
+      case AppEnvironment.staging:
+        return 'https://staging-api.wasalni.app/api/v1';
+      case AppEnvironment.production:
+        return 'https://api.wasalni.app/api/v1';
+    }
+  }
+
+  static String get socketUrl {
+    switch (environment) {
+      case AppEnvironment.development:
+        return 'http://10.0.2.2:5000';
+      case AppEnvironment.staging:
+        return 'https://staging-api.wasalni.app';
+      case AppEnvironment.production:
+        return 'https://api.wasalni.app';
+    }
+  }
+
   static const Duration apiTimeout = Duration(seconds: 30);
 
-  // Google Maps
-  static const String googleMapsApiKey = '';
+  // Google Maps API Key
+  // Set via Android: android/app/src/main/AndroidManifest.xml
+  // Set via iOS: ios/Runner/AppDelegate.swift
+  static const String googleMapsApiKey = String.fromEnvironment(
+    'GOOGLE_MAPS_API_KEY',
+    defaultValue: '',
+  );
 
   // App Settings
   static const int otpLength = 6;
@@ -33,4 +62,13 @@ class AppConfig {
 
   // Support
   static const String supportPhone = '+201000000000';
+
+  // Debug mode
+  static bool get isDebug => environment == AppEnvironment.development;
+}
+
+enum AppEnvironment {
+  development,
+  staging,
+  production,
 }
