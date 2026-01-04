@@ -10,14 +10,23 @@ import 'config/theme.dart';
 import 'services/notification_service.dart';
 import 'services/storage_service.dart';
 
+/// Global flag to check if Firebase is initialized
+bool isFirebaseInitialized = false;
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Firebase
-  await Firebase.initializeApp();
-
-  // Set up background message handler
-  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+  // Initialize Firebase (optional - continues if not configured)
+  try {
+    await Firebase.initializeApp();
+    isFirebaseInitialized = true;
+    // Set up background message handler only if Firebase is initialized
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+    debugPrint('✅ Firebase initialized successfully');
+  } catch (e) {
+    debugPrint('⚠️ Firebase not configured: $e');
+    debugPrint('📱 App will run without push notifications');
+  }
 
   // Initialize storage
   await storageService.init();

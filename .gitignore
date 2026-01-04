@@ -87,6 +87,9 @@ firebase-debug.log
 *.key
 credentials.json
 service-account.json
+*-firebase-adminsdk-*.json
+firebase-adminsdk*.json
+firebase-service-account.json
 
 # Misc
 *.bak
