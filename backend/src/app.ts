@@ -4,7 +4,9 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
+import swaggerUi from 'swagger-ui-express';
 import { config } from './config';
+import { swaggerSpec } from './config/swagger';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import authRoutes from './routes/auth.routes';
 import locationRoutes from './routes/location.routes';
@@ -82,6 +84,43 @@ app.get('/api', (_req: Request, res: Response) => {
     version: config.apiVersion,
     documentation: '/api/docs',
   });
+});
+
+// Swagger API Documentation
+app.use(
+  '/api/docs',
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec, {
+    customCss: '.swagger-ui .topbar { display: none }',
+    customSiteTitle: 'Wasalni API Documentation',
+    customfavIcon: '/favicon.ico',
+  })
+);
+
+// Swagger JSON endpoint
+app.get('/api/docs/swagger.json', (_req: Request, res: Response) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
+});
+
+// Redoc documentation (alternative UI)
+app.get('/api/docs/redoc', (_req: Request, res: Response) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Wasalni API - Redoc</title>
+        <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,700|Roboto:300,400,700" rel="stylesheet">
+        <style>body { margin: 0; padding: 0; }</style>
+      </head>
+      <body>
+        <redoc spec-url='/api/docs/swagger.json'></redoc>
+        <script src="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"></script>
+      </body>
+    </html>
+  `);
 });
 
 // API Routes
