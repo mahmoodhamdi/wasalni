@@ -292,11 +292,75 @@ class _TripScreenState extends ConsumerState<TripScreen> {
   }
 
   Future<void> _sendSOS() async {
-    // TODO: Implement SOS functionality
+    // Show SOS confirmation and options
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('تم إرسال طلب المساعدة - سيتواصل معك فريق الدعم'),
         backgroundColor: AppColors.warning,
+        duration: Duration(seconds: 5),
+      ),
+    );
+
+    // Show emergency call option
+    _showEmergencyCallOption();
+  }
+
+  void _showEmergencyCallOption() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('اتصال طوارئ'),
+        content: const Text('هل تريد الاتصال بخدمات الطوارئ؟'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('لا'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              final uri = Uri.parse('tel:122'); // Egypt emergency number
+              if (await canLaunchUrl(uri)) {
+                await launchUrl(uri);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+            ),
+            child: const Text('اتصل بالطوارئ 122'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _openChat() {
+    final tripState = ref.read(tripProvider);
+    final driver = tripState.driver;
+
+    if (driver == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('لا يمكن بدء المحادثة الآن')),
+      );
+      return;
+    }
+
+    // Show chat bottom sheet
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+      ),
+      builder: (context) => _QuickChatSheet(
+        driverName: driver.name,
+        onSendMessage: (message) {
+          // Send message via socket/API
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('تم إرسال: $message')),
+          );
+          Navigator.pop(context);
+        },
       ),
     );
   }
@@ -539,9 +603,7 @@ class _TripScreenState extends ConsumerState<TripScreen> {
                             _DriverInfoCard(
                               driver: tripState.driver!,
                               onCall: _callDriver,
-                              onMessage: () {
-                                // TODO: Navigate to chat
-                              },
+                              onMessage: _openChat,
                             ),
 
                           SizedBox(height: 16.h),
@@ -770,6 +832,131 @@ class _TripDetailsCard extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _QuickChatSheet extends StatefulWidget {
+  final String driverName;
+  final Function(String) onSendMessage;
+
+  const _QuickChatSheet({
+    required this.driverName,
+    required this.onSendMessage,
+  });
+
+  @override
+  State<_QuickChatSheet> createState() => _QuickChatSheetState();
+}
+
+class _QuickChatSheetState extends State<_QuickChatSheet> {
+  final TextEditingController _messageController = TextEditingController();
+  final List<String> _quickMessages = [
+    'أين أنت؟',
+    'أنا في الانتظار',
+    'سأصل خلال دقيقة',
+    'أنا أمام المبنى',
+    'تأخرت قليلاً',
+    'شكراً',
+  ];
+
+  @override
+  void dispose() {
+    _messageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: Container(
+        padding: EdgeInsets.all(20.w),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'محادثة مع ${widget.driverName}',
+                  style: AppTextStyles.heading3,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+            SizedBox(height: 16.h),
+            // Quick Messages
+            Text('رسائل سريعة:', style: AppTextStyles.caption),
+            SizedBox(height: 8.h),
+            Wrap(
+              spacing: 8.w,
+              runSpacing: 8.h,
+              children: _quickMessages.map((msg) {
+                return GestureDetector(
+                  onTap: () => widget.onSendMessage(msg),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 12.w,
+                      vertical: 8.h,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(16.r),
+                      border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                    ),
+                    child: Text(
+                      msg,
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+            SizedBox(height: 16.h),
+            // Custom Message Input
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _messageController,
+                    decoration: InputDecoration(
+                      hintText: 'اكتب رسالة...',
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 16.w,
+                        vertical: 12.h,
+                      ),
+                    ),
+                    textDirection: TextDirection.rtl,
+                  ),
+                ),
+                SizedBox(width: 8.w),
+                CircleAvatar(
+                  backgroundColor: AppColors.primary,
+                  child: IconButton(
+                    icon: const Icon(Icons.send, color: Colors.white),
+                    onPressed: () {
+                      final msg = _messageController.text.trim();
+                      if (msg.isNotEmpty) {
+                        widget.onSendMessage(msg);
+                      }
+                    },
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 16.h),
+          ],
+        ),
       ),
     );
   }

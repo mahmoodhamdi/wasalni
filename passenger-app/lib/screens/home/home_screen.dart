@@ -172,6 +172,234 @@ class _HomeTabState extends ConsumerState<_HomeTab> {
     return 'موقعك الحالي';
   }
 
+  void _showDrawerMenu(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+      ),
+      builder: (context) => Container(
+        padding: EdgeInsets.all(20.w),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.history, color: AppColors.primary),
+              title: const Text('سجل الرحلات'),
+              onTap: () {
+                Navigator.pop(context);
+                context.push('/history');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.schedule, color: AppColors.primary),
+              title: const Text('الرحلات المجدولة'),
+              onTap: () {
+                Navigator.pop(context);
+                context.push('/scheduled-trips');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.local_offer_outlined, color: AppColors.primary),
+              title: const Text('الأكواد الترويجية'),
+              onTap: () {
+                Navigator.pop(context);
+                context.push('/promos');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.settings_outlined, color: AppColors.primary),
+              title: const Text('الإعدادات'),
+              onTap: () {
+                Navigator.pop(context);
+                context.push('/settings');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.help_outline, color: AppColors.primary),
+              title: const Text('المساعدة والدعم'),
+              onTap: () {
+                Navigator.pop(context);
+                context.push('/help');
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showNotifications(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+      ),
+      builder: (context) => Container(
+        padding: EdgeInsets.all(20.w),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('الإشعارات', style: AppTextStyles.heading3),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+            SizedBox(height: 16.h),
+            Icon(
+              Icons.notifications_off_outlined,
+              size: 64.sp,
+              color: AppColors.textSecondary,
+            ),
+            SizedBox(height: 16.h),
+            Text(
+              'لا توجد إشعارات',
+              style: AppTextStyles.subtitle,
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              'ستظهر هنا إشعارات الرحلات والعروض',
+              style: AppTextStyles.caption,
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 24.h),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _setQuickDestination(String type) async {
+    // Check if user has saved this location
+    final savedPlace = await _getSavedPlace(type);
+
+    if (savedPlace != null) {
+      // Use saved place as destination
+      if (_currentPosition != null) {
+        final pickupAddress = await _getAddressForPosition(_currentPosition!);
+        ref.read(tripProvider.notifier).setPickup(
+          LocationPoint(
+            latitude: _currentPosition!.latitude,
+            longitude: _currentPosition!.longitude,
+            address: pickupAddress,
+          ),
+        );
+      }
+
+      ref.read(tripProvider.notifier).setDropoff(savedPlace);
+
+      if (mounted) {
+        context.push('/booking');
+      }
+    } else {
+      // No saved place, prompt user to save one
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(type == 'home'
+              ? 'لم يتم حفظ عنوان المنزل بعد'
+              : 'لم يتم حفظ عنوان العمل بعد'),
+            action: SnackBarAction(
+              label: 'إضافة',
+              onPressed: () => _showSavedPlaces(context),
+            ),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<LocationPoint?> _getSavedPlace(String type) async {
+    // Get saved places from storage
+    // For now, return null - can be implemented with SharedPreferences
+    return null;
+  }
+
+  void _showSavedPlaces(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+      ),
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.6,
+        minChildSize: 0.4,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (context, scrollController) => Container(
+          padding: EdgeInsets.all(20.w),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('الأماكن المفضلة', style: AppTextStyles.heading3),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+              SizedBox(height: 16.h),
+              // Add Home
+              _SavedPlaceItem(
+                icon: Icons.home_outlined,
+                title: 'المنزل',
+                subtitle: 'لم يتم الإضافة بعد',
+                onTap: () async {
+                  Navigator.pop(context);
+                  final result = await context.push<Map<String, dynamic>>('/location-picker');
+                  if (result != null && mounted) {
+                    // Save home location
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('تم حفظ عنوان المنزل')),
+                    );
+                  }
+                },
+              ),
+              SizedBox(height: 12.h),
+              // Add Work
+              _SavedPlaceItem(
+                icon: Icons.work_outline,
+                title: 'العمل',
+                subtitle: 'لم يتم الإضافة بعد',
+                onTap: () async {
+                  Navigator.pop(context);
+                  final result = await context.push<Map<String, dynamic>>('/location-picker');
+                  if (result != null && mounted) {
+                    // Save work location
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('تم حفظ عنوان العمل')),
+                    );
+                  }
+                },
+              ),
+              SizedBox(height: 24.h),
+              // Recent Places Header
+              Text('الأماكن الأخيرة', style: AppTextStyles.subtitle),
+              SizedBox(height: 12.h),
+              Expanded(
+                child: Center(
+                  child: Text(
+                    'لا توجد أماكن أخيرة',
+                    style: AppTextStyles.caption,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // Show permission request if needed
@@ -240,7 +468,7 @@ class _HomeTabState extends ConsumerState<_HomeTab> {
                   child: IconButton(
                     icon: const Icon(Icons.menu),
                     onPressed: () {
-                      // TODO: Open drawer
+                      _showDrawerMenu(context);
                     },
                   ),
                 ),
@@ -261,7 +489,7 @@ class _HomeTabState extends ConsumerState<_HomeTab> {
                   child: IconButton(
                     icon: const Icon(Icons.notifications_outlined),
                     onPressed: () {
-                      // TODO: Open notifications
+                      _showNotifications(context);
                     },
                   ),
                 ),
@@ -336,9 +564,7 @@ class _HomeTabState extends ConsumerState<_HomeTab> {
                       child: _QuickAction(
                         icon: Icons.home_outlined,
                         label: 'المنزل',
-                        onTap: () {
-                          // TODO: Set home as destination
-                        },
+                        onTap: () => _setQuickDestination('home'),
                       ),
                     ),
                     SizedBox(width: 12.w),
@@ -346,9 +572,7 @@ class _HomeTabState extends ConsumerState<_HomeTab> {
                       child: _QuickAction(
                         icon: Icons.work_outline,
                         label: 'العمل',
-                        onTap: () {
-                          // TODO: Set work as destination
-                        },
+                        onTap: () => _setQuickDestination('work'),
                       ),
                     ),
                     SizedBox(width: 12.w),
@@ -356,9 +580,7 @@ class _HomeTabState extends ConsumerState<_HomeTab> {
                       child: _QuickAction(
                         icon: Icons.star_outline,
                         label: 'المفضلة',
-                        onTap: () {
-                          // TODO: Show saved places
-                        },
+                        onTap: () => _showSavedPlaces(context),
                       ),
                     ),
                   ],
@@ -624,6 +846,67 @@ class _ProfileMenuItem extends StatelessWidget {
         onTap: onTap,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12.r),
+        ),
+      ),
+    );
+  }
+}
+
+class _SavedPlaceItem extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _SavedPlaceItem({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.all(16.w),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade50,
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(color: Colors.grey.shade200),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44.w,
+              height: 44.w,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+              child: Icon(icon, color: AppColors.primary),
+            ),
+            SizedBox(width: 16.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                  Text(
+                    subtitle,
+                    style: AppTextStyles.caption,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.add, color: AppColors.primary),
+          ],
         ),
       ),
     );

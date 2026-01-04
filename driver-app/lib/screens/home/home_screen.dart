@@ -637,9 +637,7 @@ class _ProfileTab extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.settings_outlined),
-            onPressed: () {
-              // TODO: Navigate to settings
-            },
+            onPressed: () => context.push('/settings'),
           ),
         ],
       ),

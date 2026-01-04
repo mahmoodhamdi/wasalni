@@ -12,6 +12,7 @@ import '../screens/auth/pending_approval_screen.dart';
 import '../screens/home/home_screen.dart';
 import '../screens/trip/active_trip_screen.dart';
 import '../screens/trip/trip_complete_screen.dart';
+import '../screens/settings/settings_screen.dart';
 
 // Router provider
 final routerProvider = Provider<GoRouter>((ref) {
@@ -81,6 +82,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/trip-complete',
         name: 'trip-complete',
         builder: (context, state) => const TripCompleteScreen(),
+      ),
+
+      // Settings
+      GoRoute(
+        path: '/settings',
+        name: 'settings',
+        builder: (context, state) => const SettingsScreen(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(
