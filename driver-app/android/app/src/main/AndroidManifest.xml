@@ -9,7 +9,6 @@
 
     <application
         android:label="وصّلني سائق"
-        android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
 
         <!-- Google Maps API Key -->
