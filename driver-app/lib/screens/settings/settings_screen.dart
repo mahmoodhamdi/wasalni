@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../config/theme.dart';
 import '../../services/storage_service.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -28,6 +29,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('الإعدادات'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
+        ),
       ),
       body: ListView(
         children: [
@@ -36,7 +41,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           SwitchListTile(
             secondary: const Icon(Icons.notifications_outlined),
             title: const Text('تفعيل الإشعارات'),
-            subtitle: const Text('استقبال إشعارات الرحلات والعروض'),
+            subtitle: const Text('استقبال إشعارات الرحلات الجديدة'),
             value: _notificationsEnabled,
             onChanged: (value) {
               setState(() => _notificationsEnabled = value);
@@ -46,27 +51,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           const Divider(),
 
           // Privacy Section
-          _buildSectionHeader('الخصوصية والأمان'),
+          _buildSectionHeader('الخصوصية والموقع'),
           SwitchListTile(
             secondary: const Icon(Icons.location_on_outlined),
             title: const Text('مشاركة الموقع'),
-            subtitle: const Text('السماح بتتبع موقعك أثناء الرحلة'),
+            subtitle: const Text('تفعيل تتبع الموقع أثناء العمل'),
             value: _locationEnabled,
             onChanged: (value) {
               setState(() => _locationEnabled = value);
             },
-          ),
-          ListTile(
-            leading: const Icon(Icons.security_outlined),
-            title: const Text('إعدادات الأمان'),
-            trailing: const Icon(Icons.arrow_back_ios, size: 16),
-            onTap: () => context.push('/safety-settings'),
-          ),
-          ListTile(
-            leading: const Icon(Icons.contact_emergency_outlined),
-            title: const Text('جهات الطوارئ'),
-            trailing: const Icon(Icons.arrow_back_ios, size: 16),
-            onTap: () => context.push('/emergency-contacts'),
           ),
 
           const Divider(),
@@ -87,7 +80,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           _buildSectionHeader('حول التطبيق'),
           ListTile(
             leading: const Icon(Icons.info_outline),
-            title: const Text('عن وصّلني'),
+            title: const Text('عن وصّلني للسائقين'),
             trailing: const Icon(Icons.arrow_back_ios, size: 16),
             onTap: () => _showAboutDialog(context),
           ),
@@ -130,7 +123,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         style: TextStyle(
           fontSize: 14.sp,
           fontWeight: FontWeight.bold,
-          color: Theme.of(context).primaryColor,
+          color: AppColors.primary,
         ),
       ),
     );
@@ -173,16 +166,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   void _showAboutDialog(BuildContext context) {
     showAboutDialog(
       context: context,
-      applicationName: 'وصّلني',
+      applicationName: 'وصّلني للسائقين',
       applicationVersion: '1.0.0',
       applicationIcon: Icon(
         Icons.local_taxi,
         size: 48.sp,
-        color: Theme.of(context).primaryColor,
+        color: AppColors.primary,
       ),
       children: [
         const Text(
-          'تطبيق وصّلني لخدمات النقل المحلية في منطقة الباجور والمناطق المحيطة.',
+          'تطبيق وصّلني للسائقين - خدمات النقل المحلية في منطقة الباجور والمناطق المحيطة.',
           textAlign: TextAlign.center,
         ),
       ],
@@ -240,83 +233,67 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   static const String _termsOfService = '''
-شروط استخدام تطبيق وصّلني
+شروط استخدام تطبيق وصّلني للسائقين
 
 1. القبول بالشروط
-باستخدامك لتطبيق وصّلني، فإنك توافق على الالتزام بهذه الشروط والأحكام.
+باستخدامك لتطبيق وصّلني للسائقين، فإنك توافق على الالتزام بهذه الشروط والأحكام.
 
-2. الخدمة
-وصّلني هو تطبيق لخدمات النقل المحلية يربط بين الركاب والسائقين في منطقة الباجور والمناطق المحيطة.
+2. متطلبات السائق
+- يجب أن يكون عمرك 21 سنة أو أكثر
+- رخصة قيادة سارية
+- سجل جنائي نظيف
+- تأمين على المركبة
 
-3. التسجيل
-- يجب أن يكون عمرك 18 سنة أو أكثر
-- يجب تقديم معلومات صحيحة ودقيقة
-- أنت مسؤول عن الحفاظ على سرية حسابك
+3. المسؤوليات
+- الالتزام بقوانين المرور
+- معاملة الركاب باحترام
+- الحفاظ على نظافة المركبة
+- عدم التدخين أثناء الرحلات
 
-4. الدفع
-- يتم الدفع نقداً للسائق
-- الأسعار تشمل جميع الرسوم والضرائب المطبقة
+4. الأرباح والعمولة
+- تحصل على نسبة من كل رحلة
+- الدفع أسبوعياً أو حسب الاتفاق
+- العمولة تشمل جميع الرسوم
 
-5. السلوك
-- يجب التعامل باحترام مع السائقين
-- يُحظر أي سلوك مسيء أو غير لائق
-- يُحظر حمل مواد ممنوعة أو خطرة
+5. إنهاء الحساب
+نحتفظ بحق إيقاف حسابك في حالة:
+- انتهاك الشروط
+- شكاوى متكررة من الركاب
+- سلوك غير لائق
 
-6. المسؤولية
-وصّلني ليست مسؤولة عن:
-- التأخير بسبب ظروف خارجة عن السيطرة
-- فقدان أو تلف الممتلكات الشخصية
-- أي إصابات ناتجة عن حوادث الطرق
-
-7. إلغاء الرحلات
-- يمكن إلغاء الرحلة قبل وصول السائق
-- قد يتم تطبيق رسوم إلغاء في بعض الحالات
-
-8. التعديلات
-نحتفظ بحق تعديل هذه الشروط في أي وقت.
-
-للاستفسارات: support@wasalni.app
+للاستفسارات: drivers@wasalni.app
 ''';
 
   static const String _privacyPolicy = '''
-سياسة الخصوصية - وصّلني
+سياسة الخصوصية - وصّلني للسائقين
 
 آخر تحديث: يناير 2026
 
 1. المعلومات التي نجمعها
-- معلومات الحساب (الاسم، رقم الهاتف)
-- بيانات الموقع أثناء استخدام التطبيق
-- سجل الرحلات
+- معلومات الحساب (الاسم، رقم الهاتف، البريد)
+- بيانات الموقع أثناء العمل
+- معلومات المركبة والمستندات
+- سجل الرحلات والأرباح
 
 2. كيف نستخدم المعلومات
 - لتقديم خدمة النقل
-- لتحسين تجربة المستخدم
-- للتواصل معك بشأن رحلاتك
-- للأغراض الأمنية
+- لمطابقتك مع الركاب القريبين
+- لحساب أرباحك
+- للتواصل معك
 
 3. مشاركة المعلومات
 نشارك معلوماتك مع:
-- السائقين (الاسم والموقع فقط أثناء الرحلة)
+- الركاب (الاسم وصورة المركبة أثناء الرحلة)
 - السلطات القانونية عند الطلب
 
 4. أمن المعلومات
 - نستخدم تشفير SSL لحماية بياناتك
-- نخزن البيانات بشكل آمن
 - لا نبيع بياناتك لأطراف ثالثة
 
 5. الموقع الجغرافي
-- نستخدم موقعك لتحديد نقطة الانطلاق
-- يمكنك إيقاف مشاركة الموقع من الإعدادات
+- نستخدم موقعك لمطابقتك مع الركاب
+- يتم تتبع الموقع أثناء وضع "متاح" فقط
 
-6. حقوقك
-- طلب الوصول إلى بياناتك
-- طلب تصحيح البيانات
-- طلب حذف حسابك
-
-7. الاتصال
-لأي استفسارات حول الخصوصية:
-privacy@wasalni.app
-
-وصّلني - نقلك بأمان
+وصّلني - شريكك في النجاح
 ''';
 }

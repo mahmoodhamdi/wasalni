@@ -177,6 +177,23 @@ class ApiService {
     return await _dio.post('/driver/documents', data: formData);
   }
 
+  // Upload multiple documents at once
+  Future<Response> uploadDocuments(Map<String, dynamic> files) async {
+    final Map<String, dynamic> formFields = {};
+
+    for (final entry in files.entries) {
+      final file = entry.value;
+      if (file is String) {
+        formFields[entry.key] = await MultipartFile.fromFile(file);
+      } else if (file != null && file.path != null) {
+        formFields[entry.key] = await MultipartFile.fromFile(file.path);
+      }
+    }
+
+    FormData formData = FormData.fromMap(formFields);
+    return await _dio.post('/driver/documents/batch', data: formData);
+  }
+
   // Notifications
   Future<Response> getNotifications({int page = 1}) async {
     return await _dio.get('/notifications', queryParameters: {'page': page});

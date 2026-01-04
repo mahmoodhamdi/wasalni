@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 import '../../config/theme.dart';
+import '../../services/api_service.dart';
 
 class DocumentsScreen extends ConsumerStatefulWidget {
   const DocumentsScreen({super.key});
@@ -14,6 +17,7 @@ class DocumentsScreen extends ConsumerStatefulWidget {
 
 class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
   bool _isLoading = false;
+  final ImagePicker _picker = ImagePicker();
 
   final Map<String, String?> _documents = {
     'nationalIdFront': null,
@@ -47,11 +51,54 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
   };
 
   Future<void> _uploadDocument(String documentKey) async {
-    // TODO: Implement image picker
-    // For now, simulate upload
-    setState(() {
-      _documents[documentKey] = 'uploaded_${DateTime.now().millisecondsSinceEpoch}';
-    });
+    // Show source selection dialog
+    final source = await showDialog<ImageSource>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('اختر مصدر الصورة'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('الكاميرا'),
+              onTap: () => Navigator.pop(context, ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('معرض الصور'),
+              onTap: () => Navigator.pop(context, ImageSource.gallery),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (source == null) return;
+
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: source,
+        maxWidth: 1920,
+        maxHeight: 1920,
+        imageQuality: 85,
+      );
+
+      if (image != null) {
+        setState(() {
+          _documents[documentKey] = image.path;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('فشل في اختيار الصورة: ${e.toString()}'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
   }
 
   bool get _allDocumentsUploaded {
@@ -72,8 +119,16 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // TODO: Upload documents to server
-      await Future.delayed(const Duration(seconds: 2));
+      // Prepare document files for upload
+      final Map<String, File> files = {};
+      _documents.forEach((key, path) {
+        if (path != null) {
+          files[key] = File(path);
+        }
+      });
+
+      // Upload documents to server
+      await apiService.uploadDocuments(files);
 
       if (mounted) {
         _showSuccessDialog();
