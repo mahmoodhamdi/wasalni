@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Save, DollarSign, MapPin, Percent } from 'lucide-react';
+import { settingsApi } from '@/lib/api';
 
 interface FareSettings {
   baseFare: { [key: string]: number };
@@ -68,9 +69,15 @@ export default function SettingsPage() {
 
   const handleSave = async () => {
     setIsSaving(true);
-    // TODO: Save to API
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsSaving(false);
+    try {
+      await settingsApi.updateFareSettings(fareSettings as unknown as Record<string, unknown>);
+      alert('تم حفظ الإعدادات بنجاح');
+    } catch (error) {
+      console.error('Failed to save settings:', error);
+      alert('فشل في حفظ الإعدادات');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const updateFareSetting = (
