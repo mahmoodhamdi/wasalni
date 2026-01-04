@@ -30,9 +30,17 @@ export const useAuthStore = create<AuthState>()(
       isLoading: false,
       error: null,
       setAuth: (token, user) => {
+        // Set cookie for middleware
+        if (typeof document !== 'undefined') {
+          document.cookie = `wasalni-admin-token=${token}; path=/; max-age=${30 * 24 * 60 * 60}; SameSite=Lax`;
+        }
         set({ token, user, isAuthenticated: true, error: null });
       },
       logout: () => {
+        // Clear cookie
+        if (typeof document !== 'undefined') {
+          document.cookie = 'wasalni-admin-token=; path=/; max-age=0';
+        }
         set({ token: null, user: null, isAuthenticated: false, error: null });
       },
       setLoading: (loading) => {

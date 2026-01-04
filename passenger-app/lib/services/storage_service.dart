@@ -115,6 +115,15 @@ class StorageService {
   Future<String?> getToken() async {
     return await getAccessToken();
   }
+
+  // Alias for saving individual tokens
+  Future<void> setToken(String token) async {
+    await _secureStorage.write(key: _keyAccessToken, value: token);
+  }
+
+  Future<void> setRefreshToken(String token) async {
+    await _secureStorage.write(key: _keyRefreshToken, value: token);
+  }
 }
 
 // Global instance

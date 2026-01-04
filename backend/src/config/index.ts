@@ -4,6 +4,54 @@ import path from 'path';
 // Load environment variables
 dotenv.config({ path: path.join(__dirname, '../../.env') });
 
+// Validate required environment variables in production
+const validateEnv = () => {
+  const requiredVars = [
+    'MONGODB_URI',
+    'JWT_SECRET',
+    'JWT_REFRESH_SECRET',
+  ];
+
+  const optionalInDev = [
+    'GOOGLE_MAPS_API_KEY',
+    'FIREBASE_PROJECT_ID',
+    'FIREBASE_PRIVATE_KEY',
+    'FIREBASE_CLIENT_EMAIL',
+  ];
+
+  const missing: string[] = [];
+  const isProduction = process.env.NODE_ENV === 'production';
+
+  for (const varName of requiredVars) {
+    if (!process.env[varName]) {
+      missing.push(varName);
+    }
+  }
+
+  if (isProduction) {
+    for (const varName of optionalInDev) {
+      if (!process.env[varName]) {
+        missing.push(varName);
+      }
+    }
+  }
+
+  if (missing.length > 0) {
+    console.error(`Missing required environment variables: ${missing.join(', ')}`);
+    if (isProduction) {
+      process.exit(1);
+    }
+  }
+
+  // Warn about default secrets
+  if (process.env.JWT_SECRET === 'default-secret-change-me' ||
+      process.env.JWT_REFRESH_SECRET === 'default-refresh-secret-change-me') {
+    console.warn('WARNING: Using default JWT secrets. Change these in production!');
+  }
+};
+
+validateEnv();
+
 export const config = {
   // Server
   nodeEnv: process.env.NODE_ENV || 'development',

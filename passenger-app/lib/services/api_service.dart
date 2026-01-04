@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../config/app_config.dart';
+import 'storage_service.dart';
 
 class ApiService {
   static final ApiService _instance = ApiService._internal();
@@ -10,6 +11,9 @@ class ApiService {
 
   late final Dio _dio;
   String? _token;
+  String? _refreshToken;
+  bool _isRefreshing = false;
+  Function? _onTokenExpired;
 
   void init() {
     _dio = Dio(
@@ -32,11 +36,38 @@ class ApiService {
           }
           return handler.next(options);
         },
-        onError: (error, handler) {
-          // Handle errors globally
-          if (error.response?.statusCode == 401) {
-            // Token expired - logout user
+        onError: (error, handler) async {
+          // Handle 401 errors with token refresh
+          if (error.response?.statusCode == 401 && !_isRefreshing) {
+            _isRefreshing = true;
+            try {
+              final refreshed = await _tryRefreshToken();
+              if (refreshed) {
+                // Retry the original request
+                final opts = Options(
+                  method: error.requestOptions.method,
+                  headers: {
+                    ...error.requestOptions.headers,
+                    'Authorization': 'Bearer $_token',
+                  },
+                );
+                final response = await _dio.request(
+                  error.requestOptions.path,
+                  data: error.requestOptions.data,
+                  queryParameters: error.requestOptions.queryParameters,
+                  options: opts,
+                );
+                _isRefreshing = false;
+                return handler.resolve(response);
+              }
+            } catch (_) {
+              // Refresh failed
+            }
+            _isRefreshing = false;
+            // Token refresh failed - trigger logout
             _token = null;
+            _refreshToken = null;
+            _onTokenExpired?.call();
           }
           return handler.next(error);
         },
@@ -44,12 +75,47 @@ class ApiService {
     );
   }
 
+  Future<bool> _tryRefreshToken() async {
+    if (_refreshToken == null) return false;
+
+    try {
+      final response = await _dio.post('/auth/refresh', data: {
+        'refreshToken': _refreshToken,
+      });
+
+      if (response.data['success'] == true) {
+        final tokens = response.data['data']['tokens'];
+        _token = tokens['accessToken'];
+        _refreshToken = tokens['refreshToken'];
+
+        // Save to storage
+        final storage = StorageService();
+        await storage.setToken(_token!);
+        await storage.setRefreshToken(_refreshToken!);
+
+        return true;
+      }
+    } catch (_) {
+      // Refresh failed
+    }
+    return false;
+  }
+
   void setToken(String token) {
     _token = token;
   }
 
+  void setRefreshToken(String token) {
+    _refreshToken = token;
+  }
+
+  void setOnTokenExpired(Function callback) {
+    _onTokenExpired = callback;
+  }
+
   void clearToken() {
     _token = null;
+    _refreshToken = null;
   }
 
   // Auth Endpoints

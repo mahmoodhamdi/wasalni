@@ -151,6 +151,11 @@ Copy `.env.example` to `.env` in the root. Key variables:
 - `FIREBASE_*`: Push notification configuration
 - `NEXT_PUBLIC_API_URL`: Admin dashboard API endpoint
 
+## Documentation
+
+- `docs/API.md` - Full API reference with all endpoints and Socket.io events
+- `docs/DEPLOYMENT.md` - Deployment guide for Docker, cloud, and database setup
+
 ## Current Development Status
 
-Phases 1-3 complete (Foundation, Authentication, Maps & Location). Currently ready for Phase 4 (Fare & Booking). See `PROJECT_PROGRESS.md` for detailed milestone tracking.
+All 8 phases complete (67/67 milestones). The project is production-ready. See `PROJECT_PROGRESS.md` for detailed milestone tracking and implementation history.
