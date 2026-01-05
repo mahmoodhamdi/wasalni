@@ -289,9 +289,29 @@ All errors follow this format:
             _id: { type: 'string' },
             name: { type: 'string', example: 'أحمد' },
             phone: { type: 'string', example: '+201234567890' },
-            relationship: { type: 'string', example: 'أخ' },
-            notifyOnTrip: { type: 'boolean' },
-            notifyOnSOS: { type: 'boolean' },
+            relationship: {
+              type: 'string',
+              enum: ['parent', 'spouse', 'sibling', 'friend', 'other'],
+              example: 'sibling'
+            },
+            notifyOnTrip: { type: 'boolean', example: true },
+            notifyOnSOS: { type: 'boolean', example: true },
+          },
+        },
+        // Safety Preferences
+        SafetyPreferences: {
+          type: 'object',
+          properties: {
+            autoShareTrips: { type: 'boolean', example: false, description: 'Automatically share trips with emergency contacts' },
+            shareWithContacts: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Array of contact IDs to auto-share trips with'
+            },
+            sendETAUpdates: { type: 'boolean', example: true, description: 'Send ETA updates to emergency contacts' },
+            sosGestureEnabled: { type: 'boolean', example: true, description: 'Enable SOS gesture trigger' },
+            nightModeAlerts: { type: 'boolean', example: true, description: 'Enable night mode safety alerts' },
+            recordTrips: { type: 'boolean', example: false, description: 'Record trips for safety' },
           },
         },
         // Zone Schema
