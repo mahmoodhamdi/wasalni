@@ -2,10 +2,12 @@ import { Types, FilterQuery } from 'mongoose';
 import Trip, { ITrip } from '../models/Trip';
 import Driver from '../models/Driver';
 import Passenger from '../models/Passenger';
+import User from '../models/User';
 import { config } from '../config';
 import { logger } from '../utils/logger';
 import fareService, { RideType } from './fare.service';
 import { calculateRoute, Coordinates } from './maps.service';
+import { sendTripNotification, sendSOSAlert } from './notification.service';
 import {
   TripStatus,
   TripType,
@@ -402,6 +404,31 @@ export const updateTripStatus = async (
     await trip.updateStatus(status, location, note);
     logger.info(`Trip ${trip.tripNumber} status updated to ${status}`);
 
+    // Send FCM notifications based on status
+    const notificationEvents: Record<TripStatus, string | null> = {
+      searching: null,
+      driver_assigned: 'driver_found',
+      driver_arriving: 'driver_arriving',
+      driver_arrived: 'driver_arrived',
+      trip_started: 'trip_started',
+      trip_completed: 'trip_completed',
+      cancelled: null, // Handled separately in cancelTrip
+    };
+
+    const event = notificationEvents[status];
+    if (event) {
+      // Get passenger userId
+      const passenger = await Passenger.findById(trip.passengerId).select('userId');
+      if (passenger?.userId) {
+        sendTripNotification(
+          passenger.userId,
+          trip._id,
+          trip.tripNumber,
+          event
+        ).catch(err => logger.error(`Failed to send ${event} notification: ${err}`));
+      }
+    }
+
     return trip;
   } catch (error) {
     logger.error(`Failed to update trip status: ${error}`);
@@ -452,6 +479,17 @@ export const assignDriverToTrip = async (
       isAvailable: false,
       currentTripId: trip._id,
     });
+
+    // Send FCM notification to passenger
+    const passenger = await Passenger.findById(trip.passengerId).select('userId');
+    if (passenger?.userId) {
+      sendTripNotification(
+        passenger.userId,
+        trip._id,
+        trip.tripNumber,
+        'driver_found'
+      ).catch(err => logger.error(`Failed to send driver_found notification: ${err}`));
+    }
 
     logger.info(`Driver ${driverId} assigned to trip ${trip.tripNumber}`);
     return trip;
@@ -541,6 +579,29 @@ export const completeTrip = async (
       },
     });
 
+    // Send FCM notifications to both parties
+    const passenger = await Passenger.findById(trip.passengerId).select('userId');
+    if (passenger?.userId) {
+      sendTripNotification(
+        passenger.userId,
+        trip._id,
+        trip.tripNumber,
+        'trip_completed'
+      ).catch(err => logger.error(`Failed to send trip_completed notification to passenger: ${err}`));
+    }
+
+    if (trip.driverId) {
+      const driver = await Driver.findById(trip.driverId).select('userId');
+      if (driver?.userId) {
+        sendTripNotification(
+          driver.userId,
+          trip._id,
+          trip.tripNumber,
+          'trip_completed'
+        ).catch(err => logger.error(`Failed to send trip_completed notification to driver: ${err}`));
+      }
+    }
+
     logger.info(`Trip ${trip.tripNumber} completed`);
     return trip;
   } catch (error) {
@@ -590,6 +651,31 @@ export const cancelTrip = async (
           cancelledTrips: cancelledBy === 'driver' ? 1 : 0,
         },
       });
+    }
+
+    // Send FCM notifications to the other party
+    if (cancelledBy === 'driver') {
+      // Notify passenger that driver cancelled
+      const passenger = await Passenger.findById(trip.passengerId).select('userId');
+      if (passenger?.userId) {
+        sendTripNotification(
+          passenger.userId,
+          trip._id,
+          trip.tripNumber,
+          'trip_cancelled_by_driver'
+        ).catch(err => logger.error(`Failed to send cancellation notification to passenger: ${err}`));
+      }
+    } else if (cancelledBy === 'passenger' && trip.driverId) {
+      // Notify driver that passenger cancelled
+      const driver = await Driver.findById(trip.driverId).select('userId');
+      if (driver?.userId) {
+        sendTripNotification(
+          driver.userId,
+          trip._id,
+          trip.tripNumber,
+          'trip_cancelled_by_passenger'
+        ).catch(err => logger.error(`Failed to send cancellation notification to driver: ${err}`));
+      }
     }
 
     logger.info(`Trip ${trip.tripNumber} cancelled by ${cancelledBy}`);
@@ -766,13 +852,39 @@ export const triggerSOS = async (
   tripId: Types.ObjectId | string
 ): Promise<boolean> => {
   try {
-    await Trip.findByIdAndUpdate(tripId, {
-      sosTriggered: true,
-      sosAt: new Date(),
+    const trip = await Trip.findByIdAndUpdate(
+      tripId,
+      {
+        sosTriggered: true,
+        sosAt: new Date(),
+      },
+      { new: true }
+    ).populate({
+      path: 'passengerId',
+      select: 'userId',
+      populate: { path: 'userId', select: 'name' },
     });
 
-    // TODO: Notify emergency contacts and support
-    // TODO: Log SOS event for admin dashboard
+    if (!trip) {
+      logger.error(`Trip ${tripId} not found for SOS`);
+      return false;
+    }
+
+    // Get all admin users
+    const admins = await User.find({ role: 'admin', isActive: true }).select('_id');
+    const adminIds = admins.map(a => a._id);
+
+    // Get passenger name and location
+    const passengerUser = (trip.passengerId as any)?.userId;
+    const passengerName = passengerUser?.name || 'Unknown';
+    const location = trip.pickup?.address || 'Unknown location';
+
+    // Send SOS alert to all admins
+    if (adminIds.length > 0) {
+      sendSOSAlert(adminIds, trip._id, passengerName, location)
+        .catch(err => logger.error(`Failed to send SOS alert: ${err}`));
+    }
+
     logger.warn(`SOS triggered for trip ${tripId}`);
     return true;
   } catch (error) {
