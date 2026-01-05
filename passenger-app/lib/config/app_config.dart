@@ -12,7 +12,7 @@ class AppConfig {
   static String get apiBaseUrl {
     switch (environment) {
       case AppEnvironment.development:
-        return 'http://10.0.2.2:5000/api/v1'; // Android emulator
+        return 'https://pronouncedly-resupine-benito.ngrok-free.dev/api/v1'; // ngrok tunnel
       case AppEnvironment.staging:
         return 'https://staging-api.wasalni.app/api/v1';
       case AppEnvironment.production:
@@ -23,7 +23,7 @@ class AppConfig {
   static String get socketUrl {
     switch (environment) {
       case AppEnvironment.development:
-        return 'http://10.0.2.2:5000';
+        return 'https://pronouncedly-resupine-benito.ngrok-free.dev'; // ngrok tunnel
       case AppEnvironment.staging:
         return 'https://staging-api.wasalni.app';
       case AppEnvironment.production:

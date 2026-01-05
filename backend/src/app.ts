@@ -22,6 +22,9 @@ import notificationRoutes from './routes/notification.routes';
 // Create Express app
 const app: Application = express();
 
+// Trust proxy for ngrok/reverse proxy (required for rate-limiter to work correctly)
+app.set('trust proxy', 1);
+
 // Security middleware
 app.use(helmet());
 

@@ -10,9 +10,10 @@ import '../../config/app_config.dart';
 import '../../providers/auth_provider.dart';
 
 class OTPScreen extends ConsumerStatefulWidget {
-  final String phone;
+  final String email;
+  final String purpose; // 'login', 'registration', 'password_reset'
 
-  const OTPScreen({super.key, required this.phone});
+  const OTPScreen({super.key, required this.email, this.purpose = 'login'});
 
   @override
   ConsumerState<OTPScreen> createState() => _OTPScreenState();
@@ -84,44 +85,43 @@ class _OTPScreenState extends ConsumerState<OTPScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final result = await ref.read(authProvider.notifier).verifyOTP(
-            widget.phone,
-            _otp,
-          );
+      if (widget.purpose == 'login') {
+        // Login OTP verification
+        final result = await ref.read(authProvider.notifier).verifyLoginOTP(
+              widget.email,
+              _otp,
+            );
 
-      if (mounted) {
-        if (result == 'authenticated') {
-          context.go('/home');
-        } else if (result == 'pending_approval') {
-          context.go('/pending-approval');
-        } else if (result == 'needs_registration') {
-          context.go('/register', extra: widget.phone);
-        } else {
-          final errorMessage = ref.read(authProvider).errorMessage;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(errorMessage ?? 'رمز التحقق غير صحيح'),
-              backgroundColor: AppColors.error,
-            ),
-          );
-          for (var controller in _controllers) {
-            controller.clear();
+        if (mounted) {
+          if (result == 'authenticated') {
+            context.go('/home');
+          } else if (result == 'pending_approval') {
+            context.go('/pending-approval');
+          } else {
+            _showError(ref.read(authProvider).errorMessage ?? 'رمز التحقق غير صحيح');
           }
-          _focusNodes[0].requestFocus();
         }
+      } else if (widget.purpose == 'registration') {
+        // Registration OTP verification
+        final success = await ref.read(authProvider.notifier).verifyRegistrationOTP(
+              widget.email,
+              _otp,
+            );
+
+        if (mounted) {
+          if (success) {
+            context.go('/register', extra: widget.email);
+          } else {
+            _showError(ref.read(authProvider).errorMessage ?? 'رمز التحقق غير صحيح');
+          }
+        }
+      } else if (widget.purpose == 'password_reset') {
+        // Password reset OTP - go to reset password screen
+        context.go('/reset-password', extra: {'email': widget.email, 'otp': _otp});
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('حدث خطأ: ${e.toString()}'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-        for (var controller in _controllers) {
-          controller.clear();
-        }
-        _focusNodes[0].requestFocus();
+        _showError('حدث خطأ: ${e.toString()}');
       }
     } finally {
       if (mounted) {
@@ -130,11 +130,24 @@ class _OTPScreenState extends ConsumerState<OTPScreen> {
     }
   }
 
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColors.error,
+      ),
+    );
+    for (var controller in _controllers) {
+      controller.clear();
+    }
+    _focusNodes[0].requestFocus();
+  }
+
   Future<void> _resendOTP() async {
     if (!_canResend) return;
 
     try {
-      final success = await ref.read(authProvider.notifier).sendOTP(widget.phone);
+      final success = await ref.read(authProvider.notifier).sendOTP(widget.email, purpose: widget.purpose);
 
       if (mounted) {
         if (success) {
@@ -184,35 +197,35 @@ class _OTPScreenState extends ConsumerState<OTPScreen> {
             children: [
               Text('أدخل رمز التحقق', style: AppTextStyles.heading2),
               SizedBox(height: 8.h),
-              Text('أرسلنا رمز تحقق إلى ${widget.phone}', style: AppTextStyles.subtitle),
+              Text('أرسلنا رمز تحقق إلى ${widget.email}', style: AppTextStyles.subtitle),
               SizedBox(height: 32.h),
               Directionality(
                 textDirection: TextDirection.ltr,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: List.generate(
-                    AppConfig.otpLength,
+                    6,
                     (index) => SizedBox(
-                      width: 48.w,
-                      height: 56.h,
+                      width: 45,
+                      height: 55,
                       child: TextFormField(
                         controller: _controllers[index],
                         focusNode: _focusNodes[index],
                         textAlign: TextAlign.center,
                         keyboardType: TextInputType.number,
                         maxLength: 1,
-                        style: AppTextStyles.heading2,
+                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                         decoration: InputDecoration(
                           counterText: '',
                           contentPadding: EdgeInsets.zero,
                           filled: true,
                           fillColor: Colors.grey.shade100,
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12.r),
+                            borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide.none,
                           ),
                           focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12.r),
+                            borderRadius: BorderRadius.circular(12),
                             borderSide: const BorderSide(color: AppColors.primary, width: 2),
                           ),
                         ),

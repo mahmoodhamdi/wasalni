@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../screens/auth/splash_screen.dart';
 import '../screens/auth/welcome_screen.dart';
-import '../screens/auth/phone_screen.dart';
+import '../screens/auth/login_screen.dart';
 import '../screens/auth/otp_screen.dart';
 import '../screens/auth/register_screen.dart';
 import '../screens/home/home_screen.dart';
@@ -43,24 +43,26 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const WelcomeScreen(),
       ),
       GoRoute(
-        path: '/phone',
-        name: 'phone',
-        builder: (context, state) => const PhoneScreen(),
+        path: '/login',
+        name: 'login',
+        builder: (context, state) => const LoginScreen(),
       ),
       GoRoute(
         path: '/otp',
         name: 'otp',
         builder: (context, state) {
-          final phone = state.extra as String? ?? '';
-          return OTPScreen(phone: phone);
+          final extra = state.extra as Map<String, dynamic>?;
+          final email = extra?['email'] as String? ?? '';
+          final purpose = extra?['purpose'] as String? ?? 'login';
+          return OTPScreen(email: email, purpose: purpose);
         },
       ),
       GoRoute(
         path: '/register',
         name: 'register',
         builder: (context, state) {
-          final phone = state.extra as String? ?? '';
-          return RegisterScreen(phone: phone);
+          final email = state.extra as String? ?? '';
+          return RegisterScreen(email: email);
         },
       ),
 

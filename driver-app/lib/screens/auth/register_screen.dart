@@ -7,9 +7,9 @@ import '../../config/theme.dart';
 import '../../providers/auth_provider.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
-  final String phone;
+  final String email;
 
-  const RegisterScreen({super.key, required this.phone});
+  const RegisterScreen({super.key, required this.email});
 
   @override
   ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
@@ -18,7 +18,9 @@ class RegisterScreen extends ConsumerStatefulWidget {
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
-  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _nationalIdController = TextEditingController();
   final _makeController = TextEditingController();
   final _modelController = TextEditingController();
@@ -29,6 +31,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   String _selectedVehicleType = 'car';
   String _selectedCategory = 'economy';
   bool _isLoading = false;
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
 
   final List<Map<String, String>> _vehicleTypes = [
     {'id': 'car', 'name': 'سيارة'},
@@ -45,7 +49,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   @override
   void dispose() {
     _nameController.dispose();
-    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    _phoneController.dispose();
     _nationalIdController.dispose();
     _makeController.dispose();
     _modelController.dispose();
@@ -58,6 +64,37 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   String? _validateRequired(String? value, String fieldName) {
     if (value == null || value.trim().isEmpty) {
       return 'يرجى إدخال $fieldName';
+    }
+    return null;
+  }
+
+  String? _validatePassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'يرجى إدخال كلمة المرور';
+    }
+    if (value.length < 6) {
+      return 'كلمة المرور قصيرة جداً (6 أحرف على الأقل)';
+    }
+    return null;
+  }
+
+  String? _validateConfirmPassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'يرجى تأكيد كلمة المرور';
+    }
+    if (value != _passwordController.text) {
+      return 'كلمة المرور غير متطابقة';
+    }
+    return null;
+  }
+
+  String? _validatePhone(String? value) {
+    if (value == null || value.isEmpty) {
+      return null; // Phone is optional
+    }
+    final phoneRegex = RegExp(r'^01[0125][0-9]{8}$');
+    if (!phoneRegex.hasMatch(value)) {
+      return 'رقم الهاتف غير صحيح';
     }
     return null;
   }
@@ -90,9 +127,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     try {
       final success = await ref.read(authProvider.notifier).register(
-        phone: widget.phone,
+        email: widget.email,
+        password: _passwordController.text,
         name: _nameController.text.trim(),
-        email: _emailController.text.isNotEmpty ? _emailController.text.trim() : null,
+        phone: _phoneController.text.isNotEmpty ? _phoneController.text.trim() : null,
         nationalId: _nationalIdController.text.trim(),
         vehicleType: _selectedVehicleType,
         vehicleCategory: _selectedCategory,
@@ -185,16 +223,71 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ),
                 SizedBox(height: 16.h),
 
-                // Email (Optional)
+                // Email (Read-only)
                 Directionality(
                   textDirection: TextDirection.ltr,
                   child: TextFormField(
-                    controller: _emailController,
+                    initialValue: widget.email,
+                    readOnly: true,
                     keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
-                      labelText: 'البريد الإلكتروني (اختياري)',
-                      prefixIcon: Icon(Icons.email_outlined),
+                    decoration: InputDecoration(
+                      labelText: 'البريد الإلكتروني',
+                      prefixIcon: const Icon(Icons.email_outlined),
+                      filled: true,
+                      fillColor: Colors.grey.shade200,
                     ),
+                  ),
+                ),
+                SizedBox(height: 16.h),
+
+                // Password
+                TextFormField(
+                  controller: _passwordController,
+                  obscureText: _obscurePassword,
+                  decoration: InputDecoration(
+                    labelText: 'كلمة المرور',
+                    prefixIcon: const Icon(Icons.lock_outlined),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                      ),
+                      onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                    ),
+                  ),
+                  validator: _validatePassword,
+                ),
+                SizedBox(height: 16.h),
+
+                // Confirm Password
+                TextFormField(
+                  controller: _confirmPasswordController,
+                  obscureText: _obscureConfirmPassword,
+                  decoration: InputDecoration(
+                    labelText: 'تأكيد كلمة المرور',
+                    prefixIcon: const Icon(Icons.lock_outlined),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                      ),
+                      onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+                    ),
+                  ),
+                  validator: _validateConfirmPassword,
+                ),
+                SizedBox(height: 16.h),
+
+                // Phone (Optional)
+                Directionality(
+                  textDirection: TextDirection.ltr,
+                  child: TextFormField(
+                    controller: _phoneController,
+                    keyboardType: TextInputType.phone,
+                    decoration: const InputDecoration(
+                      labelText: 'رقم الهاتف (اختياري)',
+                      prefixIcon: Icon(Icons.phone_outlined),
+                      hintText: '01xxxxxxxxx',
+                    ),
+                    validator: _validatePhone,
                   ),
                 ),
                 SizedBox(height: 32.h),
