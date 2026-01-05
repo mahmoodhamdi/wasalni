@@ -12,7 +12,7 @@ Wasalni (وصّلني) is a local ride-hailing platform for Bagour city and surr
 ```bash
 cd backend
 npm install
-npm run dev          # Development with nodemon
+npm run dev          # Development with nodemon (port 5000)
 npm run build        # TypeScript compilation
 npm start            # Production server
 npm run lint         # ESLint check
@@ -20,9 +20,11 @@ npm run lint:fix     # ESLint auto-fix
 npm run format       # Prettier formatting
 npm test             # Jest tests
 npm test -- --testPathPattern="auth"  # Run single test file
+npm run seed         # Seed database with sample data
+npm run seed:fresh   # Clear DB and reseed
 ```
 
-### Admin Dashboard (Next.js 16)
+### Admin Dashboard (Next.js 16 with App Router)
 ```bash
 cd admin-dashboard
 npm install
@@ -82,6 +84,7 @@ wasalni/
 ### Backend Architecture
 - **Entry point:** `backend/src/index.ts` → `backend/src/app.ts`
 - **API prefix:** `/api/v1/`
+- **API docs:** `/api/docs` (Swagger UI), `/api/docs/redoc` (Redoc)
 - **Routes:** `backend/src/routes/` - Express routers
 - **Controllers:** `backend/src/controllers/` - Request handlers
 - **Services:** `backend/src/services/` - Business logic
@@ -90,7 +93,15 @@ wasalni/
 - **Config:** `backend/src/config/` - Database, Redis, Firebase, Maps setup
 
 Key patterns:
-- Bilingual API responses: Always include both `message` (English) and `messageAr` (Arabic) in all responses
+- **Bilingual responses:** ALL API responses must include both `message` (English) and `messageAr` (Arabic). This applies to success messages, error messages, and validation errors.
+```json
+{
+  "success": true,
+  "message": "Trip created successfully",
+  "messageAr": "تم إنشاء الرحلة بنجاح",
+  "data": { ... }
+}
+```
 - JWT authentication with phone/OTP verification
 - Socket.io for real-time driver location and trip updates
 - Redis for caching and driver location tracking (with MongoDB fallback)
@@ -143,13 +154,15 @@ lib/
 
 ## Environment Configuration
 
-Copy `.env.example` to `.env` in the root. Key variables:
+Copy `backend/.env.example` to `backend/.env`. Key variables:
 - `MONGODB_URI`: MongoDB connection string
 - `REDIS_URL`: Redis connection string
 - `JWT_SECRET`: JWT signing key
 - `GOOGLE_MAPS_API_KEY`: Required for maps functionality
 - `FIREBASE_*`: Push notification configuration
-- `NEXT_PUBLIC_API_URL`: Admin dashboard API endpoint
+- `SMS_PROVIDER`: Set to `mock` for development (OTP logged to console)
+
+For admin dashboard, set `NEXT_PUBLIC_API_URL` (defaults to `http://localhost:5000/api/v1`).
 
 ## Documentation
 

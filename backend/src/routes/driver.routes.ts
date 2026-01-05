@@ -14,9 +14,51 @@ const router = Router();
 // ==================== Driver Trip Routes ====================
 
 /**
- * @route   GET /api/v1/driver/trips
- * @desc    Get driver trips
- * @access  Driver only
+ * @swagger
+ * /driver/trips:
+ *   get:
+ *     summary: Get driver trips history
+ *     description: Returns paginated list of trips for the authenticated driver
+ *     tags: [Driver]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [completed, cancelled, all]
+ *     responses:
+ *       200:
+ *         description: Driver trips retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Trip'
+ *                 pagination:
+ *                   $ref: '#/components/schemas/Pagination'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
  */
 router.get(
   '/trips',
@@ -27,9 +69,31 @@ router.get(
 );
 
 /**
- * @route   GET /api/v1/driver/trips/active
- * @desc    Get active trip for driver
- * @access  Driver only
+ * @swagger
+ * /driver/trips/active:
+ *   get:
+ *     summary: Get active trip for driver
+ *     description: Returns the current active trip for the authenticated driver
+ *     tags: [Driver]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Active trip retrieved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   $ref: '#/components/schemas/Trip'
+ *       404:
+ *         description: No active trip found
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
  */
 router.get(
   '/trips/active',
@@ -39,9 +103,31 @@ router.get(
 );
 
 /**
- * @route   GET /api/v1/driver/trips/available
- * @desc    Get pending trip request for driver
- * @access  Driver only
+ * @swagger
+ * /driver/trips/available:
+ *   get:
+ *     summary: Get available trip requests
+ *     description: Returns pending trip requests near the driver's location
+ *     tags: [Driver]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Available trips retrieved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Trip'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
  */
 router.get(
   '/trips/available',
@@ -51,9 +137,43 @@ router.get(
 );
 
 /**
- * @route   PUT /api/v1/driver/trips/:tripId/accept
- * @desc    Accept trip request
- * @access  Driver only
+ * @swagger
+ * /driver/trips/{tripId}/accept:
+ *   put:
+ *     summary: Accept trip request
+ *     description: Driver accepts a pending trip request
+ *     tags: [Driver]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: tripId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Trip accepted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Trip accepted"
+ *                 messageAr:
+ *                   type: string
+ *                   example: "تم قبول الرحلة"
+ *                 data:
+ *                   $ref: '#/components/schemas/Trip'
+ *       400:
+ *         description: Trip already accepted or not available
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
  */
 router.put(
   '/trips/:tripId/accept',
@@ -64,9 +184,48 @@ router.put(
 );
 
 /**
- * @route   PUT /api/v1/driver/trips/:tripId/reject
- * @desc    Reject trip request
- * @access  Driver only
+ * @swagger
+ * /driver/trips/{tripId}/reject:
+ *   put:
+ *     summary: Reject trip request
+ *     description: Driver rejects a trip request
+ *     tags: [Driver]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: tripId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               reason:
+ *                 type: string
+ *                 example: "مشغول"
+ *     responses:
+ *       200:
+ *         description: Trip rejected
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Trip rejected"
+ *                 messageAr:
+ *                   type: string
+ *                   example: "تم رفض الرحلة"
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
  */
 router.put(
   '/trips/:tripId/reject',
@@ -77,9 +236,56 @@ router.put(
 );
 
 /**
- * @route   PUT /api/v1/driver/trips/:tripId/status
- * @desc    Update trip status
- * @access  Driver only
+ * @swagger
+ * /driver/trips/{tripId}/status:
+ *   put:
+ *     summary: Update trip status
+ *     description: Driver updates the trip status (arriving, arrived, started)
+ *     tags: [Driver]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: tripId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - status
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [driver_arriving, driver_arrived, trip_started]
+ *                 example: "driver_arrived"
+ *     responses:
+ *       200:
+ *         description: Status updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Status updated"
+ *                 messageAr:
+ *                   type: string
+ *                   example: "تم تحديث الحالة"
+ *                 data:
+ *                   $ref: '#/components/schemas/Trip'
+ *       400:
+ *         description: Invalid status transition
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
  */
 router.put(
   '/trips/:tripId/status',
@@ -96,9 +302,61 @@ router.put(
 );
 
 /**
- * @route   PUT /api/v1/driver/trips/:tripId/complete
- * @desc    Complete trip
- * @access  Driver only
+ * @swagger
+ * /driver/trips/{tripId}/complete:
+ *   put:
+ *     summary: Complete trip
+ *     description: Driver marks the trip as completed at destination
+ *     tags: [Driver]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: tripId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               actualDistance:
+ *                 type: number
+ *                 description: Actual distance traveled in km
+ *                 example: 12.5
+ *               actualDuration:
+ *                 type: number
+ *                 description: Actual duration in minutes
+ *                 example: 25
+ *     responses:
+ *       200:
+ *         description: Trip completed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Trip completed"
+ *                 messageAr:
+ *                   type: string
+ *                   example: "تم إكمال الرحلة"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     trip:
+ *                       $ref: '#/components/schemas/Trip'
+ *                     earnings:
+ *                       type: number
+ *                       example: 44
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
  */
 router.put(
   '/trips/:tripId/complete',
@@ -113,9 +371,51 @@ router.put(
 );
 
 /**
- * @route   PUT /api/v1/driver/trips/:tripId/cancel
- * @desc    Cancel trip (driver)
- * @access  Driver only
+ * @swagger
+ * /driver/trips/{tripId}/cancel:
+ *   put:
+ *     summary: Cancel trip (driver)
+ *     description: Driver cancels an accepted trip
+ *     tags: [Driver]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: tripId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - reason
+ *             properties:
+ *               reason:
+ *                 type: string
+ *                 example: "طوارئ شخصية"
+ *     responses:
+ *       200:
+ *         description: Trip cancelled
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Trip cancelled"
+ *                 messageAr:
+ *                   type: string
+ *                   example: "تم إلغاء الرحلة"
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
  */
 router.put(
   '/trips/:tripId/cancel',
@@ -126,9 +426,56 @@ router.put(
 );
 
 /**
- * @route   POST /api/v1/driver/trips/:tripId/rate
- * @desc    Rate passenger
- * @access  Driver only
+ * @swagger
+ * /driver/trips/{tripId}/rate:
+ *   post:
+ *     summary: Rate passenger
+ *     description: Driver rates the passenger after trip completion
+ *     tags: [Driver]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: tripId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - rating
+ *             properties:
+ *               rating:
+ *                 type: integer
+ *                 minimum: 1
+ *                 maximum: 5
+ *                 example: 5
+ *               comment:
+ *                 type: string
+ *                 example: "راكب محترم"
+ *     responses:
+ *       200:
+ *         description: Rating submitted
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Rating submitted"
+ *                 messageAr:
+ *                   type: string
+ *                   example: "تم تقديم التقييم"
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
  */
 router.post(
   '/trips/:tripId/rate',
