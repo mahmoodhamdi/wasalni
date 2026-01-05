@@ -24,6 +24,8 @@ class StorageService {
   static const String _keyIsLoggedIn = 'is_logged_in';
   static const String _keyOnboardingComplete = 'onboarding_complete';
   static const String _keyLanguage = 'language';
+  static const String _keyUserAvatar = 'user_avatar';
+  static const String _keyUserGender = 'user_gender';
 
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
@@ -72,7 +74,26 @@ class StorageService {
   String? getUserEmail() => _prefs.getString(_keyUserEmail);
   String? getUserPhone() => _prefs.getString(_keyUserPhone);
   String? getUserRole() => _prefs.getString(_keyUserRole);
+  String? getUserAvatar() => _prefs.getString(_keyUserAvatar);
+  String? getUserGender() => _prefs.getString(_keyUserGender);
   bool isLoggedIn() => _prefs.getBool(_keyIsLoggedIn) ?? false;
+
+  // Individual setters
+  Future<void> setUserName(String name) async {
+    await _prefs.setString(_keyUserName, name);
+  }
+
+  Future<void> setUserPhone(String phone) async {
+    await _prefs.setString(_keyUserPhone, phone);
+  }
+
+  Future<void> setUserAvatar(String avatar) async {
+    await _prefs.setString(_keyUserAvatar, avatar);
+  }
+
+  Future<void> setUserGender(String gender) async {
+    await _prefs.setString(_keyUserGender, gender);
+  }
 
   Future<void> clearUserData() async {
     await _prefs.remove(_keyUserId);

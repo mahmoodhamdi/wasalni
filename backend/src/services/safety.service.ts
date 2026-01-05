@@ -2,9 +2,12 @@ import { Types } from 'mongoose';
 import Passenger from '../models/Passenger';
 import Driver from '../models/Driver';
 import Trip from '../models/Trip';
+import User from '../models/User';
 import { logger } from '../utils/logger';
 import { config } from '../config';
 import crypto from 'crypto';
+import { smsService } from './sms.service';
+import { emitToAdmin, emitToEmergency } from '../config/socket';
 
 // Emergency Contact
 export interface EmergencyContact {
@@ -407,23 +410,62 @@ export const triggerEnhancedSOS = async (
       resolved: false,
     };
 
+    // Get trip details for notifications
+    const driver = await Driver.findById(trip.driverId).populate('userId');
+    const passenger = await Passenger.findById(trip.passengerId).populate('userId');
+
     // Get emergency contacts if triggered by passenger
-    if (triggeredBy === 'passenger') {
-      const passenger = await Passenger.findById(trip.passengerId);
+    if (triggeredBy === 'passenger' && passenger) {
       const contacts = (passenger as any)?.emergencyContacts || [];
 
       // Filter contacts that should be notified on SOS
       const sosContacts = contacts.filter((c: EmergencyContact) => c.notifyOnSOS);
 
-      // TODO: Send SMS/Push notifications to emergency contacts
-      logger.info(`SOS contacts to notify: ${sosContacts.length}`);
-      for (const contact of sosContacts) {
-        logger.info(`Notifying emergency contact: ${contact.name} at ${contact.phone}`);
-        // TODO: Implement actual SMS sending
+      if (sosContacts.length > 0 && driver) {
+        const passengerUser = await User.findById(passenger.userId);
+        const driverUser = driver.userId as any;
+        const vehicle = (driver as any).vehicle;
+
+        // Send SMS to emergency contacts
+        const smsResult = await smsService.sendSOSAlert({
+          riderName: passengerUser?.name || 'راكب',
+          riderPhone: (passengerUser as any)?.phone || '',
+          driverName: driverUser?.name || 'سائق',
+          driverPhone: driverUser?.phone || '',
+          vehiclePlate: vehicle?.plateNumber || 'غير محدد',
+          vehicleColor: vehicle?.color,
+          vehicleModel: `${vehicle?.make} ${vehicle?.model}`,
+          location: { lat: location.latitude, lng: location.longitude },
+          emergencyContacts: sosContacts.map((c: EmergencyContact) => ({
+            name: c.name,
+            phone: c.phone,
+          })),
+          tripId: tripId.toString(),
+        });
+
+        logger.info(`SOS SMS sent: ${smsResult.sent} success, ${smsResult.failed} failed`);
       }
     }
 
-    // TODO: Notify admin dashboard
+    // Notify admin dashboard via socket
+    emitToAdmin('trip:sos', {
+      tripId,
+      triggeredBy,
+      userId,
+      location,
+      timestamp: new Date(),
+      tripNumber: (trip as any).tripNumber,
+    });
+
+    // Also emit to emergency room
+    emitToEmergency('sos:alert', {
+      tripId,
+      triggeredBy,
+      userId,
+      location,
+      timestamp: new Date(),
+    });
+
     logger.warn(`SOS triggered for trip ${tripId} by ${triggeredBy} ${userId}`);
 
     return sosEvent;
@@ -665,12 +707,38 @@ export const autoShareTripWithContacts = async (
     // Generate share link
     const shareLink = await generateTripShareLink(tripId);
 
-    // TODO: Send SMS to contacts
+    // Get trip details for SMS
+    const trip = await Trip.findById(tripId)
+      .populate({
+        path: 'driverId',
+        populate: { path: 'userId', select: 'name phone' },
+      });
+
+    const driver = trip?.driverId as any;
+    const driverUser = driver?.userId;
+    const vehicle = driver?.vehicle;
+    const passengerUser = await User.findById(passenger.userId);
+
+    // Send SMS to contacts
     const notifiedPhones: string[] = [];
     for (const contact of contactsToNotify) {
-      logger.info(`Auto-sharing trip with ${contact.name} at ${contact.phone}`);
-      notifiedPhones.push(contact.phone);
-      // TODO: Implement actual SMS sending with shareLink.shareUrl
+      const success = await smsService.sendRideShare({
+        riderName: passengerUser?.name || 'راكب',
+        driverName: driverUser?.name || 'سائق',
+        driverPhone: driverUser?.phone || '',
+        vehiclePlate: vehicle?.plateNumber || 'غير محدد',
+        vehicleColor: vehicle?.color,
+        vehicleModel: `${vehicle?.make} ${vehicle?.model}`,
+        pickup: (trip as any)?.pickup?.address || '',
+        dropoff: (trip as any)?.dropoff?.address || '',
+        trackingUrl: shareLink.shareUrl,
+        emergencyContact: { name: contact.name, phone: contact.phone },
+      });
+
+      if (success) {
+        notifiedPhones.push(contact.phone);
+        logger.info(`Auto-shared trip with ${contact.name} at ${contact.phone}`);
+      }
     }
 
     return notifiedPhones;
