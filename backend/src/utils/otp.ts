@@ -86,30 +86,19 @@ export const validateEgyptianPhone = (phone: string): boolean => {
 };
 
 /**
- * Mock SMS sending (replace with actual SMS provider in production)
+ * Validate email format
  */
-export const sendOTPSMS = async (phone: string, otp: string): Promise<boolean> => {
-  // In production, integrate with SMS provider like:
-  // - Twilio
-  // - Vonage (Nexmo)
-  // - MessageBird
-  // - Local Egyptian providers (Vodafone, Orange, etc.)
+export const validateEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
 
-  if (process.env.NODE_ENV === 'development' || process.env.SMS_PROVIDER === 'mock') {
-    console.log(`\n========================================`);
-    console.log(`📱 SMS OTP for ${phone}: ${otp}`);
-    console.log(`========================================\n`);
-    return true;
-  }
-
-  // TODO: Implement actual SMS sending
-  // Example with Twilio:
-  // const twilioClient = require('twilio')(accountSid, authToken);
-  // await twilioClient.messages.create({
-  //   body: `رمز التحقق الخاص بك في وصّلني: ${otp}`,
-  //   from: '+1234567890',
-  //   to: phone
-  // });
-
-  return true;
+/**
+ * Generate OTP for email (used by email.service.ts)
+ * Note: OTP is sent via email using the Resend service
+ */
+export const generateEmailOTP = (): { otp: string; expiresAt: Date } => {
+  const otp = generateOTP(config.otp.length);
+  const expiresAt = getOTPExpiry(config.otp.expiresIn);
+  return { otp, expiresAt };
 };

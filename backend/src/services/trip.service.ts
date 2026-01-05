@@ -836,7 +836,7 @@ export const shareTrip = async (
       $push: { sharedWith: { $each: shares } },
     });
 
-    // TODO: Send SMS to contacts with trip link
+    // TODO: Send email to contacts with trip link (using email.service)
     logger.info(`Trip ${tripId} shared with ${contacts.length} contacts`);
     return true;
   } catch (error) {
