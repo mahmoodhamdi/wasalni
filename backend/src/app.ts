@@ -18,6 +18,8 @@ import scheduledRoutes from './routes/scheduled.routes';
 import promoRoutes from './routes/promo.routes';
 import adminRoutes from './routes/admin.routes';
 import notificationRoutes from './routes/notification.routes';
+import paymentRoutes from './routes/payment.routes';
+import chatRoutes from './routes/chat.routes';
 
 // Create Express app
 const app: Application = express();
@@ -137,6 +139,8 @@ app.use(`/api/${config.apiVersion}/scheduled`, scheduledRoutes);
 app.use(`/api/${config.apiVersion}/promo`, promoRoutes);
 app.use(`/api/${config.apiVersion}/admin`, adminRoutes);
 app.use(`/api/${config.apiVersion}/notifications`, notificationRoutes);
+app.use(`/api/${config.apiVersion}/payment`, paymentRoutes);
+app.use(`/api/${config.apiVersion}/chat`, chatRoutes);
 
 // 404 handler
 app.use(notFoundHandler);

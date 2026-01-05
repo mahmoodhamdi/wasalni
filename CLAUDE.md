@@ -18,8 +18,9 @@ npm start            # Production server
 npm run lint         # ESLint check
 npm run lint:fix     # ESLint auto-fix
 npm run format       # Prettier formatting
-npm test             # Jest tests
+npm test             # Jest tests (uses mongodb-memory-server)
 npm test -- --testPathPattern="auth"  # Run single test file
+npm test -- --watch  # Watch mode for development
 npm run seed         # Seed database with sample data
 npm run seed:fresh   # Clear DB and reseed
 ```
@@ -102,10 +103,24 @@ Key patterns:
   "data": { ... }
 }
 ```
-- JWT authentication with phone/OTP verification
+- JWT authentication with email/OTP verification and Google Sign-In
 - Socket.io for real-time driver location and trip updates
 - Redis for caching and driver location tracking (with MongoDB fallback)
-- OTP in development: Set `SMS_PROVIDER=mock` in `.env` to skip real SMS; OTP is logged to console
+
+### Socket.io Room Architecture
+Socket rooms are used for targeted real-time communication:
+- `user:{userId}` - Personal room for each passenger
+- `driver:{driverId}` - Personal room for each driver
+- `drivers:online` - All online drivers (for trip broadcasts)
+- `trip:{tripId}` - Both passenger and driver join during a trip
+- `admin:dashboard` - Admin dashboard for live monitoring
+- `admin:emergency` - Admin emergency/SOS alerts
+
+### Auth Middleware Pattern
+Role-based access uses composable middleware in `backend/src/middleware/auth.middleware.ts`:
+- `authenticate` - Requires valid JWT token
+- `passengerOnly`, `driverOnly`, `adminOnly` - Role restrictions
+- `authorize('role1', 'role2')` - Custom role combinations
 
 ### Flutter Apps Architecture
 Both passenger-app and driver-app use:
@@ -160,7 +175,7 @@ Copy `backend/.env.example` to `backend/.env`. Key variables:
 - `JWT_SECRET`: JWT signing key
 - `GOOGLE_MAPS_API_KEY`: Required for maps functionality
 - `FIREBASE_*`: Push notification configuration
-- `SMS_PROVIDER`: Set to `mock` for development (OTP logged to console)
+- `RESEND_API_KEY`: Email service for OTP delivery
 
 For admin dashboard, set `NEXT_PUBLIC_API_URL` (defaults to `http://localhost:5000/api/v1`).
 

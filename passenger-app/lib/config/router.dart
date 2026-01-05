@@ -19,9 +19,12 @@ import '../screens/scheduled/scheduled_trips_screen.dart';
 import '../screens/scheduled/schedule_trip_screen.dart';
 import '../screens/promo/promos_screen.dart';
 import '../screens/profile/profile_screen.dart';
+import '../screens/profile/edit_profile_screen.dart';
 import '../screens/settings/settings_screen.dart';
 import '../screens/history/trip_history_screen.dart';
 import '../screens/help/help_screen.dart';
+import '../screens/notifications/notifications_screen.dart';
+import '../screens/chat/chat_screen.dart';
 
 // Router provider
 final routerProvider = Provider<GoRouter>((ref) {
@@ -141,6 +144,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const ProfileScreen(),
       ),
       GoRoute(
+        path: '/edit-profile',
+        name: 'edit-profile',
+        builder: (context, state) => const EditProfileScreen(),
+      ),
+      GoRoute(
         path: '/settings',
         name: 'settings',
         builder: (context, state) => const SettingsScreen(),
@@ -154,6 +162,24 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/help',
         name: 'help',
         builder: (context, state) => const HelpScreen(),
+      ),
+      GoRoute(
+        path: '/notifications',
+        name: 'notifications',
+        builder: (context, state) => const NotificationsScreen(),
+      ),
+      GoRoute(
+        path: '/chat',
+        name: 'chat',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return ChatScreen(
+            chatId: extra?['chatId'] ?? '',
+            otherUserName: extra?['otherUserName'] ?? 'السائق',
+            otherUserAvatar: extra?['otherUserAvatar'],
+            tripId: extra?['tripId'],
+          );
+        },
       ),
     ],
     errorBuilder: (context, state) => Scaffold(
