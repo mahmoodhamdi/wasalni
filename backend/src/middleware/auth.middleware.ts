@@ -12,7 +12,7 @@ declare global {
       user?: {
         userId: string;
         role: 'passenger' | 'driver' | 'admin';
-        phone: string;
+        email: string;
         driverId?: string;
         passengerId?: string;
       };
@@ -56,7 +56,7 @@ export const authenticate = async (
     req.user = {
       userId: payload.userId,
       role: payload.role,
-      phone: payload.phone,
+      email: payload.email,
     };
 
     // Add role-specific IDs
@@ -99,7 +99,7 @@ export const optionalAuth = async (
           req.user = {
             userId: payload.userId,
             role: payload.role,
-            phone: payload.phone,
+            email: payload.email,
           };
         }
       }

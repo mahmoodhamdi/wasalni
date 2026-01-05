@@ -2,10 +2,15 @@ import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import {
   sendOTP,
-  verifyOTP,
+  verifyLoginOTP,
+  verifyRegistrationOTP,
+  login,
+  googleSignIn,
   registerPassenger,
   registerDriver,
   adminLogin,
+  resetPassword,
+  changePassword,
   refreshToken,
   getProfile,
   updateProfile,
@@ -13,51 +18,37 @@ import {
   logout,
 } from '../controllers/auth.controller';
 import { authenticate } from '../middleware/auth.middleware';
-import {
-  sendOTPValidator,
-  verifyOTPValidator,
-  registerPassengerValidator,
-  registerDriverValidator,
-  adminLoginValidator,
-  refreshTokenValidator,
-  updateProfileValidator,
-  fcmTokenValidator,
-  validate,
-} from '../validators/auth.validator';
+import { body } from 'express-validator';
 
 const router = Router();
 
-// Auth-specific rate limiters
+// Rate limiters
 const otpLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
-  max: 5, // 5 OTP requests per hour per IP
+  max: 5,
   message: {
     success: false,
     message: 'Too many OTP requests, please try again later',
     messageAr: 'طلبات كثيرة جداً، يرجى المحاولة بعد ساعة',
   },
-  standardHeaders: true,
-  legacyHeaders: false,
 });
 
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // 10 login attempts per 15 minutes
+  max: 10,
   message: {
     success: false,
     message: 'Too many login attempts, please try again later',
     messageAr: 'محاولات دخول كثيرة، يرجى المحاولة لاحقاً',
   },
-  standardHeaders: true,
-  legacyHeaders: false,
 });
 
 /**
  * @swagger
  * /auth/send-otp:
  *   post:
- *     summary: Send OTP to phone number
- *     description: Sends a 6-digit OTP code to the provided phone number for verification
+ *     summary: Send OTP to email
+ *     description: Sends a 6-digit OTP code to the provided email for verification
  *     tags: [Auth]
  *     security: []
  *     requestBody:
@@ -67,42 +58,32 @@ const loginLimiter = rateLimit({
  *           schema:
  *             type: object
  *             required:
- *               - phone
+ *               - email
  *             properties:
- *               phone:
+ *               email:
  *                 type: string
- *                 example: "+201111111111"
- *                 description: Phone number with country code
+ *                 format: email
+ *                 example: "user@example.com"
+ *               purpose:
+ *                 type: string
+ *                 enum: [registration, login, password_reset]
+ *                 default: login
  *     responses:
  *       200:
  *         description: OTP sent successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: "OTP sent successfully"
- *                 messageAr:
- *                   type: string
- *                   example: "تم إرسال رمز التحقق بنجاح"
  *       400:
  *         $ref: '#/components/responses/BadRequest'
  *       429:
  *         $ref: '#/components/responses/TooManyRequests'
  */
-router.post('/send-otp', otpLimiter, sendOTPValidator, validate, sendOTP);
+router.post('/send-otp', otpLimiter, sendOTP);
 
 /**
  * @swagger
  * /auth/verify-otp:
  *   post:
- *     summary: Verify OTP and authenticate user
- *     description: Verifies the OTP code and returns authentication tokens if successful
+ *     summary: Verify OTP for login
+ *     description: Verifies the OTP code and returns authentication tokens
  *     tags: [Auth]
  *     security: []
  *     requestBody:
@@ -112,60 +93,124 @@ router.post('/send-otp', otpLimiter, sendOTPValidator, validate, sendOTP);
  *           schema:
  *             type: object
  *             required:
- *               - phone
- *               - code
+ *               - email
+ *               - otp
  *             properties:
- *               phone:
+ *               email:
  *                 type: string
- *                 example: "+201111111111"
- *               code:
+ *                 format: email
+ *               otp:
  *                 type: string
  *                 example: "123456"
- *                 description: 6-digit OTP code
  *     responses:
  *       200:
- *         description: OTP verified successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: "OTP verified successfully"
- *                 messageAr:
- *                   type: string
- *                   example: "تم التحقق من رمز التحقق بنجاح"
- *                 data:
- *                   type: object
- *                   properties:
- *                     isNewUser:
- *                       type: boolean
- *                       example: false
- *                     accessToken:
- *                       type: string
- *                       example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
- *                     refreshToken:
- *                       type: string
- *                       example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
- *                     user:
- *                       $ref: '#/components/schemas/User'
+ *         description: Login successful
  *       400:
  *         $ref: '#/components/responses/BadRequest'
- *       429:
- *         $ref: '#/components/responses/TooManyRequests'
  */
-router.post('/verify-otp', loginLimiter, verifyOTPValidator, validate, verifyOTP);
+router.post('/verify-otp', loginLimiter, verifyLoginOTP);
+
+/**
+ * @swagger
+ * /auth/verify-registration-otp:
+ *   post:
+ *     summary: Verify OTP for registration
+ *     description: Verifies the OTP code before completing registration
+ *     tags: [Auth]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - otp
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               otp:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: OTP verified
+ *       400:
+ *         $ref: '#/components/responses/BadRequest'
+ */
+router.post('/verify-registration-otp', verifyRegistrationOTP);
+
+/**
+ * @swagger
+ * /auth/login:
+ *   post:
+ *     summary: Login with email and password
+ *     description: Authenticates user with email and password
+ *     tags: [Auth]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *                 format: password
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ */
+router.post('/login', loginLimiter, login);
+
+/**
+ * @swagger
+ * /auth/google:
+ *   post:
+ *     summary: Google Sign-In
+ *     description: Authenticate or register with Google
+ *     tags: [Auth]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - idToken
+ *             properties:
+ *               idToken:
+ *                 type: string
+ *                 description: Firebase ID token from Google Sign-In
+ *               role:
+ *                 type: string
+ *                 enum: [passenger, driver]
+ *                 default: passenger
+ *     responses:
+ *       200:
+ *         description: Authentication successful
+ *       400:
+ *         $ref: '#/components/responses/BadRequest'
+ */
+router.post('/google', googleSignIn);
 
 /**
  * @swagger
  * /auth/register/passenger:
  *   post:
  *     summary: Register a new passenger
- *     description: Creates a new passenger account after phone verification
+ *     description: Creates a new passenger account (requires email OTP verification first)
  *     tags: [Auth]
  *     security: []
  *     requestBody:
@@ -175,54 +220,31 @@ router.post('/verify-otp', loginLimiter, verifyOTPValidator, validate, verifyOTP
  *           schema:
  *             type: object
  *             required:
- *               - phone
+ *               - email
+ *               - password
  *               - name
  *             properties:
- *               phone:
- *                 type: string
- *                 example: "+201111111111"
- *               name:
- *                 type: string
- *                 example: "أحمد محمد"
  *               email:
  *                 type: string
- *                 example: "ahmed@example.com"
+ *                 format: email
+ *               password:
+ *                 type: string
+ *                 minLength: 6
+ *               name:
+ *                 type: string
+ *                 example: "Ahmed Mohamed"
+ *               phone:
+ *                 type: string
  *               gender:
  *                 type: string
  *                 enum: [male, female]
- *                 example: "male"
  *     responses:
  *       201:
  *         description: Passenger registered successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: "Registration successful"
- *                 messageAr:
- *                   type: string
- *                   example: "تم التسجيل بنجاح"
- *                 data:
- *                   type: object
- *                   properties:
- *                     accessToken:
- *                       type: string
- *                     refreshToken:
- *                       type: string
- *                     user:
- *                       $ref: '#/components/schemas/Passenger'
  *       400:
  *         $ref: '#/components/responses/BadRequest'
- *       409:
- *         description: User already exists
  */
-router.post('/register/passenger', registerPassengerValidator, validate, registerPassenger);
+router.post('/register/passenger', registerPassenger);
 
 /**
  * @swagger
@@ -239,73 +261,58 @@ router.post('/register/passenger', registerPassengerValidator, validate, registe
  *           schema:
  *             type: object
  *             required:
- *               - phone
+ *               - email
+ *               - password
  *               - name
+ *               - nationalId
  *               - vehicleType
- *               - vehicleMake
- *               - vehicleModel
- *               - vehicleYear
- *               - vehicleColor
- *               - vehiclePlate
+ *               - vehicleCategory
+ *               - vehicle
  *             properties:
- *               phone:
+ *               email:
  *                 type: string
- *                 example: "+201222222222"
+ *                 format: email
+ *               password:
+ *                 type: string
  *               name:
  *                 type: string
- *                 example: "محمد علي"
+ *               phone:
+ *                 type: string
+ *               nationalId:
+ *                 type: string
  *               vehicleType:
  *                 type: string
- *                 enum: [economy, comfort, family, tuktuk, motorcycle]
- *                 example: "economy"
- *               vehicleMake:
+ *                 enum: [car, tuktuk, motorcycle]
+ *               vehicleCategory:
  *                 type: string
- *                 example: "Toyota"
- *               vehicleModel:
- *                 type: string
- *                 example: "Corolla"
- *               vehicleYear:
- *                 type: integer
- *                 example: 2020
- *               vehicleColor:
- *                 type: string
- *                 example: "أبيض"
- *               vehiclePlate:
- *                 type: string
- *                 example: "أ ب ج 1234"
+ *                 enum: [economy, comfort, family]
+ *               vehicle:
+ *                 type: object
+ *                 properties:
+ *                   make:
+ *                     type: string
+ *                   model:
+ *                     type: string
+ *                   year:
+ *                     type: integer
+ *                   color:
+ *                     type: string
+ *                   plateNumber:
+ *                     type: string
  *     responses:
  *       201:
- *         description: Driver registration submitted for approval
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: "Registration submitted for approval"
- *                 messageAr:
- *                   type: string
- *                   example: "تم تقديم طلب التسجيل للمراجعة"
- *                 data:
- *                   type: object
- *                   properties:
- *                     driver:
- *                       $ref: '#/components/schemas/Driver'
+ *         description: Driver registration submitted
  *       400:
  *         $ref: '#/components/responses/BadRequest'
  */
-router.post('/register/driver', registerDriverValidator, validate, registerDriver);
+router.post('/register/driver', registerDriver);
 
 /**
  * @swagger
  * /auth/admin/login:
  *   post:
- *     summary: Admin login with email and password
- *     description: Authenticates admin users with email/password credentials
+ *     summary: Admin login
+ *     description: Authenticates admin users with email/password
  *     tags: [Auth]
  *     security: []
  *     requestBody:
@@ -321,50 +328,88 @@ router.post('/register/driver', registerDriverValidator, validate, registerDrive
  *               email:
  *                 type: string
  *                 format: email
- *                 example: "admin@wasalni.com"
  *               password:
  *                 type: string
- *                 format: password
- *                 example: "admin123"
  *     responses:
  *       200:
- *         description: Admin login successful
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: "Login successful"
- *                 messageAr:
- *                   type: string
- *                   example: "تم تسجيل الدخول بنجاح"
- *                 data:
- *                   type: object
- *                   properties:
- *                     accessToken:
- *                       type: string
- *                     refreshToken:
- *                       type: string
- *                     user:
- *                       $ref: '#/components/schemas/User'
+ *         description: Login successful
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
- *       429:
- *         $ref: '#/components/responses/TooManyRequests'
  */
-router.post('/admin/login', loginLimiter, adminLoginValidator, validate, adminLogin);
+router.post('/admin/login', loginLimiter, adminLogin);
+
+/**
+ * @swagger
+ * /auth/reset-password:
+ *   post:
+ *     summary: Reset password with OTP
+ *     description: Resets the user password using OTP verification
+ *     tags: [Auth]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - otp
+ *               - newPassword
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               otp:
+ *                 type: string
+ *               newPassword:
+ *                 type: string
+ *                 minLength: 6
+ *     responses:
+ *       200:
+ *         description: Password reset successfully
+ *       400:
+ *         $ref: '#/components/responses/BadRequest'
+ */
+router.post('/reset-password', resetPassword);
+
+/**
+ * @swagger
+ * /auth/change-password:
+ *   put:
+ *     summary: Change password
+ *     description: Changes password for authenticated user
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - currentPassword
+ *               - newPassword
+ *             properties:
+ *               currentPassword:
+ *                 type: string
+ *               newPassword:
+ *                 type: string
+ *                 minLength: 6
+ *     responses:
+ *       200:
+ *         description: Password changed successfully
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ */
+router.put('/change-password', authenticate, changePassword);
 
 /**
  * @swagger
  * /auth/refresh:
  *   post:
  *     summary: Refresh access token
- *     description: Get a new access token using a valid refresh token
  *     tags: [Auth]
  *     security: []
  *     requestBody:
@@ -378,52 +423,25 @@ router.post('/admin/login', loginLimiter, adminLoginValidator, validate, adminLo
  *             properties:
  *               refreshToken:
  *                 type: string
- *                 example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
  *     responses:
  *       200:
- *         description: Token refreshed successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   type: object
- *                   properties:
- *                     accessToken:
- *                       type: string
- *                     refreshToken:
- *                       type: string
+ *         description: Token refreshed
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
  */
-router.post('/refresh', refreshTokenValidator, validate, refreshToken);
+router.post('/refresh', refreshToken);
 
 /**
  * @swagger
  * /auth/profile:
  *   get:
  *     summary: Get current user profile
- *     description: Returns the authenticated user's profile information
  *     tags: [Auth]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Profile retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   $ref: '#/components/schemas/User'
+ *         description: Profile retrieved
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
  */
@@ -434,7 +452,6 @@ router.get('/profile', authenticate, getProfile);
  * /auth/profile:
  *   put:
  *     summary: Update user profile
- *     description: Updates the authenticated user's profile information
  *     tags: [Auth]
  *     security:
  *       - bearerAuth: []
@@ -447,46 +464,26 @@ router.get('/profile', authenticate, getProfile);
  *             properties:
  *               name:
  *                 type: string
- *                 example: "أحمد محمد"
- *               email:
+ *               phone:
  *                 type: string
- *                 format: email
- *                 example: "ahmed@example.com"
+ *               avatar:
+ *                 type: string
  *               gender:
  *                 type: string
  *                 enum: [male, female]
  *     responses:
  *       200:
- *         description: Profile updated successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: "Profile updated successfully"
- *                 messageAr:
- *                   type: string
- *                   example: "تم تحديث الملف الشخصي بنجاح"
- *                 data:
- *                   $ref: '#/components/schemas/User'
+ *         description: Profile updated
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
- *       400:
- *         $ref: '#/components/responses/BadRequest'
  */
-router.put('/profile', authenticate, updateProfileValidator, validate, updateProfile);
+router.put('/profile', authenticate, updateProfile);
 
 /**
  * @swagger
  * /auth/fcm-token:
  *   put:
  *     summary: Update FCM token
- *     description: Updates the Firebase Cloud Messaging token for push notifications
  *     tags: [Auth]
  *     security:
  *       - bearerAuth: []
@@ -497,59 +494,37 @@ router.put('/profile', authenticate, updateProfileValidator, validate, updatePro
  *           schema:
  *             type: object
  *             required:
- *               - fcmToken
+ *               - token
  *             properties:
- *               fcmToken:
+ *               token:
  *                 type: string
- *                 example: "dGVzdF9mY21fdG9rZW4..."
  *     responses:
  *       200:
- *         description: FCM token updated successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: "FCM token updated"
- *                 messageAr:
- *                   type: string
- *                   example: "تم تحديث رمز الإشعارات"
+ *         description: FCM token updated
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
  */
-router.put('/fcm-token', authenticate, fcmTokenValidator, validate, updateFCMToken);
+router.put('/fcm-token', authenticate, updateFCMToken);
 
 /**
  * @swagger
  * /auth/logout:
  *   post:
  *     summary: Logout user
- *     description: Invalidates the current session and clears FCM token
  *     tags: [Auth]
  *     security:
  *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               fcmToken:
+ *                 type: string
  *     responses:
  *       200:
  *         description: Logged out successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: "Logged out successfully"
- *                 messageAr:
- *                   type: string
- *                   example: "تم تسجيل الخروج بنجاح"
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
  */

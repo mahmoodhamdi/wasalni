@@ -1,6 +1,6 @@
 import mongoose, { Schema, Model } from 'mongoose';
 import bcrypt from 'bcryptjs';
-import { IUser, UserRole, Gender, Language, EmergencyContact } from '../types';
+import { IUser, UserRole, Gender, Language, EmergencyContact, AuthProvider } from '../types';
 
 // Emergency Contact Schema
 const emergencyContactSchema = new Schema<EmergencyContact>(
@@ -27,24 +27,35 @@ const userSchema = new Schema<IUser>(
       required: true,
       default: 'passenger',
     },
-    phone: {
+    email: {
       type: String,
       required: true,
       unique: true,
       trim: true,
-      match: [/^\+20[0-9]{10}$/, 'Please enter a valid Egyptian phone number'],
+      lowercase: true,
+      match: [/^\S+@\S+\.\S+$/, 'Please enter a valid email'],
     },
-    email: {
+    phone: {
       type: String,
       trim: true,
-      lowercase: true,
       sparse: true,
-      match: [/^\S+@\S+\.\S+$/, 'Please enter a valid email'],
+      match: [/^\+?[0-9]{10,15}$/, 'Please enter a valid phone number'],
     },
     password: {
       type: String,
       minlength: 6,
       select: false,
+    },
+    googleId: {
+      type: String,
+      sparse: true,
+      unique: true,
+    },
+    authProvider: {
+      type: String,
+      enum: ['email', 'google'] as AuthProvider[],
+      required: true,
+      default: 'email',
     },
     name: {
       type: String,
@@ -60,7 +71,7 @@ const userSchema = new Schema<IUser>(
       type: String,
       enum: ['male', 'female'] as Gender[],
     },
-    isPhoneVerified: {
+    isEmailVerified: {
       type: Boolean,
       default: false,
     },
@@ -97,8 +108,9 @@ const userSchema = new Schema<IUser>(
 );
 
 // Indexes
-userSchema.index({ phone: 1 });
-userSchema.index({ email: 1 }, { sparse: true });
+userSchema.index({ email: 1 });
+userSchema.index({ googleId: 1 }, { sparse: true });
+userSchema.index({ phone: 1 }, { sparse: true });
 userSchema.index({ role: 1 });
 userSchema.index({ isActive: 1 });
 
@@ -122,9 +134,14 @@ userSchema.methods.comparePassword = async function (
   return bcrypt.compare(candidatePassword, user.password);
 };
 
-// Static method to find by phone
-userSchema.statics.findByPhone = function (phone: string) {
-  return this.findOne({ phone });
+// Static method to find by email
+userSchema.statics.findByEmail = function (email: string) {
+  return this.findOne({ email: email.toLowerCase() });
+};
+
+// Static method to find by Google ID
+userSchema.statics.findByGoogleId = function (googleId: string) {
+  return this.findOne({ googleId });
 };
 
 // Static method to find active users by role

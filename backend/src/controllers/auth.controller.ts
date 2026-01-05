@@ -2,10 +2,10 @@ import { Request, Response, NextFunction } from 'express';
 import { authService } from '../services/auth.service';
 import { sendSuccess, sendCreated } from '../utils/response';
 import { BadRequestError } from '../utils/errors';
-import { validateEgyptianPhone } from '../utils/otp';
+import { OTPPurpose } from '../types';
 
 /**
- * Send OTP to phone number
+ * Send OTP to email
  * POST /api/v1/auth/send-otp
  */
 export const sendOTP = async (
@@ -14,54 +14,153 @@ export const sendOTP = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { phone } = req.body;
+    const { email, purpose = 'login' } = req.body;
 
-    if (!phone) {
-      throw new BadRequestError('رقم الهاتف مطلوب');
+    if (!email) {
+      throw new BadRequestError('Email is required', 'البريد الإلكتروني مطلوب');
     }
 
-    if (!validateEgyptianPhone(phone)) {
-      throw new BadRequestError('رقم الهاتف غير صحيح');
+    // Validate email format
+    const emailRegex = /^\S+@\S+\.\S+$/;
+    if (!emailRegex.test(email)) {
+      throw new BadRequestError('Invalid email format', 'صيغة البريد الإلكتروني غير صحيحة');
     }
 
-    const result = await authService.sendOTP(phone);
-    sendSuccess(res, result, 'تم إرسال رمز التحقق');
+    // Validate purpose
+    const validPurposes: OTPPurpose[] = ['registration', 'login', 'password_reset'];
+    if (!validPurposes.includes(purpose)) {
+      throw new BadRequestError('Invalid purpose', 'الغرض غير صحيح');
+    }
+
+    const result = await authService.sendOTP(email, purpose as OTPPurpose);
+    sendSuccess(res, { expiresIn: result.expiresIn }, result.message, result.messageAr);
   } catch (error) {
     next(error);
   }
 };
 
 /**
- * Verify OTP
+ * Verify OTP for login
  * POST /api/v1/auth/verify-otp
  */
-export const verifyOTP = async (
+export const verifyLoginOTP = async (
   req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { phone, otp } = req.body;
+    const { email, otp } = req.body;
 
-    if (!phone || !otp) {
-      throw new BadRequestError('رقم الهاتف ورمز التحقق مطلوبين');
+    if (!email || !otp) {
+      throw new BadRequestError(
+        'Email and OTP are required',
+        'البريد الإلكتروني ورمز التحقق مطلوبين'
+      );
     }
 
     if (otp.length !== 6) {
-      throw new BadRequestError('رمز التحقق يجب أن يكون 6 أرقام');
+      throw new BadRequestError(
+        'OTP must be 6 digits',
+        'رمز التحقق يجب أن يكون 6 أرقام'
+      );
     }
 
-    const result = await authService.verifyOTP(phone, otp);
+    const result = await authService.verifyLoginOTP(email, otp);
 
-    if (result.isNewUser) {
-      sendSuccess(res, { isNewUser: true }, 'رمز التحقق صحيح - يرجى إكمال التسجيل');
-    } else {
-      sendSuccess(res, {
-        isNewUser: false,
-        user: result.user,
-        tokens: result.tokens,
-      }, 'تم تسجيل الدخول بنجاح');
+    sendSuccess(res, {
+      user: result.user,
+      tokens: result.tokens,
+    }, 'Login successful', 'تم تسجيل الدخول بنجاح');
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Verify OTP for registration
+ * POST /api/v1/auth/verify-registration-otp
+ */
+export const verifyRegistrationOTP = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      throw new BadRequestError(
+        'Email and OTP are required',
+        'البريد الإلكتروني ورمز التحقق مطلوبين'
+      );
     }
+
+    const result = await authService.verifyRegistrationOTP(email, otp);
+
+    sendSuccess(res, { verified: result.verified }, 'OTP verified - please complete registration', 'تم التحقق من الرمز - يرجى إكمال التسجيل');
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Login with email and password
+ * POST /api/v1/auth/login
+ */
+export const login = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      throw new BadRequestError(
+        'Email and password are required',
+        'البريد الإلكتروني وكلمة المرور مطلوبين'
+      );
+    }
+
+    const result = await authService.loginWithPassword(email, password);
+
+    sendSuccess(res, {
+      user: result.user,
+      tokens: result.tokens,
+    }, 'Login successful', 'تم تسجيل الدخول بنجاح');
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Google Sign-In
+ * POST /api/v1/auth/google
+ */
+export const googleSignIn = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { idToken, role = 'passenger' } = req.body;
+
+    if (!idToken) {
+      throw new BadRequestError('Google ID token is required', 'رمز جوجل مطلوب');
+    }
+
+    if (role !== 'passenger' && role !== 'driver') {
+      throw new BadRequestError('Invalid role', 'الدور غير صحيح');
+    }
+
+    const result = await authService.googleSignIn(idToken, role);
+
+    sendSuccess(res, {
+      user: result.user,
+      tokens: result.tokens,
+      isNewUser: result.isNewUser,
+    }, result.isNewUser ? 'Account created successfully' : 'Login successful',
+       result.isNewUser ? 'تم إنشاء الحساب بنجاح' : 'تم تسجيل الدخول بنجاح');
   } catch (error) {
     next(error);
   }
@@ -77,20 +176,34 @@ export const registerPassenger = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { phone, name, email, gender } = req.body;
+    const { email, password, name, phone, gender } = req.body;
 
-    if (!phone || !name) {
-      throw new BadRequestError('رقم الهاتف والاسم مطلوبين');
+    if (!email || !password || !name) {
+      throw new BadRequestError(
+        'Email, password, and name are required',
+        'البريد الإلكتروني وكلمة المرور والاسم مطلوبين'
+      );
+    }
+
+    if (password.length < 6) {
+      throw new BadRequestError(
+        'Password must be at least 6 characters',
+        'كلمة المرور يجب أن تكون 6 أحرف على الأقل'
+      );
     }
 
     if (name.length < 2) {
-      throw new BadRequestError('الاسم يجب أن يكون أكثر من حرفين');
+      throw new BadRequestError(
+        'Name must be at least 2 characters',
+        'الاسم يجب أن يكون أكثر من حرفين'
+      );
     }
 
     const result = await authService.registerPassenger({
-      phone,
-      name,
       email,
+      password,
+      name,
+      phone,
       gender,
     });
 
@@ -110,24 +223,41 @@ export const registerDriver = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { phone, name, email, nationalId, vehicleType, vehicleCategory, vehicle } = req.body;
+    const { email, password, name, phone, nationalId, vehicleType, vehicleCategory, vehicle } = req.body;
 
-    if (!phone || !name || !nationalId || !vehicleType || !vehicleCategory || !vehicle) {
-      throw new BadRequestError('جميع البيانات المطلوبة يجب ملؤها');
+    if (!email || !password || !name || !nationalId || !vehicleType || !vehicleCategory || !vehicle) {
+      throw new BadRequestError(
+        'All required fields must be provided',
+        'جميع البيانات المطلوبة يجب ملؤها'
+      );
+    }
+
+    if (password.length < 6) {
+      throw new BadRequestError(
+        'Password must be at least 6 characters',
+        'كلمة المرور يجب أن تكون 6 أحرف على الأقل'
+      );
     }
 
     if (nationalId.length !== 14) {
-      throw new BadRequestError('الرقم القومي يجب أن يكون 14 رقم');
+      throw new BadRequestError(
+        'National ID must be 14 digits',
+        'الرقم القومي يجب أن يكون 14 رقم'
+      );
     }
 
     if (!vehicle.make || !vehicle.model || !vehicle.year || !vehicle.color || !vehicle.plateNumber) {
-      throw new BadRequestError('بيانات المركبة غير مكتملة');
+      throw new BadRequestError(
+        'Vehicle information is incomplete',
+        'بيانات المركبة غير مكتملة'
+      );
     }
 
     const result = await authService.registerDriver({
-      phone,
-      name,
       email,
+      password,
+      name,
+      phone,
       nationalId,
       vehicleType,
       vehicleCategory,
@@ -153,11 +283,80 @@ export const adminLogin = async (
     const { email, password } = req.body;
 
     if (!email || !password) {
-      throw new BadRequestError('البريد الإلكتروني وكلمة المرور مطلوبين');
+      throw new BadRequestError(
+        'Email and password are required',
+        'البريد الإلكتروني وكلمة المرور مطلوبين'
+      );
     }
 
     const result = await authService.adminLogin(email, password);
-    sendSuccess(res, result, 'تم تسجيل الدخول بنجاح');
+    sendSuccess(res, result, 'Login successful', 'تم تسجيل الدخول بنجاح');
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Reset password
+ * POST /api/v1/auth/reset-password
+ */
+export const resetPassword = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { email, otp, newPassword } = req.body;
+
+    if (!email || !otp || !newPassword) {
+      throw new BadRequestError(
+        'Email, OTP, and new password are required',
+        'البريد الإلكتروني ورمز التحقق وكلمة المرور الجديدة مطلوبين'
+      );
+    }
+
+    if (newPassword.length < 6) {
+      throw new BadRequestError(
+        'Password must be at least 6 characters',
+        'كلمة المرور يجب أن تكون 6 أحرف على الأقل'
+      );
+    }
+
+    await authService.resetPassword(email, otp, newPassword);
+    sendSuccess(res, null, 'Password reset successfully', 'تم إعادة تعيين كلمة المرور بنجاح');
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Change password (authenticated)
+ * PUT /api/v1/auth/change-password
+ */
+export const changePassword = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      throw new BadRequestError(
+        'Current and new password are required',
+        'كلمة المرور الحالية والجديدة مطلوبين'
+      );
+    }
+
+    if (newPassword.length < 6) {
+      throw new BadRequestError(
+        'Password must be at least 6 characters',
+        'كلمة المرور يجب أن تكون 6 أحرف على الأقل'
+      );
+    }
+
+    await authService.changePassword(req.user!.userId, currentPassword, newPassword);
+    sendSuccess(res, null, 'Password changed successfully', 'تم تغيير كلمة المرور بنجاح');
   } catch (error) {
     next(error);
   }
@@ -176,11 +375,11 @@ export const refreshToken = async (
     const { refreshToken } = req.body;
 
     if (!refreshToken) {
-      throw new BadRequestError('التوكن مطلوب');
+      throw new BadRequestError('Refresh token is required', 'التوكن مطلوب');
     }
 
     const tokens = await authService.refreshToken(refreshToken);
-    sendSuccess(res, { tokens }, 'تم تجديد التوكن');
+    sendSuccess(res, { tokens }, 'Token refreshed', 'تم تجديد التوكن');
   } catch (error) {
     next(error);
   }
@@ -197,7 +396,7 @@ export const getProfile = async (
 ): Promise<void> => {
   try {
     const user = await authService.getProfile(req.user!.userId);
-    sendSuccess(res, { user }, 'تم جلب البيانات');
+    sendSuccess(res, { user }, 'Profile retrieved', 'تم جلب البيانات');
   } catch (error) {
     next(error);
   }
@@ -213,16 +412,16 @@ export const updateProfile = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { name, email, avatar, gender } = req.body;
+    const { name, phone, avatar, gender } = req.body;
 
     const user = await authService.updateProfile(req.user!.userId, {
       name,
-      email,
+      phone,
       avatar,
       gender,
     });
 
-    sendSuccess(res, { user }, 'تم تحديث البيانات');
+    sendSuccess(res, { user }, 'Profile updated', 'تم تحديث البيانات');
   } catch (error) {
     next(error);
   }
@@ -241,11 +440,11 @@ export const updateFCMToken = async (
     const { token } = req.body;
 
     if (!token) {
-      throw new BadRequestError('التوكن مطلوب');
+      throw new BadRequestError('FCM token is required', 'التوكن مطلوب');
     }
 
     await authService.updateFCMToken(req.user!.userId, token);
-    sendSuccess(res, null, 'تم تحديث التوكن');
+    sendSuccess(res, null, 'FCM token updated', 'تم تحديث التوكن');
   } catch (error) {
     next(error);
   }
@@ -261,8 +460,9 @@ export const logout = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    await authService.logout(req.user!.userId);
-    sendSuccess(res, null, 'تم تسجيل الخروج');
+    const { fcmToken } = req.body;
+    await authService.logout(req.user!.userId, fcmToken);
+    sendSuccess(res, null, 'Logged out successfully', 'تم تسجيل الخروج');
   } catch (error) {
     next(error);
   }
