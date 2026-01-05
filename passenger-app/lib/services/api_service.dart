@@ -119,28 +119,78 @@ class ApiService {
   }
 
   // Auth Endpoints
-  Future<Response> sendOTP(String phone) async {
-    return await _dio.post('/auth/send-otp', data: {'phone': phone});
+
+  /// Send OTP to email for registration, login, or password reset
+  Future<Response> sendOTP(String email, {String purpose = 'login'}) async {
+    return await _dio.post('/auth/send-otp', data: {
+      'email': email,
+      'purpose': purpose,
+    });
   }
 
-  Future<Response> verifyOTP(String phone, String otp) async {
+  /// Verify OTP for login (returns tokens if user exists)
+  Future<Response> verifyLoginOTP(String email, String otp) async {
     return await _dio.post('/auth/verify-otp', data: {
-      'phone': phone,
+      'email': email,
       'otp': otp,
     });
   }
 
+  /// Verify OTP for registration (just verifies, doesn't return tokens)
+  Future<Response> verifyRegistrationOTP(String email, String otp) async {
+    return await _dio.post('/auth/verify-registration-otp', data: {
+      'email': email,
+      'otp': otp,
+    });
+  }
+
+  /// Login with email and password
+  Future<Response> login(String email, String password) async {
+    return await _dio.post('/auth/login', data: {
+      'email': email,
+      'password': password,
+    });
+  }
+
+  /// Google Sign-In with Firebase ID token
+  Future<Response> googleSignIn(String idToken, {String role = 'passenger'}) async {
+    return await _dio.post('/auth/google', data: {
+      'idToken': idToken,
+      'role': role,
+    });
+  }
+
+  /// Register new passenger with email and password
   Future<Response> register({
-    required String phone,
+    required String email,
+    required String password,
     required String name,
-    String? email,
+    String? phone,
     String? gender,
   }) async {
     return await _dio.post('/auth/register/passenger', data: {
-      'phone': phone,
+      'email': email,
+      'password': password,
       'name': name,
-      if (email != null) 'email': email,
+      if (phone != null) 'phone': phone,
       if (gender != null) 'gender': gender,
+    });
+  }
+
+  /// Reset password with OTP
+  Future<Response> resetPassword(String email, String otp, String newPassword) async {
+    return await _dio.post('/auth/reset-password', data: {
+      'email': email,
+      'otp': otp,
+      'newPassword': newPassword,
+    });
+  }
+
+  /// Change password (authenticated)
+  Future<Response> changePassword(String currentPassword, String newPassword) async {
+    return await _dio.put('/auth/change-password', data: {
+      'currentPassword': currentPassword,
+      'newPassword': newPassword,
     });
   }
 

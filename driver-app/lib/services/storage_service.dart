@@ -18,6 +18,7 @@ class StorageService {
   static const String _keyRefreshToken = 'refresh_token';
   static const String _keyUserId = 'user_id';
   static const String _keyUserName = 'user_name';
+  static const String _keyUserEmail = 'user_email';
   static const String _keyUserPhone = 'user_phone';
   static const String _keyUserRole = 'user_role';
   static const String _keyIsLoggedIn = 'is_logged_in';
@@ -55,13 +56,15 @@ class StorageService {
   Future<void> saveUserData({
     required String id,
     required String name,
-    required String phone,
+    String? email,
+    String? phone,
     required String role,
     String? driverStatus,
   }) async {
     await _prefs.setString(_keyUserId, id);
     await _prefs.setString(_keyUserName, name);
-    await _prefs.setString(_keyUserPhone, phone);
+    if (email != null) await _prefs.setString(_keyUserEmail, email);
+    if (phone != null) await _prefs.setString(_keyUserPhone, phone);
     await _prefs.setString(_keyUserRole, role);
     if (driverStatus != null) {
       await _prefs.setString(_keyDriverStatus, driverStatus);
@@ -71,6 +74,7 @@ class StorageService {
 
   String? getUserId() => _prefs.getString(_keyUserId);
   String? getUserName() => _prefs.getString(_keyUserName);
+  String? getUserEmail() => _prefs.getString(_keyUserEmail);
   String? getUserPhone() => _prefs.getString(_keyUserPhone);
   String? getUserRole() => _prefs.getString(_keyUserRole);
   String? getDriverStatus() => _prefs.getString(_keyDriverStatus);
@@ -83,6 +87,7 @@ class StorageService {
   Future<void> clearUserData() async {
     await _prefs.remove(_keyUserId);
     await _prefs.remove(_keyUserName);
+    await _prefs.remove(_keyUserEmail);
     await _prefs.remove(_keyUserPhone);
     await _prefs.remove(_keyUserRole);
     await _prefs.remove(_keyDriverStatus);
