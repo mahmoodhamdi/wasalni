@@ -4,7 +4,7 @@ import { config } from '../config';
 export interface JWTPayload {
   userId: string;
   role: 'passenger' | 'driver' | 'admin';
-  phone: string;
+  email: string;
 }
 
 export interface TokenPair {

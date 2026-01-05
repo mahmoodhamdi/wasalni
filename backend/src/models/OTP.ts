@@ -1,20 +1,27 @@
 import mongoose, { Schema, Model } from 'mongoose';
-import { IOTP } from '../types';
+import { IOTP, OTPPurpose } from '../types';
 import { config } from '../config';
 
 // OTP Schema
 const otpSchema = new Schema<IOTP>(
   {
-    phone: {
+    email: {
       type: String,
       required: true,
       trim: true,
-      match: [/^\+20[0-9]{10}$/, 'Please enter a valid Egyptian phone number'],
+      lowercase: true,
+      match: [/^\S+@\S+\.\S+$/, 'Please enter a valid email'],
     },
     code: {
       type: String,
       required: true,
       length: 6,
+    },
+    purpose: {
+      type: String,
+      enum: ['registration', 'login', 'password_reset'] as OTPPurpose[],
+      required: true,
+      default: 'login',
     },
     expiresAt: {
       type: Date,
@@ -28,7 +35,7 @@ const otpSchema = new Schema<IOTP>(
     attempts: {
       type: Number,
       default: 0,
-      max: 5,
+      max: config.otp.maxAttempts || 5,
     },
   },
   {
@@ -44,7 +51,8 @@ const otpSchema = new Schema<IOTP>(
 );
 
 // Indexes
-otpSchema.index({ phone: 1 });
+otpSchema.index({ email: 1 });
+otpSchema.index({ email: 1, purpose: 1 });
 otpSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 }); // TTL index
 otpSchema.index({ createdAt: 1 });
 
@@ -58,13 +66,16 @@ otpSchema.statics.generateCode = function (): string {
   return code;
 };
 
-// Static: Create OTP for phone
-otpSchema.statics.createForPhone = async function (
-  phone: string
+// Static: Create OTP for email
+otpSchema.statics.createForEmail = async function (
+  email: string,
+  purpose: OTPPurpose = 'login'
 ): Promise<IOTP> {
-  // Invalidate any existing OTPs for this phone
+  const normalizedEmail = email.toLowerCase();
+
+  // Invalidate any existing OTPs for this email and purpose
   await this.updateMany(
-    { phone, isUsed: false },
+    { email: normalizedEmail, purpose, isUsed: false },
     { $set: { isUsed: true } }
   );
 
@@ -73,8 +84,9 @@ otpSchema.statics.createForPhone = async function (
   const expiresAt = new Date(Date.now() + config.otp.expiresIn * 60 * 1000);
 
   const otp = new this({
-    phone,
+    email: normalizedEmail,
     code,
+    purpose,
     expiresAt,
   });
 
@@ -83,11 +95,16 @@ otpSchema.statics.createForPhone = async function (
 
 // Static: Verify OTP
 otpSchema.statics.verifyOTP = async function (
-  phone: string,
-  code: string
+  email: string,
+  code: string,
+  purpose: OTPPurpose = 'login'
 ): Promise<{ success: boolean; message: string; messageAr: string }> {
+  const normalizedEmail = email.toLowerCase();
+  const maxAttempts = config.otp.maxAttempts || 5;
+
   const otp = await this.findOne({
-    phone,
+    email: normalizedEmail,
+    purpose,
     isUsed: false,
     expiresAt: { $gt: new Date() },
   }).sort({ createdAt: -1 });
@@ -101,7 +118,7 @@ otpSchema.statics.verifyOTP = async function (
   }
 
   // Check max attempts
-  if (otp.attempts >= 5) {
+  if (otp.attempts >= maxAttempts) {
     otp.isUsed = true;
     await otp.save();
     return {
@@ -117,10 +134,11 @@ otpSchema.statics.verifyOTP = async function (
   // Verify code
   if (otp.code !== code) {
     await otp.save();
+    const remaining = maxAttempts - otp.attempts;
     return {
       success: false,
-      message: `Invalid OTP. ${5 - otp.attempts} attempts remaining`,
-      messageAr: `رمز التحقق غير صحيح. ${5 - otp.attempts} محاولات متبقية`,
+      message: `Invalid OTP. ${remaining} attempts remaining`,
+      messageAr: `رمز التحقق غير صحيح. ${remaining} محاولات متبقية`,
     };
   }
 
@@ -137,9 +155,11 @@ otpSchema.statics.verifyOTP = async function (
 
 // Static: Check if can send new OTP (rate limiting)
 otpSchema.statics.canSendNew = async function (
-  phone: string
+  email: string,
+  purpose: OTPPurpose = 'login'
 ): Promise<{ canSend: boolean; waitSeconds?: number }> {
-  const lastOtp = await this.findOne({ phone }).sort({ createdAt: -1 });
+  const normalizedEmail = email.toLowerCase();
+  const lastOtp = await this.findOne({ email: normalizedEmail, purpose }).sort({ createdAt: -1 });
 
   if (!lastOtp) {
     return { canSend: true };
@@ -162,12 +182,13 @@ otpSchema.statics.canSendNew = async function (
 // Interface for OTP model with statics
 interface IOTPModel extends Model<IOTP> {
   generateCode(): string;
-  createForPhone(phone: string): Promise<IOTP>;
+  createForEmail(email: string, purpose?: OTPPurpose): Promise<IOTP>;
   verifyOTP(
-    phone: string,
-    code: string
+    email: string,
+    code: string,
+    purpose?: OTPPurpose
   ): Promise<{ success: boolean; message: string; messageAr: string }>;
-  canSendNew(phone: string): Promise<{ canSend: boolean; waitSeconds?: number }>;
+  canSendNew(email: string, purpose?: OTPPurpose): Promise<{ canSend: boolean; waitSeconds?: number }>;
 }
 
 // Create and export the model

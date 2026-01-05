@@ -9,6 +9,12 @@ export type Gender = 'male' | 'female';
 // Language
 export type Language = 'ar' | 'en';
 
+// Auth Provider
+export type AuthProvider = 'email' | 'google';
+
+// OTP Purpose
+export type OTPPurpose = 'registration' | 'login' | 'password_reset';
+
 // Driver Status
 export type DriverStatus = 'pending' | 'approved' | 'rejected' | 'suspended';
 
@@ -157,18 +163,21 @@ export interface IBaseDocument extends Document {
 // User Interface
 export interface IUser extends IBaseDocument {
   role: UserRole;
-  phone: string;
-  email?: string;
+  email: string;
+  phone?: string;
   password?: string;
+  googleId?: string;
+  authProvider: AuthProvider;
   name: string;
   avatar?: string;
   gender?: Gender;
-  isPhoneVerified: boolean;
+  isEmailVerified: boolean;
   isActive: boolean;
   emergencyContact?: EmergencyContact;
   fcmTokens: string[];
   language: Language;
   lastLoginAt?: Date;
+  comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
 // Passenger Interface
@@ -224,8 +233,9 @@ export interface IDriver extends IBaseDocument {
 
 // OTP Interface
 export interface IOTP extends IBaseDocument {
-  phone: string;
+  email: string;
   code: string;
+  purpose: OTPPurpose;
   expiresAt: Date;
   isUsed: boolean;
   attempts: number;
