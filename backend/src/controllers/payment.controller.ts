@@ -190,7 +190,7 @@ export const getPayment = async (
 export const paymobWebhook = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ): Promise<void> => {
   try {
     const { obj, hmac } = req.body;
@@ -236,7 +236,7 @@ export const paymobCallback = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { success, id, order } = req.query;
+    const { success, order } = req.query;
 
     // Redirect to mobile app or frontend with status
     const appScheme = process.env.APP_SCHEME || 'wasalni';

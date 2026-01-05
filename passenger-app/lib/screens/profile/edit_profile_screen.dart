@@ -177,7 +177,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     CircleAvatar(
                       radius: 60.r,
                       backgroundColor:
-                          Theme.of(context).primaryColor.withOpacity(0.1),
+                          Theme.of(context).primaryColor.withValues(alpha: 0.1),
                       backgroundImage: _avatarFile != null
                           ? FileImage(_avatarFile!)
                           : (_currentAvatar != null
@@ -392,7 +392,7 @@ class _GenderOption extends StatelessWidget {
         padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 16.w),
         decoration: BoxDecoration(
           color: isSelected
-              ? Theme.of(context).primaryColor.withOpacity(0.1)
+              ? Theme.of(context).primaryColor.withValues(alpha: 0.1)
               : Colors.grey[100],
           borderRadius: BorderRadius.circular(12.r),
           border: Border.all(

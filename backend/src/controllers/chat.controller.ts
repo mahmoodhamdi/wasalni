@@ -2,7 +2,6 @@ import { Request, Response, NextFunction } from 'express';
 import { Types } from 'mongoose';
 import * as chatService from '../services/chat.service';
 import Trip from '../models/Trip';
-import { logger } from '../utils/logger';
 
 /**
  * Get user's chats
