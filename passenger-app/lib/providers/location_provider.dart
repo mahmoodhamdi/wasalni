@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 
 import '../config/app_config.dart';
 
@@ -45,41 +46,109 @@ class LocationState {
 class LocationNotifier extends StateNotifier<LocationState> {
   LocationNotifier() : super(const LocationState());
 
+  Future<bool> _checkLocationService() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      state = state.copyWith(
+        errorMessage: 'خدمة الموقع غير مفعلة. الرجاء تفعيلها من الإعدادات.',
+        hasPermission: false,
+      );
+      return false;
+    }
+    return true;
+  }
+
   Future<void> checkPermission() async {
-    state = state.copyWith(isLoading: true);
+    state = state.copyWith(isLoading: true, errorMessage: null);
     try {
-      // TODO: Check location permission using geolocator
-      await Future.delayed(const Duration(milliseconds: 500));
+      // Check if location services are enabled
+      if (!await _checkLocationService()) {
+        state = state.copyWith(isLoading: false);
+        return;
+      }
+
+      // Check permission status
+      LocationPermission permission = await Geolocator.checkPermission();
+
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          state = state.copyWith(
+            isLoading: false,
+            hasPermission: false,
+            errorMessage: 'تم رفض إذن الموقع',
+          );
+          return;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        state = state.copyWith(
+          isLoading: false,
+          hasPermission: false,
+          errorMessage: 'تم رفض إذن الموقع بشكل دائم. الرجاء تفعيله من إعدادات التطبيق.',
+        );
+        return;
+      }
+
       state = state.copyWith(
         isLoading: false,
         hasPermission: true,
+        errorMessage: null,
       );
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        errorMessage: e.toString(),
+        errorMessage: 'حدث خطأ أثناء التحقق من الإذن: ${e.toString()}',
       );
     }
   }
 
   Future<void> getCurrentLocation() async {
-    state = state.copyWith(isLoading: true);
+    state = state.copyWith(isLoading: true, errorMessage: null);
     try {
-      // TODO: Get current location using geolocator
-      await Future.delayed(const Duration(seconds: 1));
+      // First check permission
+      if (!state.hasPermission) {
+        await checkPermission();
+        if (!state.hasPermission) {
+          state = state.copyWith(isLoading: false);
+          return;
+        }
+      }
 
-      // For now, use default location (Bagour)
+      // Check location service
+      if (!await _checkLocationService()) {
+        // Fallback to default location
+        state = state.copyWith(
+          latitude: AppConfig.defaultLatitude,
+          longitude: AppConfig.defaultLongitude,
+          address: 'الباجور، المنوفية',
+          isLoading: false,
+        );
+        return;
+      }
+
+      // Get current position
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 15),
+      );
+
+      state = state.copyWith(
+        latitude: position.latitude,
+        longitude: position.longitude,
+        isLoading: false,
+        hasPermission: true,
+        errorMessage: null,
+      );
+    } catch (e) {
+      // On error, fallback to default location
       state = state.copyWith(
         latitude: AppConfig.defaultLatitude,
         longitude: AppConfig.defaultLongitude,
         address: 'الباجور، المنوفية',
         isLoading: false,
-        hasPermission: true,
-      );
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: e.toString(),
+        errorMessage: 'تعذر الحصول على الموقع الحالي، تم استخدام الموقع الافتراضي',
       );
     }
   }
@@ -94,6 +163,14 @@ class LocationNotifier extends StateNotifier<LocationState> {
 
   void clearError() {
     state = state.copyWith(errorMessage: null);
+  }
+
+  Future<void> openLocationSettings() async {
+    await Geolocator.openLocationSettings();
+  }
+
+  Future<void> openAppSettings() async {
+    await Geolocator.openAppSettings();
   }
 }
 

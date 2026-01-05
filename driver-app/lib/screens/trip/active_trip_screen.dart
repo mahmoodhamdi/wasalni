@@ -10,6 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../config/theme.dart';
 import '../../providers/trip_provider.dart';
 import '../../services/location_service.dart';
+import '../../services/socket_service.dart';
 import '../../widgets/wasalni_map.dart';
 
 class ActiveTripScreen extends ConsumerStatefulWidget {
@@ -192,6 +193,68 @@ class _ActiveTripScreenState extends ConsumerState<ActiveTripScreen> {
       final uri = Uri.parse('tel:$phone');
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri);
+      }
+    }
+  }
+
+  void _showSOSDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.sos, color: AppColors.error, size: 28.sp),
+            SizedBox(width: 8.w),
+            const Text('طوارئ - SOS'),
+          ],
+        ),
+        content: const Text(
+          'هل تريد إرسال نداء استغاثة؟\n\nسيتم إبلاغ فريق الدعم والسلطات المحلية بموقعك.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('إلغاء'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _triggerSOS();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+            ),
+            child: const Text('إرسال SOS', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _triggerSOS() async {
+    final tripState = ref.read(driverTripProvider);
+    if (tripState.tripId != null && _currentPosition != null) {
+      socketService.sendSOS(
+        tripState.tripId!,
+        _currentPosition!.latitude,
+        _currentPosition!.longitude,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 8.w),
+                const Text('تم إرسال نداء الاستغاثة'),
+              ],
+            ),
+            backgroundColor: AppColors.error,
+            duration: const Duration(seconds: 5),
+          ),
+        );
       }
     }
   }
@@ -406,6 +469,26 @@ class _ActiveTripScreenState extends ConsumerState<ActiveTripScreen> {
                       ),
                     ),
                     const Spacer(),
+                    // SOS Button
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.error,
+                        borderRadius: BorderRadius.circular(12.r),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.error.withValues(alpha: 0.3),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.sos, color: Colors.white),
+                        onPressed: _showSOSDialog,
+                        tooltip: 'طوارئ SOS',
+                      ),
+                    ),
+                    SizedBox(width: 8.w),
                     // Navigate button
                     Container(
                       decoration: BoxDecoration(

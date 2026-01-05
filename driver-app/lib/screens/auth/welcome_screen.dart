@@ -66,7 +66,7 @@ class WelcomeScreen extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () => context.push('/phone'),
+                  onPressed: () => context.push('/login'),
                   child: Text(
                     'ابدأ التسجيل',
                     style: AppTextStyles.button.copyWith(color: Colors.white),
@@ -75,7 +75,7 @@ class WelcomeScreen extends StatelessWidget {
               ),
               SizedBox(height: 12.h),
               TextButton(
-                onPressed: () => context.push('/phone'),
+                onPressed: () => context.push('/login'),
                 child: const Text('لديك حساب؟ سجل دخول'),
               ),
               SizedBox(height: 24.h),
