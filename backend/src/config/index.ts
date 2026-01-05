@@ -77,6 +77,8 @@ export const config = {
   otp: {
     expiresIn: parseInt(process.env.OTP_EXPIRES_IN || '5', 10), // minutes
     length: parseInt(process.env.OTP_LENGTH || '6', 10),
+    maxAttempts: parseInt(process.env.OTP_MAX_ATTEMPTS || '3', 10),
+    rateLimitMinutes: parseInt(process.env.OTP_RATE_LIMIT_MINUTES || '15', 10),
   },
 
   // Cloudinary
@@ -98,12 +100,10 @@ export const config = {
     clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
   },
 
-  // SMS
-  sms: {
-    provider: process.env.SMS_PROVIDER || 'mock',
-    apiKey: process.env.SMS_API_KEY,
-    apiSecret: process.env.SMS_API_SECRET,
-    fromNumber: process.env.SMS_FROM_NUMBER,
+  // Email (Resend)
+  email: {
+    resendApiKey: process.env.RESEND_API_KEY || '',
+    fromEmail: process.env.RESEND_FROM_EMAIL || 'noreply@wasalni.com',
   },
 
   // App Settings
