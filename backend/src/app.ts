@@ -57,7 +57,7 @@ if (config.nodeEnv === 'development') {
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  max: config.nodeEnv === 'development' ? 1000 : 100, // Higher limit for development
   message: {
     success: false,
     message: 'Too many requests, please try again later',
