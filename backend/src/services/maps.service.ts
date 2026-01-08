@@ -1,22 +1,29 @@
-import {
-  Client,
-  PlaceDetailsRequest,
-  PlaceDetailsResponse,
-  TravelMode,
-  Language,
-} from '@googlemaps/google-maps-services-js';
+/**
+ * Maps Service using FREE OpenStreetMap APIs
+ * - Nominatim for geocoding and place search
+ * - OSRM for routing and directions
+ *
+ * TODO: Switch to Google Maps when billing is ready
+ */
+
 import {
   getDirections,
   getPlaceAutocomplete,
   geocodeAddress,
   reverseGeocode,
-  getDistanceMatrix,
   calculateETA,
 } from '../config/maps';
 import { config } from '../config';
 import { logger } from '../utils/logger';
 
-const mapsClient = new Client({});
+// TODO: Switch to Google Maps when billing is ready
+// import {
+//   Client,
+//   PlaceDetailsRequest,
+//   PlaceDetailsResponse,
+//   TravelMode,
+//   Language,
+// } from '@googlemaps/google-maps-services-js';
 
 // Interfaces
 export interface Coordinates {
@@ -77,6 +84,7 @@ export interface FareEstimate {
 
 /**
  * Search for places with autocomplete (Arabic support)
+ * Uses Nominatim (FREE)
  */
 export const searchPlaces = async (
   query: string,
@@ -105,49 +113,18 @@ export const searchPlaces = async (
 
 /**
  * Get place details by place ID
+ * Uses Nominatim reverse geocode as alternative
  */
 export const getPlaceDetails = async (placeId: string): Promise<PlaceDetails | null> => {
-  if (!config.googleMaps.apiKey) {
-    logger.warn('Google Maps API key not configured');
-    return null;
-  }
-
-  try {
-    const request: PlaceDetailsRequest = {
-      params: {
-        place_id: placeId,
-        fields: ['place_id', 'name', 'formatted_address', 'geometry', 'types', 'vicinity'],
-        language: Language.ar,
-        key: config.googleMaps.apiKey,
-      },
-    };
-
-    const response = await mapsClient.placeDetails(request);
-    const result = response.data.result;
-
-    if (!result || !result.geometry?.location) {
-      return null;
-    }
-
-    return {
-      placeId: result.place_id || placeId,
-      name: result.name || '',
-      address: result.formatted_address || '',
-      location: {
-        lat: result.geometry.location.lat,
-        lng: result.geometry.location.lng,
-      },
-      types: result.types || [],
-      vicinity: result.vicinity,
-    };
-  } catch (error) {
-    logger.error(`Get place details failed: ${error}`);
-    return null;
-  }
+  // Nominatim doesn't support getting details by place_id in the same way
+  // This would need the coordinates to be passed in for reverse geocoding
+  logger.warn('getPlaceDetails requires coordinates with Nominatim - use searchPlaces instead');
+  return null;
 };
 
 /**
  * Get address from coordinates (reverse geocoding)
+ * Uses Nominatim (FREE)
  */
 export const getAddressFromCoordinates = async (
   lat: number,
@@ -195,6 +172,7 @@ export const getAddressFromCoordinates = async (
 
 /**
  * Get coordinates from address (geocoding)
+ * Uses Nominatim (FREE)
  */
 export const getCoordinatesFromAddress = async (
   address: string
@@ -222,6 +200,7 @@ export const getCoordinatesFromAddress = async (
 
 /**
  * Calculate route between two points
+ * Uses OSRM (FREE)
  */
 export const calculateRoute = async (
   origin: Coordinates,
@@ -356,6 +335,7 @@ function getFareSettings(category: 'economy' | 'comfort' | 'family') {
 
 /**
  * Get ETA between two points
+ * Uses OSRM (FREE)
  */
 export const getEstimatedTime = async (
   origin: Coordinates,
@@ -464,3 +444,30 @@ export default {
   isInServiceArea,
   getNearbyPopularPlaces,
 };
+
+/*
+// TODO: Switch to Google Maps when billing is ready
+// Original Google Maps implementation:
+
+import {
+  Client,
+  PlaceDetailsRequest,
+  TravelMode,
+  Language,
+} from '@googlemaps/google-maps-services-js';
+
+const mapsClient = new Client({});
+
+export const getPlaceDetails = async (placeId: string): Promise<PlaceDetails | null> => {
+  const request: PlaceDetailsRequest = {
+    params: {
+      place_id: placeId,
+      fields: ['place_id', 'name', 'formatted_address', 'geometry', 'types', 'vicinity'],
+      language: Language.ar,
+      key: config.googleMaps.apiKey,
+    },
+  };
+  const response = await mapsClient.placeDetails(request);
+  // ... rest of implementation
+};
+*/

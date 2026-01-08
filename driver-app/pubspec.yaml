@@ -30,17 +30,21 @@ dependencies:
   dio: ^5.4.0
   socket_io_client: ^2.0.3+1
 
-  # Maps & Location
-  google_maps_flutter: ^2.5.3
+  # Maps & Location (FREE - OpenStreetMap)
+  flutter_map: ^6.1.0
+  latlong2: ^0.9.0
+  http: ^1.2.0
+  # TODO: Switch to Google Maps when billing is ready
+  # google_maps_flutter: ^2.5.3
+  # geocoding: ^2.2.0
+  # flutter_polyline_points: ^2.0.0
   geolocator: ^10.1.0
-  geocoding: ^2.2.0
-  flutter_polyline_points: ^2.0.0
 
   # Firebase
-  firebase_core: ^2.32.0
-  firebase_messaging: ^14.7.10
-  firebase_auth: ^4.16.0
-  google_sign_in: ^6.2.1
+  firebase_core: ^3.8.1
+  firebase_auth: ^5.3.4
+  firebase_messaging: ^15.1.6
+  google_sign_in: ^6.2.2
 
   # Storage
   shared_preferences: ^2.2.2

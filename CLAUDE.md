@@ -39,6 +39,7 @@ npm run lint         # ESLint check
 cd passenger-app
 flutter pub get
 dart run build_runner build    # Generate Riverpod providers
+flutter analyze                # Static analysis
 flutter run                    # Run on connected device
 flutter run -d chrome          # Web development
 flutter build apk              # Android release
@@ -50,6 +51,7 @@ flutter build ios              # iOS release
 cd driver-app
 flutter pub get
 dart run build_runner build    # Generate Riverpod providers
+flutter analyze                # Static analysis
 flutter run
 flutter build apk
 ```
@@ -92,6 +94,7 @@ wasalni/
 - **Models:** `backend/src/models/` - Mongoose schemas
 - **Middleware:** `backend/src/middleware/` - Auth, error handling
 - **Config:** `backend/src/config/` - Database, Redis, Firebase, Maps setup
+- **Sockets:** `backend/src/sockets/` - Socket.io event handlers (e.g., `trip.socket.ts`)
 
 Key patterns:
 - **Bilingual responses:** ALL API responses must include both `message` (English) and `messageAr` (Arabic). This applies to success messages, error messages, and validation errors.
@@ -106,6 +109,7 @@ Key patterns:
 - JWT authentication with email/OTP verification and Google Sign-In
 - Socket.io for real-time driver location and trip updates
 - Redis for caching and driver location tracking (with MongoDB fallback)
+- **Error classes:** Use `AppError` subclasses from `backend/src/utils/errors.ts` (BadRequestError, NotFoundError, etc.) - all require bilingual messages
 
 ### Socket.io Room Architecture
 Socket rooms are used for targeted real-time communication:
@@ -128,7 +132,7 @@ Both passenger-app and driver-app use:
 - **Navigation:** GoRouter
 - **Network:** Dio for HTTP, socket_io_client for real-time
 - **Storage:** shared_preferences + flutter_secure_storage
-- **Maps:** google_maps_flutter + geolocator
+- **Maps:** flutter_map (OpenStreetMap) + geolocator (Google Maps planned for future)
 
 Structure pattern:
 ```
@@ -146,6 +150,7 @@ lib/
 - **API Client:** Axios with auth interceptors (`lib/api.ts`)
 - **UI:** Tailwind CSS + custom components
 - **Routing:** `app/` directory with nested layouts
+- **Maps:** Leaflet (react-leaflet) for admin map views
 - **Components:** `components/layout/` (Sidebar, Header), `components/ui/` (StatsCard, DataTable)
 
 ### Shared Types

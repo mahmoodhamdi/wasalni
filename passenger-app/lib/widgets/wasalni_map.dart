@@ -1,30 +1,115 @@
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../config/theme.dart';
 import '../services/location_service.dart';
 
+// TODO: Switch to Google Maps when billing is ready
+// import 'package:google_maps_flutter/google_maps_flutter.dart' as gmaps;
+
+/// Map controller wrapper for flutter_map
+class WasalniMapController {
+  final MapController _controller = MapController();
+
+  MapController get controller => _controller;
+
+  void moveToLocation(LatLng position, {double zoom = 15.0}) {
+    _controller.move(position, zoom);
+  }
+
+  void animateToLocation(LatLng position, {double zoom = 15.0}) {
+    _controller.move(position, zoom);
+  }
+
+  void zoomIn() {
+    final currentZoom = _controller.camera.zoom;
+    _controller.move(_controller.camera.center, currentZoom + 1);
+  }
+
+  void zoomOut() {
+    final currentZoom = _controller.camera.zoom;
+    _controller.move(_controller.camera.center, currentZoom - 1);
+  }
+
+  LatLng get center => _controller.camera.center;
+  double get zoom => _controller.camera.zoom;
+}
+
+/// Custom marker data for the map
+class WasalniMarker {
+  final String id;
+  final LatLng position;
+  final Widget? icon;
+  final Color? color;
+  final double size;
+  final VoidCallback? onTap;
+
+  const WasalniMarker({
+    required this.id,
+    required this.position,
+    this.icon,
+    this.color,
+    this.size = 40.0,
+    this.onTap,
+  });
+}
+
+/// Custom polyline data
+class WasalniPolyline {
+  final String id;
+  final List<LatLng> points;
+  final Color color;
+  final double strokeWidth;
+
+  const WasalniPolyline({
+    required this.id,
+    required this.points,
+    this.color = Colors.blue,
+    this.strokeWidth = 4.0,
+  });
+}
+
+/// Custom circle data
+class WasalniCircle {
+  final String id;
+  final LatLng center;
+  final double radiusMeters;
+  final Color fillColor;
+  final Color borderColor;
+  final double borderWidth;
+
+  const WasalniCircle({
+    required this.id,
+    required this.center,
+    required this.radiusMeters,
+    this.fillColor = const Color(0x304CAF50),
+    this.borderColor = Colors.green,
+    this.borderWidth = 2.0,
+  });
+}
+
+/// WasalniMap widget using OpenStreetMap (flutter_map)
+/// FREE alternative to Google Maps
 class WasalniMap extends StatefulWidget {
   final LatLng? initialPosition;
   final double initialZoom;
-  final Set<Marker>? markers;
-  final Set<Polyline>? polylines;
-  final Set<Circle>? circles;
+  final List<WasalniMarker>? markers;
+  final List<WasalniPolyline>? polylines;
+  final List<WasalniCircle>? circles;
   final bool showMyLocation;
   final bool showMyLocationButton;
   final bool showZoomControls;
   final bool scrollGesturesEnabled;
   final bool zoomGesturesEnabled;
-  final bool tiltGesturesEnabled;
   final bool rotateGesturesEnabled;
-  final MapType mapType;
-  final Function(GoogleMapController)? onMapCreated;
+  final Function(WasalniMapController)? onMapCreated;
   final Function(LatLng)? onTap;
   final Function(LatLng)? onLongPress;
-  final Function(CameraPosition)? onCameraMove;
+  final Function(LatLng, double)? onCameraMove;
   final Function()? onCameraIdle;
-  final EdgeInsets? padding;
+  final Widget? myLocationMarker;
 
   const WasalniMap({
     super.key,
@@ -38,15 +123,13 @@ class WasalniMap extends StatefulWidget {
     this.showZoomControls = false,
     this.scrollGesturesEnabled = true,
     this.zoomGesturesEnabled = true,
-    this.tiltGesturesEnabled = false,
     this.rotateGesturesEnabled = false,
-    this.mapType = MapType.normal,
     this.onMapCreated,
     this.onTap,
     this.onLongPress,
     this.onCameraMove,
     this.onCameraIdle,
-    this.padding,
+    this.myLocationMarker,
   });
 
   @override
@@ -54,94 +137,289 @@ class WasalniMap extends StatefulWidget {
 }
 
 class _WasalniMapState extends State<WasalniMap> {
-  GoogleMapController? _controller;
+  late final WasalniMapController _mapController;
+  LatLng? _myLocation;
+  bool _isLoadingLocation = false;
 
   // Default position (Bagour, Menoufia)
-  static const LatLng _defaultPosition = LatLng(
+  static final LatLng _defaultPosition = LatLng(
     LocationService.bagourLatitude,
     LocationService.bagourLongitude,
   );
 
-  // Map style - hide POIs
-  static const String _mapStyle = '''
-[
-  {
-    "featureType": "poi",
-    "elementType": "labels",
-    "stylers": [{"visibility": "off"}]
-  },
-  {
-    "featureType": "transit",
-    "stylers": [{"visibility": "simplified"}]
-  }
-]
-''';
-
   LatLng get _initialPosition => widget.initialPosition ?? _defaultPosition;
 
   @override
-  void dispose() {
-    _controller?.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    _mapController = WasalniMapController();
+    if (widget.showMyLocation) {
+      _loadMyLocation();
+    }
   }
 
-  void _onMapCreated(GoogleMapController controller) {
-    _controller = controller;
-    widget.onMapCreated?.call(controller);
+  Future<void> _loadMyLocation() async {
+    setState(() => _isLoadingLocation = true);
+    try {
+      final position = await locationService.getCurrentPosition();
+      if (position != null && mounted) {
+        setState(() {
+          _myLocation = LatLng(position.latitude, position.longitude);
+          _isLoadingLocation = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoadingLocation = false);
+      }
+    }
+  }
+
+  void _goToMyLocation() async {
+    if (_myLocation != null) {
+      _mapController.animateToLocation(_myLocation!, zoom: 16.0);
+    } else {
+      await _loadMyLocation();
+      if (_myLocation != null) {
+        _mapController.animateToLocation(_myLocation!, zoom: 16.0);
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return GoogleMap(
-      initialCameraPosition: CameraPosition(
-        target: _initialPosition,
-        zoom: widget.initialZoom,
-      ),
-      onMapCreated: _onMapCreated,
-      markers: widget.markers ?? {},
-      polylines: widget.polylines ?? {},
-      circles: widget.circles ?? {},
-      myLocationEnabled: widget.showMyLocation,
-      myLocationButtonEnabled: widget.showMyLocationButton,
-      zoomControlsEnabled: widget.showZoomControls,
-      scrollGesturesEnabled: widget.scrollGesturesEnabled,
-      zoomGesturesEnabled: widget.zoomGesturesEnabled,
-      tiltGesturesEnabled: widget.tiltGesturesEnabled,
-      rotateGesturesEnabled: widget.rotateGesturesEnabled,
-      mapType: widget.mapType,
-      onTap: widget.onTap,
-      onLongPress: widget.onLongPress,
-      onCameraMove: widget.onCameraMove,
-      onCameraIdle: widget.onCameraIdle,
-      padding: widget.padding ?? EdgeInsets.zero,
-      compassEnabled: false,
-      mapToolbarEnabled: false,
-      buildingsEnabled: true,
-      indoorViewEnabled: false,
-      trafficEnabled: false,
-      style: _mapStyle,
+    return Stack(
+      children: [
+        FlutterMap(
+          mapController: _mapController.controller,
+          options: MapOptions(
+            initialCenter: _initialPosition,
+            initialZoom: widget.initialZoom,
+            minZoom: 5.0,
+            maxZoom: 18.0,
+            interactionOptions: InteractionOptions(
+              flags: (widget.scrollGesturesEnabled ? InteractiveFlag.drag : 0) |
+                  (widget.zoomGesturesEnabled
+                      ? InteractiveFlag.pinchZoom | InteractiveFlag.doubleTapZoom
+                      : 0) |
+                  (widget.rotateGesturesEnabled ? InteractiveFlag.rotate : 0),
+            ),
+            onTap: widget.onTap != null
+                ? (tapPosition, point) => widget.onTap!(point)
+                : null,
+            onLongPress: widget.onLongPress != null
+                ? (tapPosition, point) => widget.onLongPress!(point)
+                : null,
+            onPositionChanged: (position, hasGesture) {
+              if (position.center != null) {
+                widget.onCameraMove?.call(position.center!, position.zoom ?? widget.initialZoom);
+              }
+            },
+            onMapReady: () {
+              widget.onMapCreated?.call(_mapController);
+            },
+          ),
+          children: [
+            // OpenStreetMap Tile Layer (FREE)
+            TileLayer(
+              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+              userAgentPackageName: 'com.wasalni.passenger',
+              maxZoom: 19,
+            ),
+
+            // Circles layer
+            if (widget.circles != null && widget.circles!.isNotEmpty)
+              CircleLayer(
+                circles: widget.circles!.map((circle) {
+                  return CircleMarker(
+                    point: circle.center,
+                    radius: circle.radiusMeters,
+                    useRadiusInMeter: true,
+                    color: circle.fillColor,
+                    borderColor: circle.borderColor,
+                    borderStrokeWidth: circle.borderWidth,
+                  );
+                }).toList(),
+              ),
+
+            // Polylines layer
+            if (widget.polylines != null && widget.polylines!.isNotEmpty)
+              PolylineLayer(
+                polylines: widget.polylines!.map((polyline) {
+                  return Polyline(
+                    points: polyline.points,
+                    color: polyline.color,
+                    strokeWidth: polyline.strokeWidth,
+                  );
+                }).toList(),
+              ),
+
+            // Markers layer
+            MarkerLayer(
+              markers: [
+                // Custom markers
+                if (widget.markers != null)
+                  ...widget.markers!.map((marker) {
+                    return Marker(
+                      point: marker.position,
+                      width: marker.size,
+                      height: marker.size,
+                      child: GestureDetector(
+                        onTap: marker.onTap,
+                        child: marker.icon ??
+                            Icon(
+                              Icons.location_on,
+                              color: marker.color ?? AppColors.primary,
+                              size: marker.size,
+                            ),
+                      ),
+                    );
+                  }),
+
+                // My location marker
+                if (widget.showMyLocation && _myLocation != null)
+                  Marker(
+                    point: _myLocation!,
+                    width: 24,
+                    height: 24,
+                    child: widget.myLocationMarker ??
+                        Container(
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 3),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                blurRadius: 6,
+                                spreadRadius: 2,
+                              ),
+                            ],
+                          ),
+                        ),
+                  ),
+              ],
+            ),
+          ],
+        ),
+
+        // My location button
+        if (widget.showMyLocationButton)
+          Positioned(
+            right: 16.w,
+            bottom: 100.h,
+            child: FloatingActionButton.small(
+              heroTag: 'myLocation',
+              backgroundColor: Colors.white,
+              onPressed: _goToMyLocation,
+              child: _isLoadingLocation
+                  ? SizedBox(
+                      width: 20.w,
+                      height: 20.w,
+                      child: const CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Icon(
+                      Icons.my_location,
+                      color: AppColors.primary,
+                      size: 20.sp,
+                    ),
+            ),
+          ),
+
+        // Zoom controls
+        if (widget.showZoomControls)
+          Positioned(
+            right: 16.w,
+            bottom: 160.h,
+            child: Column(
+              children: [
+                FloatingActionButton.small(
+                  heroTag: 'zoomIn',
+                  backgroundColor: Colors.white,
+                  onPressed: _mapController.zoomIn,
+                  child: Icon(Icons.add, color: Colors.grey.shade700),
+                ),
+                SizedBox(height: 8.h),
+                FloatingActionButton.small(
+                  heroTag: 'zoomOut',
+                  backgroundColor: Colors.white,
+                  onPressed: _mapController.zoomOut,
+                  child: Icon(Icons.remove, color: Colors.grey.shade700),
+                ),
+              ],
+            ),
+          ),
+      ],
     );
   }
 }
 
-/// Custom marker builder for drivers
-class DriverMarkerBuilder {
-  static Future<BitmapDescriptor> buildDriverMarker({
-    required String vehicleType,
-    bool isAvailable = true,
-  }) async {
-    // Use default marker with color based on availability
-    return BitmapDescriptor.defaultMarkerWithHue(
-      isAvailable ? BitmapDescriptor.hueGreen : BitmapDescriptor.hueOrange,
+/// Marker builders for common use cases
+class MarkerBuilder {
+  /// Pickup location marker (green)
+  static WasalniMarker pickupMarker({
+    required String id,
+    required LatLng position,
+    VoidCallback? onTap,
+  }) {
+    return WasalniMarker(
+      id: id,
+      position: position,
+      size: 40,
+      icon: const Icon(
+        Icons.circle,
+        color: Colors.green,
+        size: 16,
+      ),
+      onTap: onTap,
     );
   }
 
-  static Future<BitmapDescriptor> buildPickupMarker() async {
-    return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen);
+  /// Dropoff location marker (red)
+  static WasalniMarker dropoffMarker({
+    required String id,
+    required LatLng position,
+    VoidCallback? onTap,
+  }) {
+    return WasalniMarker(
+      id: id,
+      position: position,
+      size: 40,
+      icon: const Icon(
+        Icons.location_on,
+        color: Colors.red,
+        size: 32,
+      ),
+      onTap: onTap,
+    );
   }
 
-  static Future<BitmapDescriptor> buildDropoffMarker() async {
-    return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed);
+  /// Driver marker
+  static WasalniMarker driverMarker({
+    required String id,
+    required LatLng position,
+    bool isAvailable = true,
+    VoidCallback? onTap,
+  }) {
+    return WasalniMarker(
+      id: id,
+      position: position,
+      size: 40,
+      icon: Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: isAvailable ? Colors.green : Colors.orange,
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white, width: 2),
+        ),
+        child: const Icon(
+          Icons.directions_car,
+          color: Colors.white,
+          size: 20,
+        ),
+      ),
+      onTap: onTap,
+    );
   }
 }
 
@@ -173,9 +451,7 @@ class LocationPermissionRequest extends StatelessWidget {
             ),
             SizedBox(height: 16.h),
             Text(
-              isPermanentlyDenied
-                  ? 'تم رفض إذن الموقع'
-                  : 'نحتاج إذن الموقع',
+              isPermanentlyDenied ? 'تم رفض إذن الموقع' : 'نحتاج إذن الموقع',
               style: AppTextStyles.heading3,
               textAlign: TextAlign.center,
             ),
@@ -229,3 +505,19 @@ class MapLoadingPlaceholder extends StatelessWidget {
     );
   }
 }
+
+/*
+// TODO: Switch to Google Maps when billing is ready
+// Original Google Maps implementation:
+
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+
+class WasalniMap extends StatefulWidget {
+  final LatLng? initialPosition;
+  final Set<Marker>? markers;
+  final Set<Polyline>? polylines;
+  final Set<Circle>? circles;
+  final Function(GoogleMapController)? onMapCreated;
+  // ... rest of Google Maps implementation
+}
+*/

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 
 import '../../config/theme.dart';
@@ -12,6 +12,9 @@ import '../../services/api_service.dart';
 import '../../services/location_service.dart';
 import '../../services/storage_service.dart';
 import '../../widgets/wasalni_map.dart';
+
+// TODO: Switch to Google Maps when billing is ready
+// import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -68,11 +71,15 @@ class _HomeTab extends ConsumerStatefulWidget {
 }
 
 class _HomeTabState extends ConsumerState<_HomeTab> {
-  GoogleMapController? _mapController;
+  WasalniMapController? _mapController;
   LocationPermissionStatus _permissionStatus = LocationPermissionStatus.denied;
   Position? _currentPosition;
   bool _isLoadingLocation = true;
-  final Set<Marker> _markers = {};
+  final List<WasalniMarker> _markers = [];
+
+  // TODO: Switch to Google Maps when billing is ready
+  // GoogleMapController? _mapController;
+  // final Set<Marker> _markers = {};
 
   @override
   void initState() {
@@ -104,21 +111,26 @@ class _HomeTabState extends ConsumerState<_HomeTab> {
 
   void _animateToCurrentLocation() {
     if (_currentPosition != null && _mapController != null) {
-      _mapController!.animateCamera(
-        CameraUpdate.newLatLngZoom(
-          LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
-          16,
-        ),
+      _mapController!.animateToLocation(
+        LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
+        zoom: 16.0,
       );
     }
   }
 
-  void _onMapCreated(GoogleMapController controller) {
+  void _onMapCreated(WasalniMapController controller) {
     _mapController = controller;
     if (_currentPosition != null) {
       _animateToCurrentLocation();
     }
   }
+
+  // TODO: Switch to Google Maps when billing is ready
+  // void _onMapCreated(GoogleMapController controller) {
+  //   _mapController!.animateCamera(
+  //     CameraUpdate.newLatLngZoom(LatLng(lat, lng), 16),
+  //   );
+  // }
 
   Future<void> _navigateToLocationPicker() async {
     // First, set current location as pickup
@@ -443,7 +455,7 @@ class _HomeTabState extends ConsumerState<_HomeTab> {
           markers: _markers,
           showMyLocation: true,
           onMapCreated: _onMapCreated,
-          padding: EdgeInsets.only(bottom: 200.h),
+          // padding removed - handled by bottom sheet
         ),
 
         // Top Bar
