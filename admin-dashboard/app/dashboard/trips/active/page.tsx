@@ -78,11 +78,22 @@ export default function ActiveTripsPage() {
   // Setup WebSocket
   useEffect(() => {
     const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:5000';
+
+    // Get token from zustand store
+    let token = null;
+    const storedAuth = localStorage.getItem('wasalni-admin-auth');
+    if (storedAuth) {
+      try {
+        const parsed = JSON.parse(storedAuth);
+        token = parsed?.state?.token;
+      } catch {
+        // Ignore
+      }
+    }
+
     const newSocket = io(socketUrl, {
       transports: ['websocket'],
-      auth: {
-        token: localStorage.getItem('admin_token'),
-      },
+      auth: { token },
     });
 
     newSocket.on('connect', () => {

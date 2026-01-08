@@ -1,5 +1,21 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
+import { persist, createJSONStorage, type StateStorage } from 'zustand/middleware';
+
+// SSR-safe storage
+const safeStorage: StateStorage = {
+  getItem: (name) => {
+    if (typeof window === 'undefined') return null;
+    return localStorage.getItem(name);
+  },
+  setItem: (name, value) => {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem(name, value);
+  },
+  removeItem: (name) => {
+    if (typeof window === 'undefined') return;
+    localStorage.removeItem(name);
+  },
+};
 
 interface User {
   _id: string;
@@ -81,8 +97,9 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'wasalni-admin-auth',
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => safeStorage),
       partialize: (state) => ({ token: state.token, user: state.user, isAuthenticated: state.isAuthenticated }),
+      skipHydration: true,
     }
   )
 );
