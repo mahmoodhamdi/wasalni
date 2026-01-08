@@ -9,8 +9,7 @@ export async function seedZones(): Promise<any[]> {
     {
       name: 'Downtown Cairo',
       nameAr: 'وسط القاهرة',
-      description: 'Central business district',
-      descriptionAr: 'منطقة الأعمال المركزية',
+      type: 'service_area',
       polygon: {
         type: 'Polygon',
         coordinates: [
@@ -24,17 +23,18 @@ export async function seedZones(): Promise<any[]> {
         ],
       },
       isActive: true,
-      isServiceArea: true,
-      surgeMultiplier: 1.0,
-      isHighDemand: true,
+      settings: {
+        surgeMultiplier: 1.0,
+        isPickupAllowed: true,
+        isDropoffAllowed: true,
+      },
     },
 
     // Heliopolis
     {
       name: 'Heliopolis',
       nameAr: 'مصر الجديدة',
-      description: 'Upscale residential and commercial area',
-      descriptionAr: 'منطقة سكنية وتجارية راقية',
+      type: 'service_area',
       polygon: {
         type: 'Polygon',
         coordinates: [
@@ -48,17 +48,18 @@ export async function seedZones(): Promise<any[]> {
         ],
       },
       isActive: true,
-      isServiceArea: true,
-      surgeMultiplier: 1.0,
-      isHighDemand: false,
+      settings: {
+        surgeMultiplier: 1.0,
+        isPickupAllowed: true,
+        isDropoffAllowed: true,
+      },
     },
 
     // Maadi
     {
       name: 'Maadi',
       nameAr: 'المعادي',
-      description: 'Affluent residential neighborhood',
-      descriptionAr: 'حي سكني راقي',
+      type: 'service_area',
       polygon: {
         type: 'Polygon',
         coordinates: [
@@ -72,17 +73,18 @@ export async function seedZones(): Promise<any[]> {
         ],
       },
       isActive: true,
-      isServiceArea: true,
-      surgeMultiplier: 1.0,
-      isHighDemand: false,
+      settings: {
+        surgeMultiplier: 1.0,
+        isPickupAllowed: true,
+        isDropoffAllowed: true,
+      },
     },
 
     // 6th of October City
     {
       name: '6th of October City',
       nameAr: 'مدينة 6 أكتوبر',
-      description: 'Satellite city west of Cairo',
-      descriptionAr: 'مدينة جديدة غرب القاهرة',
+      type: 'service_area',
       polygon: {
         type: 'Polygon',
         coordinates: [
@@ -96,17 +98,18 @@ export async function seedZones(): Promise<any[]> {
         ],
       },
       isActive: true,
-      isServiceArea: true,
-      surgeMultiplier: 1.1, // Slight surge due to distance
-      isHighDemand: false,
+      settings: {
+        surgeMultiplier: 1.1,
+        isPickupAllowed: true,
+        isDropoffAllowed: true,
+      },
     },
 
     // New Cairo
     {
       name: 'New Cairo',
       nameAr: 'القاهرة الجديدة',
-      description: 'Modern satellite city east of Cairo',
-      descriptionAr: 'مدينة حديثة شرق القاهرة',
+      type: 'service_area',
       polygon: {
         type: 'Polygon',
         coordinates: [
@@ -120,17 +123,18 @@ export async function seedZones(): Promise<any[]> {
         ],
       },
       isActive: true,
-      isServiceArea: true,
-      surgeMultiplier: 1.0,
-      isHighDemand: true,
+      settings: {
+        surgeMultiplier: 1.0,
+        isPickupAllowed: true,
+        isDropoffAllowed: true,
+      },
     },
 
-    // Cairo International Airport
+    // Cairo International Airport - surge zone
     {
       name: 'Cairo International Airport',
       nameAr: 'مطار القاهرة الدولي',
-      description: 'Airport zone with special rates',
-      descriptionAr: 'منطقة المطار بأسعار خاصة',
+      type: 'surge_zone',
       polygon: {
         type: 'Polygon',
         coordinates: [
@@ -144,18 +148,18 @@ export async function seedZones(): Promise<any[]> {
         ],
       },
       isActive: true,
-      isServiceArea: true,
-      surgeMultiplier: 1.2, // Airport premium
-      isHighDemand: true,
-      isAirport: true,
+      settings: {
+        surgeMultiplier: 1.2,
+        isPickupAllowed: true,
+        isDropoffAllowed: true,
+      },
     },
 
     // Giza
     {
       name: 'Giza',
       nameAr: 'الجيزة',
-      description: 'Historic area including pyramids',
-      descriptionAr: 'منطقة تاريخية تشمل الأهرامات',
+      type: 'service_area',
       polygon: {
         type: 'Polygon',
         coordinates: [
@@ -169,17 +173,18 @@ export async function seedZones(): Promise<any[]> {
         ],
       },
       isActive: true,
-      isServiceArea: true,
-      surgeMultiplier: 1.0,
-      isHighDemand: false,
+      settings: {
+        surgeMultiplier: 1.0,
+        isPickupAllowed: true,
+        isDropoffAllowed: true,
+      },
     },
 
     // Nasr City
     {
       name: 'Nasr City',
       nameAr: 'مدينة نصر',
-      description: 'Large residential and commercial district',
-      descriptionAr: 'حي سكني وتجاري كبير',
+      type: 'service_area',
       polygon: {
         type: 'Polygon',
         coordinates: [
@@ -193,17 +198,18 @@ export async function seedZones(): Promise<any[]> {
         ],
       },
       isActive: true,
-      isServiceArea: true,
-      surgeMultiplier: 1.0,
-      isHighDemand: true,
+      settings: {
+        surgeMultiplier: 1.0,
+        isPickupAllowed: true,
+        isDropoffAllowed: true,
+      },
     },
 
-    // Zamalek
+    // Zamalek - surge zone (premium area)
     {
       name: 'Zamalek',
       nameAr: 'الزمالك',
-      description: 'Upscale island district',
-      descriptionAr: 'حي جزيرة راقي',
+      type: 'surge_zone',
       polygon: {
         type: 'Polygon',
         coordinates: [
@@ -217,17 +223,18 @@ export async function seedZones(): Promise<any[]> {
         ],
       },
       isActive: true,
-      isServiceArea: true,
-      surgeMultiplier: 1.1, // Premium area
-      isHighDemand: false,
+      settings: {
+        surgeMultiplier: 1.1,
+        isPickupAllowed: true,
+        isDropoffAllowed: true,
+      },
     },
 
     // Dokki
     {
       name: 'Dokki',
       nameAr: 'الدقي',
-      description: 'Residential and educational area',
-      descriptionAr: 'منطقة سكنية وتعليمية',
+      type: 'service_area',
       polygon: {
         type: 'Polygon',
         coordinates: [
@@ -241,17 +248,18 @@ export async function seedZones(): Promise<any[]> {
         ],
       },
       isActive: true,
-      isServiceArea: true,
-      surgeMultiplier: 1.0,
-      isHighDemand: false,
+      settings: {
+        surgeMultiplier: 1.0,
+        isPickupAllowed: true,
+        isDropoffAllowed: true,
+      },
     },
 
     // Bagour - Primary Service Area (El-Menofia)
     {
       name: 'Bagour',
       nameAr: 'الباجور',
-      description: 'Primary service area in El-Menofia',
-      descriptionAr: 'منطقة الخدمة الأساسية في المنوفية',
+      type: 'service_area',
       polygon: {
         type: 'Polygon',
         coordinates: [
@@ -265,10 +273,11 @@ export async function seedZones(): Promise<any[]> {
         ],
       },
       isActive: true,
-      isServiceArea: true,
-      surgeMultiplier: 1.0,
-      isHighDemand: false,
-      isPrimaryServiceArea: true,
+      settings: {
+        surgeMultiplier: 1.0,
+        isPickupAllowed: true,
+        isDropoffAllowed: true,
+      },
     },
   ];
 

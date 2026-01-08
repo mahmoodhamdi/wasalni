@@ -28,7 +28,7 @@ export const createTrip = async (
       return;
     }
 
-    const userId = (req as any).user?._id;
+    const userId = req.user?.userId;
     if (!userId) {
       res.status(StatusCodes.UNAUTHORIZED).json(
         errorResponse('Not authenticated', 'غير مسجل الدخول')

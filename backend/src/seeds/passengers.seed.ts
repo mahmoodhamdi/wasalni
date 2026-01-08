@@ -18,7 +18,7 @@ export async function seedPassengers(users: SeededUser[]): Promise<SeededPasseng
   const passengers = [
     // Active passengers with full data
     {
-      user: passengerUsers[0]._id,
+      userId: passengerUsers[0]._id,
       savedPlaces: [
         {
           name: 'المنزل',
@@ -27,7 +27,7 @@ export async function seedPassengers(users: SeededUser[]): Promise<SeededPasseng
             type: 'Point',
             coordinates: [31.2001, 30.0131],
           },
-          type: 'home',
+          icon: 'home',
         },
         {
           name: 'العمل',
@@ -36,14 +36,14 @@ export async function seedPassengers(users: SeededUser[]): Promise<SeededPasseng
             type: 'Point',
             coordinates: [31.2357, 30.0444],
           },
-          type: 'work',
+          icon: 'work',
         },
       ],
       emergencyContacts: [
         {
           name: 'محمد (أخ)',
           phone: '+201234567890',
-          relationship: 'brother',
+          relationship: 'sibling',
           notifyOnTrip: true,
           notifyOnSOS: true,
         },
@@ -54,24 +54,15 @@ export async function seedPassengers(users: SeededUser[]): Promise<SeededPasseng
         sosGestureEnabled: true,
         nightModeAlerts: true,
       },
-      paymentMethods: [
-        {
-          type: 'card',
-          lastFour: '4242',
-          brand: 'visa',
-          isDefault: true,
-        },
-      ],
+      defaultPaymentMethod: 'cash',
+      walletBalance: 250,
       rating: 4.9,
       totalRatings: 45,
       totalTrips: 50,
-      wallet: {
-        balance: 250,
-        currency: 'EGP',
-      },
+      totalSpent: 2500,
     },
     {
-      user: passengerUsers[1]._id,
+      userId: passengerUsers[1]._id,
       savedPlaces: [
         {
           name: 'المنزل',
@@ -80,7 +71,7 @@ export async function seedPassengers(users: SeededUser[]): Promise<SeededPasseng
             type: 'Point',
             coordinates: [31.2497, 30.0626],
           },
-          type: 'home',
+          icon: 'home',
         },
         {
           name: 'الجامعة',
@@ -89,14 +80,14 @@ export async function seedPassengers(users: SeededUser[]): Promise<SeededPasseng
             type: 'Point',
             coordinates: [31.2826, 30.0751],
           },
-          type: 'other',
+          icon: 'favorite',
         },
       ],
       emergencyContacts: [
         {
           name: 'أمي',
           phone: '+201234567891',
-          relationship: 'mother',
+          relationship: 'parent',
           notifyOnTrip: true,
           notifyOnSOS: true,
         },
@@ -107,16 +98,15 @@ export async function seedPassengers(users: SeededUser[]): Promise<SeededPasseng
         sosGestureEnabled: true,
         nightModeAlerts: true,
       },
+      defaultPaymentMethod: 'cash',
+      walletBalance: 100,
       rating: 4.8,
       totalRatings: 32,
       totalTrips: 35,
-      wallet: {
-        balance: 100,
-        currency: 'EGP',
-      },
+      totalSpent: 1750,
     },
     {
-      user: passengerUsers[2]._id,
+      userId: passengerUsers[2]._id,
       savedPlaces: [
         {
           name: 'المنزل',
@@ -125,19 +115,18 @@ export async function seedPassengers(users: SeededUser[]): Promise<SeededPasseng
             type: 'Point',
             coordinates: [31.2500, 29.9603],
           },
-          type: 'home',
+          icon: 'home',
         },
       ],
+      defaultPaymentMethod: 'cash',
+      walletBalance: 0,
       rating: 4.7,
       totalRatings: 20,
       totalTrips: 25,
-      wallet: {
-        balance: 0,
-        currency: 'EGP',
-      },
+      totalSpent: 1250,
     },
     {
-      user: passengerUsers[3]._id,
+      userId: passengerUsers[3]._id,
       savedPlaces: [
         {
           name: 'المنزل',
@@ -146,7 +135,7 @@ export async function seedPassengers(users: SeededUser[]): Promise<SeededPasseng
             type: 'Point',
             coordinates: [31.3300, 30.0500],
           },
-          type: 'home',
+          icon: 'home',
         },
         {
           name: 'العمل',
@@ -155,7 +144,7 @@ export async function seedPassengers(users: SeededUser[]): Promise<SeededPasseng
             type: 'Point',
             coordinates: [31.4200, 30.0074],
           },
-          type: 'work',
+          icon: 'work',
         },
       ],
       emergencyContacts: [
@@ -173,36 +162,33 @@ export async function seedPassengers(users: SeededUser[]): Promise<SeededPasseng
         sosGestureEnabled: true,
         nightModeAlerts: true,
       },
+      defaultPaymentMethod: 'wallet',
+      walletBalance: 500,
       rating: 5.0,
       totalRatings: 15,
       totalTrips: 15,
-      wallet: {
-        balance: 500,
-        currency: 'EGP',
-      },
+      totalSpent: 750,
     },
     {
-      user: passengerUsers[4]._id,
+      userId: passengerUsers[4]._id,
       savedPlaces: [],
+      defaultPaymentMethod: 'cash',
+      walletBalance: 75,
       rating: 4.5,
       totalRatings: 8,
       totalTrips: 10,
-      wallet: {
-        balance: 75,
-        currency: 'EGP',
-      },
+      totalSpent: 500,
     },
     // Suspended passenger
     {
-      user: passengerUsers[5]._id,
+      userId: passengerUsers[5]._id,
       savedPlaces: [],
+      defaultPaymentMethod: 'cash',
+      walletBalance: 0,
       rating: 2.5,
       totalRatings: 10,
       totalTrips: 12,
-      wallet: {
-        balance: 0,
-        currency: 'EGP',
-      },
+      totalSpent: 600,
     },
   ];
 
@@ -210,7 +196,7 @@ export async function seedPassengers(users: SeededUser[]): Promise<SeededPasseng
 
   return createdPassengers.map((p, i) => ({
     _id: p._id.toString(),
-    userId: p.user.toString(),
+    userId: p.userId.toString(),
     name: passengerUsers[i].name,
   }));
 }

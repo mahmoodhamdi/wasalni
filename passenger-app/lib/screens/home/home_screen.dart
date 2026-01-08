@@ -110,11 +110,17 @@ class _HomeTabState extends ConsumerState<_HomeTab> {
   }
 
   void _animateToCurrentLocation() {
-    if (_currentPosition != null && _mapController != null) {
+    if (!mounted || _currentPosition == null || _mapController == null) {
+      return;
+    }
+    try {
       _mapController!.animateToLocation(
         LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
         zoom: 16.0,
       );
+    } catch (e) {
+      // Map controller may have been disposed
+      debugPrint('Failed to animate map: $e');
     }
   }
 
@@ -327,9 +333,21 @@ class _HomeTabState extends ConsumerState<_HomeTab> {
   }
 
   Future<LocationPoint?> _getSavedPlace(String type) async {
-    // Get saved places from storage
-    // For now, return null - can be implemented with SharedPreferences
-    return null;
+    final place = await storageService.getSavedPlace(type);
+    if (place == null) return null;
+    return LocationPoint(
+      latitude: place['latitude'] as double,
+      longitude: place['longitude'] as double,
+      address: place['address'] as String?,
+    );
+  }
+
+  Future<void> _saveSavedPlace(String type, LocationPoint location) async {
+    await storageService.saveSavedPlace(type, {
+      'latitude': location.latitude,
+      'longitude': location.longitude,
+      'address': location.address,
+    });
   }
 
   void _showSavedPlaces(BuildContext context) {
@@ -366,11 +384,18 @@ class _HomeTabState extends ConsumerState<_HomeTab> {
                 title: 'المنزل',
                 subtitle: 'لم يتم الإضافة بعد',
                 onTap: () async {
-                  Navigator.pop(context);
+                  final navigator = Navigator.of(context);
+                  final scaffoldMessenger = ScaffoldMessenger.of(context);
+                  navigator.pop();
                   final result = await context.push<Map<String, dynamic>>('/location-picker');
                   if (result != null && mounted) {
                     // Save home location
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    await _saveSavedPlace('home', LocationPoint(
+                      latitude: result['latitude'] as double,
+                      longitude: result['longitude'] as double,
+                      address: result['address'] as String?,
+                    ));
+                    scaffoldMessenger.showSnackBar(
                       const SnackBar(content: Text('تم حفظ عنوان المنزل')),
                     );
                   }
@@ -383,11 +408,18 @@ class _HomeTabState extends ConsumerState<_HomeTab> {
                 title: 'العمل',
                 subtitle: 'لم يتم الإضافة بعد',
                 onTap: () async {
-                  Navigator.pop(context);
+                  final navigator = Navigator.of(context);
+                  final scaffoldMessenger = ScaffoldMessenger.of(context);
+                  navigator.pop();
                   final result = await context.push<Map<String, dynamic>>('/location-picker');
                   if (result != null && mounted) {
                     // Save work location
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    await _saveSavedPlace('work', LocationPoint(
+                      latitude: result['latitude'] as double,
+                      longitude: result['longitude'] as double,
+                      address: result['address'] as String?,
+                    ));
+                    scaffoldMessenger.showSnackBar(
                       const SnackBar(content: Text('تم حفظ عنوان العمل')),
                     );
                   }

@@ -32,8 +32,13 @@ class ApiService {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
+          print('🔑 ApiService Request: ${options.method} ${options.path}');
+          print('🔑 Token present: ${_token != null}');
           if (_token != null) {
             options.headers['Authorization'] = 'Bearer $_token';
+            print('🔑 Added Authorization header');
+          } else {
+            print('⚠️ No token available for request');
           }
           return handler.next(options);
         },
@@ -41,9 +46,11 @@ class ApiService {
           // Handle 401 errors with token refresh
           if (error.response?.statusCode == 401 && !_isRefreshing) {
             _isRefreshing = true;
+            bool refreshSucceeded = false;
             try {
               final refreshed = await _tryRefreshToken();
               if (refreshed) {
+                refreshSucceeded = true;
                 // Retry the original request
                 final opts = Options(
                   method: error.requestOptions.method,
@@ -61,14 +68,18 @@ class ApiService {
                 _isRefreshing = false;
                 return handler.resolve(response);
               }
-            } catch (_) {
-              // Refresh failed
+            } catch (e) {
+              // Refresh failed with exception
+              print('🔑 Token refresh failed: $e');
             }
             _isRefreshing = false;
-            // Token refresh failed - trigger logout
-            _token = null;
-            _refreshToken = null;
-            _onTokenExpired?.call();
+            // Only clear token if refresh actually failed
+            if (!refreshSucceeded) {
+              print('🔑 Clearing token due to refresh failure');
+              _token = null;
+              _refreshToken = null;
+              _onTokenExpired?.call();
+            }
           }
           return handler.next(error);
         },
@@ -103,6 +114,7 @@ class ApiService {
   }
 
   void setToken(String token) {
+    print('🔑 setToken called: ${token.substring(0, 20)}...');
     _token = token;
   }
 
@@ -324,20 +336,26 @@ class ApiService {
     required double dropoffLng,
   }) async {
     return await _dio.post('/fare/estimate', data: {
-      'pickupLat': pickupLat,
-      'pickupLng': pickupLng,
-      'dropoffLat': dropoffLat,
-      'dropoffLng': dropoffLng,
+      'origin': {
+        'lat': pickupLat,
+        'lng': pickupLng,
+      },
+      'destination': {
+        'lat': dropoffLat,
+        'lng': dropoffLng,
+      },
     });
   }
 
   Future<Response> validatePromo({
     required String code,
     required String rideType,
+    required double fare,
   }) async {
-    return await _dio.post('/fare/validate-promo', data: {
+    return await _dio.post('/fare/promo/validate', data: {
       'code': code,
       'rideType': rideType,
+      'fare': fare,
     });
   }
 
