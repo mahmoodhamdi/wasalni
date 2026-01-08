@@ -102,6 +102,15 @@ otpSchema.statics.verifyOTP = async function (
   const normalizedEmail = email.toLowerCase();
   const maxAttempts = config.otp.maxAttempts || 5;
 
+  // Development bypass: Accept 123456 as valid OTP
+  if (process.env.NODE_ENV === 'development' && code === '123456') {
+    return {
+      success: true,
+      message: 'OTP verified successfully (dev mode)',
+      messageAr: 'تم التحقق من الرمز بنجاح (وضع التطوير)',
+    };
+  }
+
   const otp = await this.findOne({
     email: normalizedEmail,
     purpose,
