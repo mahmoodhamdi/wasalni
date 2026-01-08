@@ -11,6 +11,7 @@ enum AuthStatus {
   authenticated,
   unauthenticated,
   needsRegistration,
+  needsProfileCompletion,
   otpSent,
   otpVerified,
   error,
@@ -211,15 +212,28 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
         await _saveAuthData(tokens, user);
 
-        state = state.copyWith(
-          status: AuthStatus.authenticated,
-          userId: user['_id'],
-          email: user['email'],
-          name: user['name'],
-          phone: user['phone'],
-          avatar: user['avatar'],
-          isNewUser: isNewUser,
-        );
+        if (isNewUser) {
+          // New user needs to complete their profile
+          state = state.copyWith(
+            status: AuthStatus.needsProfileCompletion,
+            userId: user['_id'],
+            email: user['email'],
+            name: user['name'],
+            phone: user['phone'],
+            avatar: user['avatar'],
+            isNewUser: true,
+          );
+        } else {
+          state = state.copyWith(
+            status: AuthStatus.authenticated,
+            userId: user['_id'],
+            email: user['email'],
+            name: user['name'],
+            phone: user['phone'],
+            avatar: user['avatar'],
+            isNewUser: false,
+          );
+        }
         return true;
       } else {
         final message = response.data['messageAr'] ?? response.data['message'] ?? 'فشل تسجيل الدخول';

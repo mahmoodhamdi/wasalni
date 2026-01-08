@@ -146,7 +146,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
       if (mounted) {
         if (success) {
-          context.go('/home');
+          final authState = ref.read(authProvider);
+          if (authState.status == AuthStatus.needsProfileCompletion) {
+            // New user - redirect to profile completion
+            context.go('/edit-profile');
+          } else {
+            context.go('/home');
+          }
         } else {
           final errorMessage = ref.read(authProvider).errorMessage;
           if (errorMessage != null) {

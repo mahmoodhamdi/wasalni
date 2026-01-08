@@ -152,7 +152,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (mounted) {
         if (success) {
           final authState = ref.read(authProvider);
-          if (authState.isPendingApproval) {
+          if (authState.needsRegistration) {
+            // New user needs to complete driver registration
+            context.go('/register', extra: authState.email);
+          } else if (authState.isPendingApproval) {
             context.go('/pending-approval');
           } else {
             context.go('/home');
