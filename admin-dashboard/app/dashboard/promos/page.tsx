@@ -529,7 +529,13 @@ function PromoForm({
           إلغاء
         </button>
         <button
-          onClick={() => onSave({ ...formData, _id: promo?._id })}
+          onClick={() => {
+            const dataToSave = { ...formData };
+            if (promo?._id) {
+              (dataToSave as Partial<PromoCode>)._id = promo._id;
+            }
+            onSave(dataToSave);
+          }}
           className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 flex items-center gap-2"
         >
           <Save size={18} />
