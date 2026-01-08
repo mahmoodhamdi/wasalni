@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 
 import '../../config/theme.dart';
@@ -81,7 +81,7 @@ class _HomeTab extends ConsumerStatefulWidget {
 }
 
 class _HomeTabState extends ConsumerState<_HomeTab> {
-  GoogleMapController? _mapController;
+  WasalniMapController? _mapController;
   Position? _currentPosition;
   bool _isLoadingLocation = true;
   LocationPermissionStatus _permissionStatus = LocationPermissionStatus.denied;
@@ -145,16 +145,14 @@ class _HomeTabState extends ConsumerState<_HomeTab> {
 
   void _animateToCurrentLocation() {
     if (_currentPosition != null && _mapController != null) {
-      _mapController!.animateCamera(
-        CameraUpdate.newLatLngZoom(
-          LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
-          16,
-        ),
+      _mapController!.animateToLocation(
+        LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
+        zoom: 16,
       );
     }
   }
 
-  void _onMapCreated(GoogleMapController controller) {
+  void _onMapCreated(WasalniMapController controller) {
     _mapController = controller;
     if (_currentPosition != null) {
       _animateToCurrentLocation();
@@ -294,7 +292,6 @@ class _HomeTabState extends ConsumerState<_HomeTab> {
               : null,
           showMyLocation: true,
           onMapCreated: _onMapCreated,
-          padding: EdgeInsets.only(bottom: 200.h),
         ),
 
         // Top Bar

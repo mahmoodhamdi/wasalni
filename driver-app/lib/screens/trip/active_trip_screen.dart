@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -21,9 +21,9 @@ class ActiveTripScreen extends ConsumerStatefulWidget {
 }
 
 class _ActiveTripScreenState extends ConsumerState<ActiveTripScreen> {
-  GoogleMapController? _mapController;
-  final Set<Marker> _markers = {};
-  final Set<Polyline> _polylines = {};
+  WasalniMapController? _mapController;
+  final List<WasalniMarker> _markers = [];
+  final List<LatLng> _polylinePoints = [];
   Position? _currentPosition;
   StreamSubscription<Position>? _locationSubscription;
   Timer? _locationUpdateTimer;
@@ -76,12 +76,11 @@ class _ActiveTripScreenState extends ConsumerState<ActiveTripScreen> {
     // Driver location marker
     if (_currentPosition != null) {
       _markers.add(
-        Marker(
-          markerId: const MarkerId('driver'),
+        WasalniMarker(
+          id: 'driver',
           position: LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
-          rotation: _currentPosition!.heading,
-          infoWindow: const InfoWindow(title: 'موقعك'),
+          color: Colors.blue,
+          icon: const Icon(Icons.navigation, color: Colors.white, size: 20),
         ),
       );
     }
@@ -89,14 +88,11 @@ class _ActiveTripScreenState extends ConsumerState<ActiveTripScreen> {
     // Show pickup only when heading there
     if (tripState.status == DriverTripStatus.accepted && tripState.pickup != null) {
       _markers.add(
-        Marker(
-          markerId: const MarkerId('pickup'),
+        WasalniMarker(
+          id: 'pickup',
           position: tripState.pickup!.latLng,
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-          infoWindow: InfoWindow(
-            title: 'نقطة الانطلاق',
-            snippet: tripState.pickup!.address ?? '',
-          ),
+          color: Colors.green,
+          icon: const Icon(Icons.location_on, color: Colors.white, size: 20),
         ),
       );
     }
@@ -104,14 +100,11 @@ class _ActiveTripScreenState extends ConsumerState<ActiveTripScreen> {
     // Show dropoff during/after pickup
     if (tripState.dropoff != null) {
       _markers.add(
-        Marker(
-          markerId: const MarkerId('dropoff'),
+        WasalniMarker(
+          id: 'dropoff',
           position: tripState.dropoff!.latLng,
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-          infoWindow: InfoWindow(
-            title: 'الوجهة',
-            snippet: tripState.dropoff!.address ?? '',
-          ),
+          color: Colors.red,
+          icon: const Icon(Icons.flag, color: Colors.white, size: 20),
         ),
       );
     }
@@ -123,45 +116,22 @@ class _ActiveTripScreenState extends ConsumerState<ActiveTripScreen> {
     if (_mapController == null) return;
 
     final tripState = ref.read(driverTripProvider);
-    final List<LatLng> points = [];
-
-    if (_currentPosition != null) {
-      points.add(LatLng(_currentPosition!.latitude, _currentPosition!.longitude));
-    }
+    LatLng? target;
 
     // Target based on status
     if (tripState.status == DriverTripStatus.accepted ||
         tripState.status == DriverTripStatus.arrived) {
-      if (tripState.pickup != null) {
-        points.add(tripState.pickup!.latLng);
-      }
+      target = tripState.pickup?.latLng;
     } else if (tripState.status == DriverTripStatus.inProgress) {
-      if (tripState.dropoff != null) {
-        points.add(tripState.dropoff!.latLng);
-      }
+      target = tripState.dropoff?.latLng;
     }
 
-    if (points.length >= 2) {
-      double minLat = points.first.latitude;
-      double maxLat = points.first.latitude;
-      double minLng = points.first.longitude;
-      double maxLng = points.first.longitude;
-
-      for (final point in points) {
-        if (point.latitude < minLat) minLat = point.latitude;
-        if (point.latitude > maxLat) maxLat = point.latitude;
-        if (point.longitude < minLng) minLng = point.longitude;
-        if (point.longitude > maxLng) maxLng = point.longitude;
-      }
-
-      _mapController!.animateCamera(
-        CameraUpdate.newLatLngBounds(
-          LatLngBounds(
-            southwest: LatLng(minLat - 0.005, minLng - 0.005),
-            northeast: LatLng(maxLat + 0.005, maxLng + 0.005),
-          ),
-          50,
-        ),
+    if (target != null) {
+      _mapController!.animateToLocation(target, zoom: 15);
+    } else if (_currentPosition != null) {
+      _mapController!.animateToLocation(
+        LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
+        zoom: 15,
       );
     }
   }
@@ -418,13 +388,11 @@ class _ActiveTripScreenState extends ConsumerState<ActiveTripScreen> {
                   ? LatLng(_currentPosition!.latitude, _currentPosition!.longitude)
                   : null,
               markers: _markers,
-              polylines: _polylines,
               showMyLocation: false,
               onMapCreated: (controller) {
                 _mapController = controller;
                 Future.delayed(const Duration(milliseconds: 500), _fitBounds);
               },
-              padding: EdgeInsets.only(bottom: 280.h),
             ),
 
             // Top Bar
