@@ -61,12 +61,16 @@ export default function PendingDriversPage() {
   const handleApprove = async (driverId: string) => {
     try {
       setActionLoading(driverId);
-      await driversApi.approve(driverId);
-      setSelectedDriver(null);
-      fetchPendingDrivers();
-    } catch (err) {
+      const response = await driversApi.approve(driverId);
+      if (response.data.success) {
+        setSelectedDriver(null);
+        fetchPendingDrivers();
+        alert('تمت الموافقة على السائق بنجاح');
+      }
+    } catch (err: any) {
       console.error('Failed to approve driver:', err);
-      alert('فشل في الموافقة على السائق');
+      const errorMessage = err.response?.data?.messageAr || err.response?.data?.message || 'فشل في الموافقة على السائق';
+      alert(errorMessage);
     } finally {
       setActionLoading(null);
     }
@@ -78,12 +82,16 @@ export default function PendingDriversPage() {
 
     try {
       setActionLoading(driverId);
-      await driversApi.reject(driverId, reason);
-      setSelectedDriver(null);
-      fetchPendingDrivers();
-    } catch (err) {
+      const response = await driversApi.reject(driverId, reason);
+      if (response.data.success) {
+        setSelectedDriver(null);
+        fetchPendingDrivers();
+        alert('تم رفض السائق');
+      }
+    } catch (err: any) {
       console.error('Failed to reject driver:', err);
-      alert('فشل في رفض السائق');
+      const errorMessage = err.response?.data?.messageAr || err.response?.data?.message || 'فشل في رفض السائق';
+      alert(errorMessage);
     } finally {
       setActionLoading(null);
     }

@@ -72,7 +72,10 @@ export default function FinancePage() {
     completedPayouts: 0,
   };
 
-  const s = stats || defaultStats;
+  const s = { ...defaultStats, ...(stats || {}) };
+
+  // Helper function to safely format numbers
+  const formatNumber = (num: number | undefined | null) => (num ?? 0).toLocaleString('ar-EG');
 
   return (
     <div className="space-y-6">
@@ -91,25 +94,25 @@ export default function FinancePage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatsCard
           title="إيرادات اليوم"
-          value={`${s.todayRevenue.toLocaleString('ar-EG')} ج.م`}
+          value={`${formatNumber(s.todayRevenue)} ج.م`}
           icon={DollarSign}
           change={{ value: 12, type: 'increase' }}
         />
         <StatsCard
           title="إيرادات الأسبوع"
-          value={`${s.weekRevenue.toLocaleString('ar-EG')} ج.م`}
+          value={`${formatNumber(s.weekRevenue)} ج.م`}
           icon={TrendingUp}
           change={{ value: 8, type: 'increase' }}
         />
         <StatsCard
           title="إيرادات الشهر"
-          value={`${s.monthRevenue.toLocaleString('ar-EG')} ج.م`}
+          value={`${formatNumber(s.monthRevenue)} ج.م`}
           icon={Wallet}
           change={{ value: 15, type: 'increase' }}
         />
         <StatsCard
           title="إجمالي الإيرادات"
-          value={`${s.totalRevenue.toLocaleString('ar-EG')} ج.م`}
+          value={`${formatNumber(s.totalRevenue)} ج.م`}
           icon={CreditCard}
         />
       </div>
@@ -124,7 +127,7 @@ export default function FinancePage() {
             <div>
               <p className="text-sm text-slate-500">عمولة المنصة</p>
               <p className="text-xl font-bold text-slate-900">
-                {s.totalPlatformFees.toLocaleString('ar-EG')} ج.م
+                {formatNumber(s.totalPlatformFees)} ج.م
               </p>
             </div>
           </div>
@@ -137,7 +140,7 @@ export default function FinancePage() {
             <div>
               <p className="text-sm text-slate-500">أرباح السائقين</p>
               <p className="text-xl font-bold text-slate-900">
-                {s.totalDriverEarnings.toLocaleString('ar-EG')} ج.م
+                {formatNumber(s.totalDriverEarnings)} ج.م
               </p>
             </div>
           </div>
@@ -150,7 +153,7 @@ export default function FinancePage() {
             <div>
               <p className="text-sm text-slate-500">مدفوعات معلقة</p>
               <p className="text-xl font-bold text-slate-900">
-                {s.pendingPayouts.toLocaleString('ar-EG')} ج.م
+                {formatNumber(s.pendingPayouts)} ج.م
               </p>
             </div>
           </div>
@@ -163,7 +166,7 @@ export default function FinancePage() {
             <div>
               <p className="text-sm text-slate-500">مدفوعات مكتملة</p>
               <p className="text-xl font-bold text-slate-900">
-                {s.completedPayouts.toLocaleString('ar-EG')} ج.م
+                {formatNumber(s.completedPayouts)} ج.م
               </p>
             </div>
           </div>
