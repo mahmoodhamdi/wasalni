@@ -144,6 +144,39 @@ router.get(
 
 /**
  * @swagger
+ * /trips/history:
+ *   get:
+ *     summary: Get trip history
+ *     description: Returns paginated list of completed/cancelled trips
+ *     tags: [Trip]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *     responses:
+ *       200:
+ *         description: Trip history retrieved
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ */
+router.get(
+  '/history',
+  authenticate,
+  tripListValidator,
+  tripController.getPassengerTrips
+);
+
+/**
+ * @swagger
  * /trips/active:
  *   get:
  *     summary: Get active trip for passenger

@@ -1,10 +1,31 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api';
 import { RefreshCw, Car, MapPin, Clock, Loader2 } from 'lucide-react';
 import { locationApi } from '@/lib/api';
 import { io, Socket } from 'socket.io-client';
+import dynamic from 'next/dynamic';
+
+// TODO: Switch to Google Maps when billing is ready
+// import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api';
+
+// Dynamically import Leaflet components (required for Next.js SSR)
+const MapContainer = dynamic(
+  () => import('react-leaflet').then((mod) => mod.MapContainer),
+  { ssr: false }
+);
+const TileLayer = dynamic(
+  () => import('react-leaflet').then((mod) => mod.TileLayer),
+  { ssr: false }
+);
+const Marker = dynamic(
+  () => import('react-leaflet').then((mod) => mod.Marker),
+  { ssr: false }
+);
+const Popup = dynamic(
+  () => import('react-leaflet').then((mod) => mod.Popup),
+  { ssr: false }
+);
 
 interface DriverLocation {
   driverId: string;
@@ -29,20 +50,7 @@ interface DriverLocation {
 }
 
 // Egypt map center (Bagour area)
-const mapCenter = { lat: 30.4167, lng: 30.9667 };
-
-const mapContainerStyle = {
-  width: '100%',
-  height: '100%',
-};
-
-const mapOptions: google.maps.MapOptions = {
-  disableDefaultUI: false,
-  zoomControl: true,
-  mapTypeControl: false,
-  streetViewControl: false,
-  fullscreenControl: true,
-};
+const mapCenter: [number, number] = [30.4167, 30.9667];
 
 export default function LiveMapPage() {
   const [drivers, setDrivers] = useState<DriverLocation[]>([]);
@@ -51,10 +59,24 @@ export default function LiveMapPage() {
   const [error, setError] = useState<string | null>(null);
   const [socket, setSocket] = useState<Socket | null>(null);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+  const [mapReady, setMapReady] = useState(false);
 
-  const { isLoaded, loadError } = useJsApiLoader({
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
-  });
+  // Load Leaflet CSS
+  useEffect(() => {
+    // Import Leaflet CSS on client side
+    import('leaflet/dist/leaflet.css');
+
+    // Fix for default marker icons in Leaflet with Next.js
+    import('leaflet').then((L) => {
+      delete (L.Icon.Default.prototype as any)._getIconUrl;
+      L.Icon.Default.mergeOptions({
+        iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+        iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+      });
+      setMapReady(true);
+    });
+  }, []);
 
   // Fetch online drivers
   const fetchDrivers = useCallback(async () => {
@@ -136,19 +158,6 @@ export default function LiveMapPage() {
     return () => clearInterval(interval);
   }, [fetchDrivers]);
 
-  const getVehicleIcon = (vehicleType: string) => {
-    switch (vehicleType) {
-      case 'car':
-        return '/icons/car-marker.png';
-      case 'motorcycle':
-        return '/icons/motorcycle-marker.png';
-      case 'tuktuk':
-        return '/icons/tuktuk-marker.png';
-      default:
-        return undefined;
-    }
-  };
-
   const formatLastUpdate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -158,18 +167,6 @@ export default function LiveMapPage() {
     if (diff < 3600) return `منذ ${Math.floor(diff / 60)} دقيقة`;
     return `منذ ${Math.floor(diff / 3600)} ساعة`;
   };
-
-  if (loadError) {
-    return (
-      <div className="flex items-center justify-center h-[calc(100vh-120px)] bg-white rounded-lg">
-        <div className="text-center">
-          <MapPin className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-slate-800 mb-2">خطأ في تحميل الخريطة</h2>
-          <p className="text-slate-600">تأكد من إعداد مفتاح Google Maps API بشكل صحيح</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-4">
@@ -227,7 +224,7 @@ export default function LiveMapPage() {
 
       {/* Map Container */}
       <div className="bg-white rounded-lg shadow-sm overflow-hidden h-[calc(100vh-280px)]">
-        {!isLoaded ? (
+        {!mapReady ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
               <Loader2 className="w-12 h-12 text-emerald-600 animate-spin mx-auto mb-4" />
@@ -235,71 +232,68 @@ export default function LiveMapPage() {
             </div>
           </div>
         ) : (
-          <GoogleMap
-            mapContainerStyle={mapContainerStyle}
+          <MapContainer
             center={mapCenter}
             zoom={12}
-            options={mapOptions}
+            style={{ height: '100%', width: '100%' }}
           >
+            {/* OpenStreetMap Tile Layer (FREE) */}
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+
             {drivers.map((driver) => (
               <Marker
                 key={driver.driverId}
-                position={driver.location}
-                icon={getVehicleIcon(driver.vehicleType) ? {
-                  url: getVehicleIcon(driver.vehicleType)!,
-                  scaledSize: new google.maps.Size(40, 40),
-                  anchor: new google.maps.Point(20, 20),
-                } : undefined}
-                onClick={() => setSelectedDriver(driver)}
-              />
-            ))}
-
-            {selectedDriver && (
-              <InfoWindow
-                position={selectedDriver.location}
-                onCloseClick={() => setSelectedDriver(null)}
+                position={[driver.location.lat, driver.location.lng]}
+                eventHandlers={{
+                  click: () => setSelectedDriver(driver),
+                }}
               >
-                <div className="p-2 min-w-[200px]" dir="rtl">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
-                      <Car className="w-5 h-5 text-emerald-600" />
+                <Popup>
+                  <div className="p-2 min-w-[200px]" dir="rtl">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
+                        <Car className="w-5 h-5 text-emerald-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-slate-800">{driver.name}</h3>
+                        <p className="text-sm text-slate-500">{driver.phone}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-slate-800">{selectedDriver.name}</h3>
-                      <p className="text-sm text-slate-500">{selectedDriver.phone}</p>
-                    </div>
-                  </div>
 
-                  <div className="space-y-2 text-sm">
-                    {selectedDriver.vehicle && (
+                    <div className="space-y-2 text-sm">
+                      {driver.vehicle && (
+                        <div className="flex justify-between">
+                          <span className="text-slate-500">المركبة:</span>
+                          <span className="text-slate-800">
+                            {driver.vehicle.make} {driver.vehicle.model} - {driver.vehicle.color}
+                          </span>
+                        </div>
+                      )}
+                      {driver.vehicle && (
+                        <div className="flex justify-between">
+                          <span className="text-slate-500">اللوحة:</span>
+                          <span className="text-slate-800">{driver.vehicle.plateNumber}</span>
+                        </div>
+                      )}
                       <div className="flex justify-between">
-                        <span className="text-slate-500">المركبة:</span>
-                        <span className="text-slate-800">
-                          {selectedDriver.vehicle.make} {selectedDriver.vehicle.model} - {selectedDriver.vehicle.color}
+                        <span className="text-slate-500">الحالة:</span>
+                        <span className={`font-medium ${driver.isAvailable ? 'text-emerald-600' : 'text-amber-600'}`}>
+                          {driver.isAvailable ? 'متاح' : 'مشغول'}
                         </span>
                       </div>
-                    )}
-                    {selectedDriver.vehicle && (
                       <div className="flex justify-between">
-                        <span className="text-slate-500">اللوحة:</span>
-                        <span className="text-slate-800">{selectedDriver.vehicle.plateNumber}</span>
+                        <span className="text-slate-500">آخر تحديث:</span>
+                        <span className="text-slate-800">{formatLastUpdate(driver.lastUpdate)}</span>
                       </div>
-                    )}
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">الحالة:</span>
-                      <span className={`font-medium ${selectedDriver.isAvailable ? 'text-emerald-600' : 'text-amber-600'}`}>
-                        {selectedDriver.isAvailable ? 'متاح' : 'مشغول'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">آخر تحديث:</span>
-                      <span className="text-slate-800">{formatLastUpdate(selectedDriver.lastUpdate)}</span>
                     </div>
                   </div>
-                </div>
-              </InfoWindow>
-            )}
-          </GoogleMap>
+                </Popup>
+              </Marker>
+            ))}
+          </MapContainer>
         )}
       </div>
 
@@ -339,3 +333,39 @@ export default function LiveMapPage() {
     </div>
   );
 }
+
+/*
+// TODO: Switch to Google Maps when billing is ready
+// Original Google Maps implementation:
+
+import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api';
+
+const { isLoaded, loadError } = useJsApiLoader({
+  googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
+});
+
+<GoogleMap
+  mapContainerStyle={mapContainerStyle}
+  center={mapCenter}
+  zoom={12}
+  options={mapOptions}
+>
+  {drivers.map((driver) => (
+    <Marker
+      key={driver.driverId}
+      position={driver.location}
+      icon={...}
+      onClick={() => setSelectedDriver(driver)}
+    />
+  ))}
+
+  {selectedDriver && (
+    <InfoWindow
+      position={selectedDriver.location}
+      onCloseClick={() => setSelectedDriver(null)}
+    >
+      ...
+    </InfoWindow>
+  )}
+</GoogleMap>
+*/
