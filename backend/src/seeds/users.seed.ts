@@ -50,6 +50,7 @@ export async function seedUsers(): Promise<SeededUser[]> {
     {
       phone: '+201111111113',
       name: 'محمود علي',
+      email: 'mahmoud@example.com',
       role: 'passenger',
       isPhoneVerified: true,
       isActive: true,
@@ -59,6 +60,7 @@ export async function seedUsers(): Promise<SeededUser[]> {
     {
       phone: '+201111111114',
       name: 'فاطمة حسن',
+      email: 'fatma@example.com',
       role: 'passenger',
       isPhoneVerified: true,
       isActive: true,
@@ -68,6 +70,7 @@ export async function seedUsers(): Promise<SeededUser[]> {
     {
       phone: '+201111111115',
       name: 'عمر خالد',
+      email: 'omar@example.com',
       role: 'passenger',
       isPhoneVerified: true,
       isActive: true,
@@ -78,6 +81,7 @@ export async function seedUsers(): Promise<SeededUser[]> {
     {
       phone: '+201111111116',
       name: 'راكب موقوف',
+      email: 'suspended.passenger@example.com',
       role: 'passenger',
       isPhoneVerified: true,
       isActive: false,
@@ -88,6 +92,7 @@ export async function seedUsers(): Promise<SeededUser[]> {
     {
       phone: '+201222222221',
       name: 'محمد السائق',
+      email: 'driver.mohamed@example.com',
       role: 'driver',
       isPhoneVerified: true,
       isActive: true,
@@ -97,6 +102,7 @@ export async function seedUsers(): Promise<SeededUser[]> {
     {
       phone: '+201222222222',
       name: 'علي السائق',
+      email: 'driver.ali@example.com',
       role: 'driver',
       isPhoneVerified: true,
       isActive: true,
@@ -106,6 +112,7 @@ export async function seedUsers(): Promise<SeededUser[]> {
     {
       phone: '+201222222223',
       name: 'حسن السائق',
+      email: 'driver.hassan@example.com',
       role: 'driver',
       isPhoneVerified: true,
       isActive: true,
@@ -115,6 +122,7 @@ export async function seedUsers(): Promise<SeededUser[]> {
     {
       phone: '+201222222224',
       name: 'أحمد السائق',
+      email: 'driver.ahmed@example.com',
       role: 'driver',
       isPhoneVerified: true,
       isActive: true,
@@ -124,6 +132,7 @@ export async function seedUsers(): Promise<SeededUser[]> {
     {
       phone: '+201222222225',
       name: 'كريم السائق',
+      email: 'driver.kareem@example.com',
       role: 'driver',
       isPhoneVerified: true,
       isActive: true,
@@ -135,6 +144,7 @@ export async function seedUsers(): Promise<SeededUser[]> {
     {
       phone: '+201333333331',
       name: 'يوسف السائق',
+      email: 'driver.yousef@example.com',
       role: 'driver',
       isPhoneVerified: true,
       isActive: true,
@@ -144,6 +154,7 @@ export async function seedUsers(): Promise<SeededUser[]> {
     {
       phone: '+201333333332',
       name: 'إبراهيم السائق',
+      email: 'driver.ibrahim@example.com',
       role: 'driver',
       isPhoneVerified: true,
       isActive: true,
@@ -153,6 +164,7 @@ export async function seedUsers(): Promise<SeededUser[]> {
     {
       phone: '+201333333333',
       name: 'مصطفى السائق',
+      email: 'driver.mostafa@example.com',
       role: 'driver',
       isPhoneVerified: true,
       isActive: true,
@@ -164,6 +176,7 @@ export async function seedUsers(): Promise<SeededUser[]> {
     {
       phone: '+201444444444',
       name: 'سائق موقوف',
+      email: 'suspended.driver@example.com',
       role: 'driver',
       isPhoneVerified: true,
       isActive: false,

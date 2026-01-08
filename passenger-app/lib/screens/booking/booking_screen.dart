@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../config/theme.dart';
 import '../../providers/trip_provider.dart';
@@ -16,7 +16,7 @@ class BookingScreen extends ConsumerStatefulWidget {
 }
 
 class _BookingScreenState extends ConsumerState<BookingScreen> {
-  GoogleMapController? _mapController;
+  WasalniMapController? _mapController;
   final TextEditingController _promoController = TextEditingController();
   bool _showPromoInput = false;
 
@@ -26,33 +26,23 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
     super.dispose();
   }
 
-  Set<Marker> _buildMarkers(TripState state) {
-    final markers = <Marker>{};
+  List<WasalniMarker> _buildMarkers(TripState state) {
+    final markers = <WasalniMarker>[];
 
     if (state.pickup != null) {
       markers.add(
-        Marker(
-          markerId: const MarkerId('pickup'),
+        MarkerBuilder.pickupMarker(
+          id: 'pickup',
           position: state.pickup!.latLng,
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-          infoWindow: InfoWindow(
-            title: 'نقطة الانطلاق',
-            snippet: state.pickup!.address,
-          ),
         ),
       );
     }
 
     if (state.dropoff != null) {
       markers.add(
-        Marker(
-          markerId: const MarkerId('dropoff'),
+        MarkerBuilder.dropoffMarker(
+          id: 'dropoff',
           position: state.dropoff!.latLng,
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-          infoWindow: InfoWindow(
-            title: 'الوجهة',
-            snippet: state.dropoff!.address,
-          ),
         ),
       );
     }
@@ -62,32 +52,14 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
 
   void _fitBounds(TripState state) {
     if (state.pickup != null && state.dropoff != null && _mapController != null) {
-      final bounds = LatLngBounds(
-        southwest: LatLng(
-          state.pickup!.latitude < state.dropoff!.latitude
-              ? state.pickup!.latitude
-              : state.dropoff!.latitude,
-          state.pickup!.longitude < state.dropoff!.longitude
-              ? state.pickup!.longitude
-              : state.dropoff!.longitude,
-        ),
-        northeast: LatLng(
-          state.pickup!.latitude > state.dropoff!.latitude
-              ? state.pickup!.latitude
-              : state.dropoff!.latitude,
-          state.pickup!.longitude > state.dropoff!.longitude
-              ? state.pickup!.longitude
-              : state.dropoff!.longitude,
-        ),
-      );
-
-      _mapController!.animateCamera(
-        CameraUpdate.newLatLngBounds(bounds, 80),
-      );
+      // Center between pickup and dropoff
+      final centerLat = (state.pickup!.latitude + state.dropoff!.latitude) / 2;
+      final centerLng = (state.pickup!.longitude + state.dropoff!.longitude) / 2;
+      _mapController!.moveToLocation(LatLng(centerLat, centerLng), zoom: 13.0);
     }
   }
 
-  void _onMapCreated(GoogleMapController controller) {
+  void _onMapCreated(WasalniMapController controller) {
     _mapController = controller;
     final state = ref.read(tripProvider);
     Future.delayed(const Duration(milliseconds: 300), () {
@@ -183,7 +155,6 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
             markers: _buildMarkers(tripState),
             showMyLocation: false,
             onMapCreated: _onMapCreated,
-            padding: EdgeInsets.only(bottom: 350.h),
           ),
 
           // Back button

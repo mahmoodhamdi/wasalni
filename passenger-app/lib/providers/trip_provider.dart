@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../services/api_service.dart';
 import '../services/socket_service.dart';
@@ -86,10 +86,13 @@ class FareEstimate {
   factory FareEstimate.fromJson(Map<String, dynamic> json) => FareEstimate(
         rideType: json['rideType'] ?? '',
         rideTypeAr: json['rideTypeAr'] ?? '',
-        minFare: (json['minFare'] ?? 0).toDouble(),
-        maxFare: (json['maxFare'] ?? 0).toDouble(),
-        distanceKm: (json['distanceKm'] ?? 0).toDouble(),
-        durationMinutes: (json['durationMinutes'] ?? 0).toInt(),
+        // Backend returns 'min'/'max', Flutter expects 'minFare'/'maxFare'
+        minFare: (json['min'] ?? json['minFare'] ?? 0).toDouble(),
+        maxFare: (json['max'] ?? json['maxFare'] ?? 0).toDouble(),
+        // Backend returns distance in meters, convert to km
+        distanceKm: ((json['distance'] ?? json['distanceKm'] ?? 0) / 1000).toDouble(),
+        // Backend returns duration in seconds, convert to minutes
+        durationMinutes: ((json['duration'] ?? json['durationMinutes'] ?? 0) / 60).round(),
         surgeMultiplier: (json['surgeMultiplier'] ?? 1.0).toDouble(),
         distanceText: json['distanceText'] ?? '',
         durationText: json['durationText'] ?? '',
@@ -440,7 +443,17 @@ class TripNotifier extends StateNotifier<TripState> {
         final estimates = (data['estimates'] as List)
             .map((e) => FareEstimate.fromJson(e))
             .toList();
-        final route = data['route'] != null ? RouteInfo.fromJson(data['route']) : null;
+        // Backend returns route info at top level, not nested in 'route'
+        RouteInfo? route;
+        if (data['distance'] != null) {
+          route = RouteInfo(
+            encodedPolyline: '', // Not provided in fare estimate response
+            distanceMeters: (data['distance'] as num).toDouble(),
+            durationSeconds: (data['duration'] as num).toInt(),
+            distanceText: data['distanceText'] ?? '',
+            durationText: data['durationText'] ?? '',
+          );
+        }
 
         // Auto-select first ride type if none selected
         String? selectedRide = state.selectedRideType;
@@ -474,11 +487,14 @@ class TripNotifier extends StateNotifier<TripState> {
 
   Future<bool> applyPromoCode(String code) async {
     if (state.selectedRideType == null) return false;
+    final selectedFare = state.selectedFare;
+    if (selectedFare == null) return false;
 
     try {
       final response = await apiService.validatePromo(
         code: code,
         rideType: state.selectedRideType!,
+        fare: selectedFare.minFare,
       );
 
       if (response.data['success'] == true) {

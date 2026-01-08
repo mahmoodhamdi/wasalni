@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -120,6 +122,48 @@ class StorageService {
   String getLanguage() => _prefs.getString(_keyLanguage) ?? 'ar';
   Future<void> setLanguage(String language) async {
     await _prefs.setString(_keyLanguage, language);
+  }
+
+  // Saved Places
+  static const String _keySavedPlaces = 'saved_places';
+
+  Future<void> saveSavedPlace(String type, Map<String, dynamic> place) async {
+    final places = await getSavedPlaces();
+    places[type] = place;
+    await _prefs.setString(_keySavedPlaces, _encodeJson(places));
+  }
+
+  Future<Map<String, dynamic>?> getSavedPlace(String type) async {
+    final places = await getSavedPlaces();
+    return places[type];
+  }
+
+  Future<Map<String, dynamic>> getSavedPlaces() async {
+    final json = _prefs.getString(_keySavedPlaces);
+    if (json == null) return {};
+    try {
+      return Map<String, dynamic>.from(_decodeJson(json));
+    } catch (e) {
+      return {};
+    }
+  }
+
+  Future<void> removeSavedPlace(String type) async {
+    final places = await getSavedPlaces();
+    places.remove(type);
+    await _prefs.setString(_keySavedPlaces, _encodeJson(places));
+  }
+
+  String _encodeJson(Map<String, dynamic> data) {
+    return jsonEncode(data);
+  }
+
+  Map<String, dynamic> _decodeJson(String jsonString) {
+    try {
+      return Map<String, dynamic>.from(jsonDecode(jsonString));
+    } catch (e) {
+      return {};
+    }
   }
 
   // FCM Token

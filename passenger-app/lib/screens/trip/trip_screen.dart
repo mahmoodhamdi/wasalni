@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../config/theme.dart';
@@ -18,9 +18,9 @@ class TripScreen extends ConsumerStatefulWidget {
 }
 
 class _TripScreenState extends ConsumerState<TripScreen> {
-  GoogleMapController? _mapController;
-  final Set<Marker> _markers = {};
-  final Set<Polyline> _polylines = {};
+  WasalniMapController? _mapController;
+  List<WasalniMarker> _markers = [];
+  List<WasalniPolyline> _polylines = [];
 
   @override
   void initState() {
@@ -37,37 +37,27 @@ class _TripScreenState extends ConsumerState<TripScreen> {
   }
 
   void _updateMarkers(TripState tripState) {
-    _markers.clear();
+    final markers = <WasalniMarker>[];
 
     // Driver marker (if available)
     if (tripState.driverLat != null && tripState.driverLng != null) {
-      _markers.add(
-        Marker(
-          markerId: const MarkerId('driver'),
+      markers.add(
+        MarkerBuilder.driverMarker(
+          id: 'driver',
           position: LatLng(tripState.driverLat!, tripState.driverLng!),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
-          rotation: tripState.driverHeading ?? 0,
-          infoWindow: InfoWindow(
-            title: tripState.driver?.name ?? 'السائق',
-            snippet: tripState.driver?.vehicleModel ?? '',
-          ),
+          isAvailable: true,
         ),
       );
     }
 
     // Pickup marker (only if not yet picked up)
     if (tripState.status != TripStatus.inProgress && tripState.pickup != null) {
-      _markers.add(
-        Marker(
-          markerId: const MarkerId('pickup'),
+      markers.add(
+        MarkerBuilder.pickupMarker(
+          id: 'pickup',
           position: LatLng(
             tripState.pickup!.latitude,
             tripState.pickup!.longitude,
-          ),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-          infoWindow: InfoWindow(
-            title: 'نقطة الانطلاق',
-            snippet: tripState.pickup!.address ?? '',
           ),
         ),
       );
@@ -75,44 +65,47 @@ class _TripScreenState extends ConsumerState<TripScreen> {
 
     // Dropoff marker
     if (tripState.dropoff != null) {
-      _markers.add(
-        Marker(
-          markerId: const MarkerId('dropoff'),
+      markers.add(
+        MarkerBuilder.dropoffMarker(
+          id: 'dropoff',
           position: LatLng(
             tripState.dropoff!.latitude,
             tripState.dropoff!.longitude,
-          ),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-          infoWindow: InfoWindow(
-            title: 'الوجهة',
-            snippet: tripState.dropoff!.address ?? '',
           ),
         ),
       );
     }
 
-    if (mounted) setState(() {});
+    if (mounted) {
+      setState(() {
+        _markers = markers;
+      });
+    }
   }
 
   void _updateRoute(TripState tripState) {
-    _polylines.clear();
+    final polylines = <WasalniPolyline>[];
 
     if (tripState.route?.encodedPolyline != null &&
         tripState.route!.encodedPolyline.isNotEmpty) {
       final points = _decodePolyline(tripState.route!.encodedPolyline);
       if (points.isNotEmpty) {
-        _polylines.add(
-          Polyline(
-            polylineId: const PolylineId('route'),
+        polylines.add(
+          WasalniPolyline(
+            id: 'route',
             points: points,
             color: AppColors.primary,
-            width: 4,
+            strokeWidth: 4,
           ),
         );
       }
     }
 
-    if (mounted) setState(() {});
+    if (mounted) {
+      setState(() {
+        _polylines = polylines;
+      });
+    }
   }
 
   // Decode Google encoded polyline
@@ -177,28 +170,9 @@ class _TripScreenState extends ConsumerState<TripScreen> {
       ));
     }
 
-    if (points.length >= 2) {
-      double minLat = points.first.latitude;
-      double maxLat = points.first.latitude;
-      double minLng = points.first.longitude;
-      double maxLng = points.first.longitude;
-
-      for (final point in points) {
-        if (point.latitude < minLat) minLat = point.latitude;
-        if (point.latitude > maxLat) maxLat = point.latitude;
-        if (point.longitude < minLng) minLng = point.longitude;
-        if (point.longitude > maxLng) maxLng = point.longitude;
-      }
-
-      _mapController!.animateCamera(
-        CameraUpdate.newLatLngBounds(
-          LatLngBounds(
-            southwest: LatLng(minLat - 0.01, minLng - 0.01),
-            northeast: LatLng(maxLat + 0.01, maxLng + 0.01),
-          ),
-          50,
-        ),
-      );
+    if (points.isNotEmpty) {
+      // Center on first point for now
+      _mapController!.moveToLocation(points.first, zoom: 14.0);
     }
   }
 
@@ -480,7 +454,6 @@ class _TripScreenState extends ConsumerState<TripScreen> {
                   _fitBounds(tripState);
                 });
               },
-              padding: EdgeInsets.only(bottom: 320.h),
             ),
 
             // Top Bar

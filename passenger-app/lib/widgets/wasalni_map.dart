@@ -223,7 +223,7 @@ class _WasalniMapState extends State<WasalniMap> {
             // OpenStreetMap Tile Layer (FREE)
             TileLayer(
               urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-              userAgentPackageName: 'com.wasalni.passenger',
+              userAgentPackageName: 'com.wasalni.passenger_app',
               maxZoom: 19,
             ),
 

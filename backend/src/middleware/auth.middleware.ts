@@ -30,25 +30,36 @@ export const authenticate = async (
 ): Promise<void> => {
   try {
     const authHeader = req.headers.authorization;
+    console.log(`🔐 [Auth] Path: ${req.path}, Method: ${req.method}`);
+    console.log(`🔐 [Auth] Authorization header: ${authHeader ? `present (${authHeader.substring(0, 30)}...)` : 'MISSING'}`);
+    console.log(`🔐 [Auth] Starts with Bearer: ${authHeader?.startsWith('Bearer ')}`);
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.log(`🔐 [Auth] FAILED: Token required or invalid format`);
       throw new UnauthorizedError('التوكن مطلوب');
     }
 
     const token = authHeader.split(' ')[1];
+    console.log(`🔐 [Auth] Token extracted: ${token?.substring(0, 20)}...`);
     const payload = verifyToken(token);
+    console.log(`🔐 [Auth] Payload: ${payload ? 'valid' : 'INVALID'}`);
 
     if (!payload) {
+      console.log(`🔐 [Auth] FAILED: Token invalid or expired`);
       throw new UnauthorizedError('توكن غير صالح أو منتهي الصلاحية');
     }
 
     // Verify user still exists and is active
+    console.log(`🔐 [Auth] Looking up user: ${payload.userId}`);
     const user = await User.findById(payload.userId).select('isActive role');
+    console.log(`🔐 [Auth] User found: ${user ? `yes (role: ${user.role}, active: ${user.isActive})` : 'NO'}`);
     if (!user) {
+      console.log(`🔐 [Auth] FAILED: User not found`);
       throw new UnauthorizedError('المستخدم غير موجود');
     }
 
     if (!user.isActive) {
+      console.log(`🔐 [Auth] FAILED: User not active`);
       throw new UnauthorizedError('الحساب غير مفعل');
     }
 
@@ -117,14 +128,18 @@ export const optionalAuth = async (
  */
 export const authorize = (...allowedRoles: Array<'passenger' | 'driver' | 'admin'>) => {
   return (req: Request, res: Response, next: NextFunction): void => {
+    console.log(`🔐 [Authorize] Checking roles: ${allowedRoles.join(', ')}, User role: ${req.user?.role || 'none'}`);
     if (!req.user) {
+      console.log(`🔐 [Authorize] FAILED: No user on request`);
       return next(new UnauthorizedError('غير مصرح'));
     }
 
     if (!allowedRoles.includes(req.user.role)) {
+      console.log(`🔐 [Authorize] FAILED: Role ${req.user.role} not in allowed roles`);
       return next(new ForbiddenError('غير مسموح لك بهذا الإجراء'));
     }
 
+    console.log(`🔐 [Authorize] PASSED`);
     next();
   };
 };
