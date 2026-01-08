@@ -15,7 +15,16 @@ export default function DashboardLayout({
   const { isOpen } = useSidebarStore();
 
   useEffect(() => {
-    const token = localStorage.getItem('admin_token');
+    const storedAuth = localStorage.getItem('wasalni-admin-auth');
+    let token = null;
+    if (storedAuth) {
+      try {
+        const parsed = JSON.parse(storedAuth);
+        token = parsed?.state?.token;
+      } catch {
+        // Ignore parse errors
+      }
+    }
     if (!token) {
       router.push('/auth/login');
     }

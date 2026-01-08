@@ -11,9 +11,20 @@ export const api = axios.create({
 
 // Add auth token to requests
 api.interceptors.request.use((config) => {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+  if (typeof window !== 'undefined') {
+    // Read from zustand persisted store
+    const storedAuth = localStorage.getItem('wasalni-admin-auth');
+    if (storedAuth) {
+      try {
+        const parsed = JSON.parse(storedAuth);
+        const token = parsed?.state?.token;
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+      } catch {
+        // Ignore parse errors
+      }
+    }
   }
   return config;
 });
@@ -24,7 +35,7 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('admin_token');
+        localStorage.removeItem('wasalni-admin-auth');
         window.location.href = '/auth/login';
       }
     }
@@ -41,7 +52,7 @@ export const authApi = {
     api.get('/auth/profile'),
 
   logout: () => {
-    localStorage.removeItem('admin_token');
+    localStorage.removeItem('wasalni-admin-auth');
     window.location.href = '/auth/login';
   },
 };
