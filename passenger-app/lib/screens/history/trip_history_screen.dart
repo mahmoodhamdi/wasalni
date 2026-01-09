@@ -258,12 +258,22 @@ class _TripHistoryScreenState extends ConsumerState<TripHistoryScreen> {
 
   ({String label, Color color}) _getStatusInfo(String status) {
     switch (status) {
+      case 'trip_completed':
       case 'completed':
         return (label: 'مكتملة', color: Colors.green);
       case 'cancelled':
         return (label: 'ملغية', color: Colors.red);
+      case 'trip_started':
       case 'in_progress':
         return (label: 'قيد التنفيذ', color: Colors.blue);
+      case 'searching':
+        return (label: 'جاري البحث', color: Colors.orange);
+      case 'driver_assigned':
+        return (label: 'تم التعيين', color: Colors.teal);
+      case 'driver_arriving':
+        return (label: 'السائق في الطريق', color: Colors.cyan);
+      case 'driver_arrived':
+        return (label: 'السائق وصل', color: Colors.purple);
       default:
         return (label: status, color: Colors.grey);
     }

@@ -256,29 +256,24 @@ class ScheduledNotifier extends StateNotifier<ScheduledState> {
 
   // Load available time slots
   Future<void> loadAvailableSlots(DateTime date) async {
-    state = state.copyWith(isLoading: true, errorMessage: null);
-
+    // Don't set loading state for slots - it's a background operation
     try {
       final response = await _apiService.getScheduledSlots(date);
 
       if (response.statusCode == 200 && response.data['success'] == true) {
         final data = response.data['data'];
-        final slots = (data['slots'] as List)
-            .map((s) => TimeSlot(time: DateTime.parse(s)))
-            .toList();
+        final slotsData = data['slots'];
+        if (slotsData != null && slotsData is List) {
+          final slots = slotsData
+              .map((s) => TimeSlot(time: DateTime.parse(s.toString())))
+              .toList();
 
-        state = state.copyWith(
-          availableSlots: slots,
-          isLoading: false,
-        );
-      } else {
-        throw Exception(response.data['messageAr'] ?? 'فشل تحميل المواعيد');
+          state = state.copyWith(availableSlots: slots);
+        }
       }
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: e.toString(),
-      );
+      // Silent failure for slots - not critical
+      // Silent failure - slots are optional
     }
   }
 
