@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import '../../providers/promo_provider.dart';
 import '../../config/theme.dart';
@@ -46,12 +47,12 @@ class _PromosScreenState extends ConsumerState<PromosScreen>
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Promo Codes'),
+        title: const Text('أكواد الخصم'),
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
-            Tab(text: 'Available'),
-            Tab(text: 'History'),
+            Tab(text: 'المتاحة'),
+            Tab(text: 'السجل'),
           ],
         ),
       ),
@@ -79,7 +80,7 @@ class _PromosScreenState extends ConsumerState<PromosScreen>
     final state = ref.watch(promoProvider);
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         boxShadow: [
@@ -94,12 +95,12 @@ class _PromosScreenState extends ConsumerState<PromosScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Have a promo code?',
+            'هل لديك كود خصم؟',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8.h),
           Row(
             children: [
               Expanded(
@@ -107,40 +108,40 @@ class _PromosScreenState extends ConsumerState<PromosScreen>
                   controller: _promoCodeController,
                   textCapitalization: TextCapitalization.characters,
                   decoration: InputDecoration(
-                    hintText: 'Enter promo code',
+                    hintText: 'أدخل كود الخصم',
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(8.r),
                     ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 16.w,
+                      vertical: 12.h,
                     ),
                     prefixIcon: const Icon(Icons.local_offer_outlined),
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12.w),
               SizedBox(
-                height: 48,
+                height: 48.h,
                 child: ElevatedButton(
                   onPressed: state.isValidating ? null : _validatePromo,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(8.r),
                     ),
                   ),
                   child: state.isValidating
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
+                      ? SizedBox(
+                          width: 20.w,
+                          height: 20.h,
+                          child: const CircularProgressIndicator(
                             strokeWidth: 2,
                             color: Colors.white,
                           ),
                         )
-                      : const Text('Apply'),
+                      : const Text('تطبيق'),
                 ),
               ),
             ],
@@ -148,7 +149,7 @@ class _PromosScreenState extends ConsumerState<PromosScreen>
 
           // Validation result
           if (state.lastValidation != null) ...[
-            const SizedBox(height: 12),
+            SizedBox(height: 12.h),
             _buildValidationResult(state.lastValidation!),
           ],
         ],
@@ -158,12 +159,12 @@ class _PromosScreenState extends ConsumerState<PromosScreen>
 
   Widget _buildValidationResult(PromoValidationResult result) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
         color: result.valid
             ? Colors.green.withOpacity(0.1)
             : Colors.red.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(8.r),
         border: Border.all(
           color: result.valid ? Colors.green : Colors.red,
           width: 1,
@@ -174,17 +175,18 @@ class _PromosScreenState extends ConsumerState<PromosScreen>
           Icon(
             result.valid ? Icons.check_circle : Icons.error,
             color: result.valid ? Colors.green : Colors.red,
-            size: 20,
+            size: 20.sp,
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: 8.w),
           Expanded(
             child: Text(
               result.valid
-                  ? 'Promo code applied! Save ${result.discountType == 'percentage' ? '${result.discount?.toInt()}%' : '${result.discount?.toStringAsFixed(0)} EGP'}'
-                  : result.message ?? 'Invalid promo code',
+                  ? 'تم تطبيق الكود! وفر ${result.discountType == 'percentage' ? '${result.discount?.toInt()}%' : '${result.discount?.toStringAsFixed(0)} ج.م'}'
+                  : result.message ?? 'كود غير صالح',
               style: TextStyle(
                 color: result.valid ? Colors.green.shade700 : Colors.red.shade700,
                 fontWeight: FontWeight.w500,
+                fontSize: 14.sp,
               ),
             ),
           ),
@@ -193,7 +195,7 @@ class _PromosScreenState extends ConsumerState<PromosScreen>
               onPressed: () {
                 ref.read(promoProvider.notifier).clearValidation();
               },
-              child: const Text('Clear'),
+              child: const Text('مسح'),
             ),
         ],
       ),
@@ -204,7 +206,7 @@ class _PromosScreenState extends ConsumerState<PromosScreen>
     final code = _promoCodeController.text.trim();
     if (code.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a promo code')),
+        const SnackBar(content: Text('الرجاء إدخال كود الخصم')),
       );
       return;
     }
@@ -230,8 +232,8 @@ class _PromosScreenState extends ConsumerState<PromosScreen>
     if (state.availablePromos.isEmpty) {
       return _buildEmptyState(
         icon: Icons.local_offer_outlined,
-        title: 'No Promos Available',
-        subtitle: 'Check back later for new offers!',
+        title: 'لا توجد عروض متاحة',
+        subtitle: 'تابعنا للحصول على عروض جديدة!',
       );
     }
 
@@ -240,7 +242,7 @@ class _PromosScreenState extends ConsumerState<PromosScreen>
         await ref.read(promoProvider.notifier).loadAvailablePromos();
       },
       child: ListView.builder(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(16.w),
         itemCount: state.availablePromos.length,
         itemBuilder: (context, index) {
           return _buildPromoCard(state.availablePromos[index]);
@@ -251,10 +253,10 @@ class _PromosScreenState extends ConsumerState<PromosScreen>
 
   Widget _buildPromoCard(PromoCode promo) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: EdgeInsets.only(bottom: 12.h),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12.r),
         border: Border.all(
           color: promo.isExpiringSoon
               ? Colors.orange.withOpacity(0.5)
@@ -272,7 +274,7 @@ class _PromosScreenState extends ConsumerState<PromosScreen>
         children: [
           // Header with discount
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(16.w),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
@@ -280,42 +282,42 @@ class _PromosScreenState extends ConsumerState<PromosScreen>
                   AppColors.primary.withOpacity(0.8),
                 ],
               ),
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(11),
+              borderRadius: BorderRadius.vertical(
+                top: Radius.circular(11.r),
               ),
             ),
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: EdgeInsets.all(8.w),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(8.r),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.local_offer,
                     color: Colors.white,
-                    size: 24,
+                    size: 24.sp,
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12.w),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         promo.discountText,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Colors.white,
-                          fontSize: 24,
+                          fontSize: 22.sp,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       Text(
-                        promo.type == 'percentage' ? 'Off your ride' : 'Discount',
+                        promo.type == 'percentage' ? 'خصم على رحلتك' : 'خصم',
                         style: TextStyle(
                           color: Colors.white.withOpacity(0.9),
-                          fontSize: 14,
+                          fontSize: 14.sp,
                         ),
                       ),
                     ],
@@ -323,19 +325,19 @@ class _PromosScreenState extends ConsumerState<PromosScreen>
                 ),
                 if (promo.isExpiringSoon)
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 8.w,
+                      vertical: 4.h,
                     ),
                     decoration: BoxDecoration(
                       color: Colors.orange,
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: BorderRadius.circular(4.r),
                     ),
                     child: Text(
-                      '${promo.daysUntilExpiry}d left',
-                      style: const TextStyle(
+                      '${promo.daysUntilExpiry} يوم',
+                      style: TextStyle(
                         color: Colors.white,
-                        fontSize: 12,
+                        fontSize: 12.sp,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -346,7 +348,7 @@ class _PromosScreenState extends ConsumerState<PromosScreen>
 
           // Details
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(16.w),
             child: Column(
               children: [
                 // Promo code
@@ -354,13 +356,13 @@ class _PromosScreenState extends ConsumerState<PromosScreen>
                   children: [
                     Expanded(
                       child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 10,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 12.w,
+                          vertical: 10.h,
                         ),
                         decoration: BoxDecoration(
                           color: Colors.grey.shade100,
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(8.r),
                           border: Border.all(
                             color: Colors.grey.shade300,
                             style: BorderStyle.solid,
@@ -369,77 +371,83 @@ class _PromosScreenState extends ConsumerState<PromosScreen>
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(
-                              promo.code,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 2,
+                            Flexible(
+                              child: Text(
+                                promo.code,
+                                style: TextStyle(
+                                  fontSize: 16.sp,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 2,
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ],
                         ),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8.w),
                     IconButton(
                       onPressed: () {
                         Clipboard.setData(ClipboardData(text: promo.code));
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('Promo code copied!'),
+                            content: Text('تم نسخ الكود!'),
                             duration: Duration(seconds: 2),
                           ),
                         );
                       },
                       icon: const Icon(Icons.copy),
-                      tooltip: 'Copy code',
+                      tooltip: 'نسخ الكود',
                     ),
                   ],
                 ),
 
-                const SizedBox(height: 12),
+                SizedBox(height: 12.h),
 
                 // Conditions
                 if (promo.minFare != null || promo.maxDiscount != null || promo.rideTypes != null)
                   Column(
                     children: [
                       const Divider(),
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8.h),
                       if (promo.minFare != null)
                         _buildConditionRow(
                           Icons.attach_money,
-                          'Min fare: ${promo.minFare!.toStringAsFixed(0)} EGP',
+                          'الحد الأدنى: ${promo.minFare!.toStringAsFixed(0)} ج.م',
                         ),
                       if (promo.maxDiscount != null)
                         _buildConditionRow(
                           Icons.trending_down,
-                          'Max discount: ${promo.maxDiscount!.toStringAsFixed(0)} EGP',
+                          'أقصى خصم: ${promo.maxDiscount!.toStringAsFixed(0)} ج.م',
                         ),
                       if (promo.rideTypes != null && promo.rideTypes!.isNotEmpty)
                         _buildConditionRow(
                           Icons.directions_car,
-                          'Valid for: ${promo.rideTypes!.join(', ')}',
+                          'صالح لـ: ${_translateRideTypes(promo.rideTypes!)}',
                         ),
                     ],
                   ),
 
-                const SizedBox(height: 8),
+                SizedBox(height: 8.h),
 
                 // Expiry
                 Row(
                   children: [
                     Icon(
                       Icons.schedule,
-                      size: 14,
+                      size: 14.sp,
                       color: Colors.grey.shade600,
                     ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Valid until ${DateFormat('MMM d, yyyy').format(promo.validUntil)}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade600,
+                    SizedBox(width: 4.w),
+                    Flexible(
+                      child: Text(
+                        'صالح حتى ${DateFormat('d MMM yyyy', 'ar').format(promo.validUntil)}',
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          color: Colors.grey.shade600,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
@@ -452,18 +460,32 @@ class _PromosScreenState extends ConsumerState<PromosScreen>
     );
   }
 
+  String _translateRideTypes(List<String> types) {
+    final Map<String, String> translations = {
+      'economy': 'اقتصادي',
+      'comfort': 'مريح',
+      'family': 'عائلي',
+      'tuktuk': 'توكتوك',
+      'motorcycle': 'موتوسيكل',
+    };
+    return types.map((t) => translations[t] ?? t).join('، ');
+  }
+
   Widget _buildConditionRow(IconData icon, String text) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
+      padding: EdgeInsets.only(bottom: 4.h),
       child: Row(
         children: [
-          Icon(icon, size: 16, color: Colors.grey.shade600),
-          const SizedBox(width: 8),
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.grey.shade700,
+          Icon(icon, size: 16.sp, color: Colors.grey.shade600),
+          SizedBox(width: 8.w),
+          Flexible(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: 13.sp,
+                color: Colors.grey.shade700,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
@@ -479,8 +501,8 @@ class _PromosScreenState extends ConsumerState<PromosScreen>
     if (state.usageHistory.isEmpty) {
       return _buildEmptyState(
         icon: Icons.history,
-        title: 'No Usage History',
-        subtitle: 'Your promo code usage will appear here',
+        title: 'لا يوجد سجل استخدام',
+        subtitle: 'سيظهر سجل استخدام الأكواد هنا',
       );
     }
 
@@ -499,14 +521,14 @@ class _PromosScreenState extends ConsumerState<PromosScreen>
           await ref.read(promoProvider.notifier).loadUsageHistory(refresh: true);
         },
         child: ListView.builder(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(16.w),
           itemCount: state.usageHistory.length + (state.hasMore ? 1 : 0),
           itemBuilder: (context, index) {
             if (index == state.usageHistory.length) {
-              return const Center(
+              return Center(
                 child: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: CircularProgressIndicator(),
+                  padding: EdgeInsets.all(16.w),
+                  child: const CircularProgressIndicator(),
                 ),
               );
             }
@@ -519,44 +541,44 @@ class _PromosScreenState extends ConsumerState<PromosScreen>
 
   Widget _buildHistoryItem(PromoUsage usage) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(16),
+      margin: EdgeInsets.only(bottom: 8.h),
+      padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(8.r),
         border: Border.all(color: Colors.grey.withOpacity(0.2)),
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: EdgeInsets.all(10.w),
             decoration: BoxDecoration(
               color: AppColors.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(8.r),
             ),
             child: Icon(
               Icons.local_offer,
               color: AppColors.primary,
-              size: 20,
+              size: 20.sp,
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12.w),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   usage.promoCode,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w600,
-                    fontSize: 15,
+                    fontSize: 15.sp,
                   ),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: 4.h),
                 Text(
-                  DateFormat('MMM d, yyyy • h:mm a').format(usage.usedAt),
+                  DateFormat('d MMM yyyy - h:mm a', 'ar').format(usage.usedAt),
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 12.sp,
                     color: Colors.grey.shade600,
                   ),
                 ),
@@ -564,16 +586,17 @@ class _PromosScreenState extends ConsumerState<PromosScreen>
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
             decoration: BoxDecoration(
               color: Colors.green.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(6.r),
             ),
             child: Text(
-              '-${usage.discountAmount.toStringAsFixed(0)} EGP',
-              style: const TextStyle(
+              '-${usage.discountAmount.toStringAsFixed(0)} ج.م',
+              style: TextStyle(
                 color: Colors.green,
                 fontWeight: FontWeight.w600,
+                fontSize: 14.sp,
               ),
             ),
           ),
@@ -589,34 +612,35 @@ class _PromosScreenState extends ConsumerState<PromosScreen>
   }) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: EdgeInsets.all(32.w),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.all(20.w),
               decoration: BoxDecoration(
                 color: Colors.grey.shade100,
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 icon,
-                size: 48,
+                size: 48.sp,
                 color: Colors.grey.shade400,
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16.h),
             Text(
               title,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8.h),
             Text(
               subtitle,
               style: TextStyle(
                 color: Colors.grey.shade600,
+                fontSize: 14.sp,
               ),
               textAlign: TextAlign.center,
             ),
