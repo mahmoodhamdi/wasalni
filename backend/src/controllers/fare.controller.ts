@@ -97,7 +97,7 @@ export const calculateFare = async (
     }
 
     const { rideType, distance, duration, waitingTime, promoCode } = req.body;
-    const userId = (req as any).user?._id;
+    const userId = req.user?.userId;
 
     const fare = await fareService.calculateFinalFare(
       rideType as RideType,
@@ -153,7 +153,7 @@ export const validatePromoCode = async (
     }
 
     const { code, fare, rideType } = req.body;
-    const userId = (req as any).user?._id;
+    const userId = req.user?.userId;
 
     if (!userId) {
       res.status(StatusCodes.UNAUTHORIZED).json(
@@ -254,7 +254,7 @@ export const updateFareSettings = async (
     }
 
     const { rideType } = req.params;
-    const adminId = (req as any).user?._id;
+    const adminId = req.user?.userId;
 
     if (!adminId) {
       res.status(StatusCodes.UNAUTHORIZED).json(

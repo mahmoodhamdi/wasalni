@@ -15,7 +15,7 @@ export async function seedPassengers(users: SeededUser[]): Promise<SeededPasseng
     return [];
   }
 
-  const passengers = [
+  const passengers: any[] = [
     // Active passengers with full data
     {
       userId: passengerUsers[0]._id,
@@ -191,6 +191,34 @@ export async function seedPassengers(users: SeededUser[]): Promise<SeededPasseng
       totalSpent: 600,
     },
   ];
+
+  // Add more passengers if available (passengers 7-16)
+  const additionalPassengerData = [
+    { rating: 4.6, totalTrips: 28, totalSpent: 1400, walletBalance: 150 },
+    { rating: 4.9, totalTrips: 42, totalSpent: 2100, walletBalance: 300 },
+    { rating: 4.3, totalTrips: 15, totalSpent: 750, walletBalance: 0 },
+    { rating: 4.7, totalTrips: 33, totalSpent: 1650, walletBalance: 200 },
+    { rating: 4.5, totalTrips: 22, totalSpent: 1100, walletBalance: 50 },
+    { rating: 4.8, totalTrips: 55, totalSpent: 2750, walletBalance: 400 },
+    { rating: 4.4, totalTrips: 18, totalSpent: 900, walletBalance: 0 },
+    { rating: 4.6, totalTrips: 31, totalSpent: 1550, walletBalance: 100 },
+    { rating: 4.2, totalTrips: 12, totalSpent: 600, walletBalance: 75 },
+    { rating: 4.9, totalTrips: 48, totalSpent: 2400, walletBalance: 350 },
+  ];
+
+  for (let i = 6; i < passengerUsers.length && i - 6 < additionalPassengerData.length; i++) {
+    const data = additionalPassengerData[i - 6];
+    passengers.push({
+      userId: passengerUsers[i]._id,
+      savedPlaces: [],
+      defaultPaymentMethod: i % 2 === 0 ? 'cash' : 'wallet',
+      walletBalance: data.walletBalance,
+      rating: data.rating,
+      totalRatings: Math.floor(data.totalTrips * 0.8),
+      totalTrips: data.totalTrips,
+      totalSpent: data.totalSpent,
+    });
+  }
 
   const createdPassengers = await Passenger.insertMany(passengers);
 

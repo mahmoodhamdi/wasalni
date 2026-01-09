@@ -86,7 +86,9 @@ export default function PassengersPage() {
     {
       accessorKey: 'email',
       header: 'البريد الإلكتروني',
-      cell: ({ row }) => row.original.user?.email || '-',
+      cell: ({ row }) => (
+        <span className="text-slate-700">{row.original.user?.email || '-'}</span>
+      ),
     },
     {
       accessorKey: 'isActive',
@@ -109,7 +111,9 @@ export default function PassengersPage() {
     {
       accessorKey: 'totalTrips',
       header: 'الرحلات',
-      cell: ({ row }) => row.original.totalTrips || 0,
+      cell: ({ row }) => (
+        <span className="text-slate-800 font-semibold">{row.original.totalTrips || 0}</span>
+      ),
     },
     {
       accessorKey: 'rating',
@@ -117,15 +121,18 @@ export default function PassengersPage() {
       cell: ({ row }) => (
         <div className="flex items-center gap-1">
           <span className="text-amber-500">★</span>
-          <span>{(row.original.rating || 0).toFixed(1)}</span>
+          <span className="text-slate-800 font-medium">{(row.original.rating || 0).toFixed(1)}</span>
         </div>
       ),
     },
     {
       accessorKey: 'createdAt',
       header: 'تاريخ التسجيل',
-      cell: ({ row }) =>
-        new Date(row.original.createdAt).toLocaleDateString('ar-EG'),
+      cell: ({ row }) => (
+        <span className="text-slate-600">
+          {new Date(row.original.createdAt).toLocaleDateString('ar-EG')}
+        </span>
+      ),
     },
     {
       id: 'actions',

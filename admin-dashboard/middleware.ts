@@ -1,45 +1,22 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// Routes that don't require authentication
-const publicRoutes = ['/auth/login', '/auth/forgot-password'];
-
-// Routes that require authentication
-const protectedRoutes = ['/dashboard'];
-
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Check for auth token in cookies
-  const token = request.cookies.get('wasalni-admin-token')?.value;
-
-  // Also check localStorage via a custom header (set by client)
-  const authHeader = request.headers.get('x-auth-token');
-
-  const isAuthenticated = !!token || !!authHeader;
-
-  // Redirect from root to dashboard or login
+  // Only handle root path redirect - let client-side handle all auth
+  // This avoids race conditions between server middleware and client localStorage
   if (pathname === '/') {
-    if (isAuthenticated) {
+    // Check for auth token in cookies (set by client on login)
+    const token = request.cookies.get('wasalni-admin-token')?.value;
+
+    if (token) {
       return NextResponse.redirect(new URL('/dashboard', request.url));
     }
     return NextResponse.redirect(new URL('/auth/login', request.url));
   }
 
-  // If trying to access protected routes without auth, redirect to login
-  if (protectedRoutes.some((route) => pathname.startsWith(route))) {
-    if (!isAuthenticated) {
-      const loginUrl = new URL('/auth/login', request.url);
-      loginUrl.searchParams.set('redirect', pathname);
-      return NextResponse.redirect(loginUrl);
-    }
-  }
-
-  // If already authenticated and trying to access login, redirect to dashboard
-  if (publicRoutes.includes(pathname) && isAuthenticated) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
-  }
-
+  // Let all other routes through - client-side components handle auth
   return NextResponse.next();
 }
 

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../providers/scheduled_provider.dart';
 
@@ -117,11 +118,13 @@ class _ScheduleTripScreenState extends ConsumerState<ScheduleTripScreen> {
     );
 
     if (result != null) {
+      final location = result['location'] as LatLng?;
+      if (location == null) return;
       setState(() {
         _pickup = TripLocation(
           address: result['address'] ?? '',
-          latitude: result['latitude'] ?? 0.0,
-          longitude: result['longitude'] ?? 0.0,
+          latitude: location.latitude,
+          longitude: location.longitude,
           name: result['name'],
         );
       });
@@ -135,11 +138,13 @@ class _ScheduleTripScreenState extends ConsumerState<ScheduleTripScreen> {
     );
 
     if (result != null) {
+      final location = result['location'] as LatLng?;
+      if (location == null) return;
       setState(() {
         _dropoff = TripLocation(
           address: result['address'] ?? '',
-          latitude: result['latitude'] ?? 0.0,
-          longitude: result['longitude'] ?? 0.0,
+          latitude: location.latitude,
+          longitude: location.longitude,
           name: result['name'],
         );
       });

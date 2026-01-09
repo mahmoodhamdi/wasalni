@@ -141,7 +141,7 @@ export default function DriversPage() {
         };
         return (
           <div>
-            <p>{types[row.original.vehicleType] || row.original.vehicleType}</p>
+            <p className="text-slate-800 font-medium">{types[row.original.vehicleType] || row.original.vehicleType}</p>
             {row.original.vehicle && (
               <p className="text-xs text-slate-500">
                 {row.original.vehicle.make} {row.original.vehicle.model}
@@ -193,14 +193,16 @@ export default function DriversPage() {
       cell: ({ row }) => (
         <div className="flex items-center gap-1">
           <span className="text-amber-500">★</span>
-          <span>{(row.original.rating || 0).toFixed(1)}</span>
+          <span className="text-slate-800 font-medium">{(row.original.rating || 0).toFixed(1)}</span>
         </div>
       ),
     },
     {
       accessorKey: 'totalTrips',
       header: 'الرحلات',
-      cell: ({ row }) => row.original.totalTrips || 0,
+      cell: ({ row }) => (
+        <span className="text-slate-800 font-semibold">{row.original.totalTrips || 0}</span>
+      ),
     },
     {
       id: 'actions',

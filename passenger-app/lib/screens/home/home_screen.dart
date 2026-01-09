@@ -389,10 +389,13 @@ class _HomeTabState extends ConsumerState<_HomeTab> {
                   navigator.pop();
                   final result = await context.push<Map<String, dynamic>>('/location-picker');
                   if (result != null && mounted) {
+                    // Extract location from LatLng object
+                    final location = result['location'] as LatLng?;
+                    if (location == null) return;
                     // Save home location
                     await _saveSavedPlace('home', LocationPoint(
-                      latitude: result['latitude'] as double,
-                      longitude: result['longitude'] as double,
+                      latitude: location.latitude,
+                      longitude: location.longitude,
                       address: result['address'] as String?,
                     ));
                     scaffoldMessenger.showSnackBar(
@@ -413,10 +416,13 @@ class _HomeTabState extends ConsumerState<_HomeTab> {
                   navigator.pop();
                   final result = await context.push<Map<String, dynamic>>('/location-picker');
                   if (result != null && mounted) {
+                    // Extract location from LatLng object
+                    final location = result['location'] as LatLng?;
+                    if (location == null) return;
                     // Save work location
                     await _saveSavedPlace('work', LocationPoint(
-                      latitude: result['latitude'] as double,
-                      longitude: result['longitude'] as double,
+                      latitude: location.latitude,
+                      longitude: location.longitude,
                       address: result['address'] as String?,
                     ));
                     scaffoldMessenger.showSnackBar(

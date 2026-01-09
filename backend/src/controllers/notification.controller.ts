@@ -6,7 +6,7 @@ import { sendSuccess, sendBadRequest, sendError } from '../utils/response';
 // Get user notifications
 export const getNotifications = async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = new Types.ObjectId((req as any).user.id);
+    const userId = new Types.ObjectId(req.user!.userId);
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 20;
 
@@ -26,7 +26,7 @@ export const getNotifications = async (req: Request, res: Response): Promise<voi
 // Get unread count
 export const getUnreadCount = async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = new Types.ObjectId((req as any).user.id);
+    const userId = new Types.ObjectId(req.user!.userId);
     const result = await notificationService.getUserNotifications(userId, 1, 1);
 
     sendSuccess(
@@ -43,7 +43,7 @@ export const getUnreadCount = async (req: Request, res: Response): Promise<void>
 // Mark notification as read
 export const markAsRead = async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = new Types.ObjectId((req as any).user.id);
+    const userId = new Types.ObjectId(req.user!.userId);
     const notificationId = new Types.ObjectId(req.params.notificationId);
 
     const notification = await notificationService.markAsRead(notificationId, userId);
@@ -67,7 +67,7 @@ export const markAsRead = async (req: Request, res: Response): Promise<void> => 
 // Mark all notifications as read
 export const markAllAsRead = async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = new Types.ObjectId((req as any).user.id);
+    const userId = new Types.ObjectId(req.user!.userId);
 
     await notificationService.markAllAsRead(userId);
 
@@ -85,7 +85,7 @@ export const markAllAsRead = async (req: Request, res: Response): Promise<void> 
 // Update FCM token
 export const updateFCMToken = async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = new Types.ObjectId((req as any).user.id);
+    const userId = new Types.ObjectId(req.user!.userId);
     const { fcmToken } = req.body;
 
     if (!fcmToken) {
@@ -109,7 +109,7 @@ export const updateFCMToken = async (req: Request, res: Response): Promise<void>
 // Remove FCM token (logout)
 export const removeFCMToken = async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = new Types.ObjectId((req as any).user.id);
+    const userId = new Types.ObjectId(req.user!.userId);
     const { fcmToken } = req.body;
 
     await notificationService.removeFCMToken(userId, fcmToken);
@@ -128,7 +128,7 @@ export const removeFCMToken = async (req: Request, res: Response): Promise<void>
 // Test notification (for development)
 export const sendTestNotification = async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = new Types.ObjectId((req as any).user.id);
+    const userId = new Types.ObjectId(req.user!.userId);
     const { title, body } = req.body;
 
     await notificationService.sendNotification(userId, {

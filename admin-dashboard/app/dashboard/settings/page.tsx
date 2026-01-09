@@ -169,33 +169,33 @@ export default function SettingsPage() {
           </h3>
 
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
+            <table className="w-full min-w-[700px] table-fixed">
+              <thead className="bg-slate-50">
                 <tr className="border-b border-slate-200">
-                  <th className="text-right py-3 px-4 text-sm font-medium text-slate-600">
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-slate-800 w-40">
                     نوع المركبة
                   </th>
-                  <th className="text-right py-3 px-4 text-sm font-medium text-slate-600">
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-slate-800">
                     الأجرة الأساسية (ج.م)
                   </th>
-                  <th className="text-right py-3 px-4 text-sm font-medium text-slate-600">
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-slate-800">
                     سعر الكيلومتر (ج.م)
                   </th>
-                  <th className="text-right py-3 px-4 text-sm font-medium text-slate-600">
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-slate-800">
                     سعر الدقيقة (ج.م)
                   </th>
-                  <th className="text-right py-3 px-4 text-sm font-medium text-slate-600">
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-slate-800">
                     الحد الأدنى (ج.م)
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {vehicleTypes.map((vehicle) => (
-                  <tr key={vehicle.id} className="border-b border-slate-100">
+                  <tr key={vehicle.id} className="border-b border-slate-100 hover:bg-slate-50">
                     <td className="py-4 px-4">
                       <div className="flex items-center gap-3">
                         <span className="text-2xl">{vehicle.icon}</span>
-                        <span className="font-medium text-slate-900">
+                        <span className="font-semibold text-slate-800">
                           {vehicle.name}
                         </span>
                       </div>
@@ -211,7 +211,7 @@ export default function SettingsPage() {
                             parseFloat(e.target.value)
                           )
                         }
-                        className="w-24 px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        className="w-24 px-3 py-2 border border-slate-300 rounded-lg text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                       />
                     </td>
                     <td className="py-4 px-4">
@@ -226,7 +226,7 @@ export default function SettingsPage() {
                             parseFloat(e.target.value)
                           )
                         }
-                        className="w-24 px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        className="w-24 px-3 py-2 border border-slate-300 rounded-lg text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                       />
                     </td>
                     <td className="py-4 px-4">
@@ -241,7 +241,7 @@ export default function SettingsPage() {
                             parseFloat(e.target.value)
                           )
                         }
-                        className="w-24 px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        className="w-24 px-3 py-2 border border-slate-300 rounded-lg text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                       />
                     </td>
                     <td className="py-4 px-4">
@@ -255,7 +255,7 @@ export default function SettingsPage() {
                             parseFloat(e.target.value)
                           )
                         }
-                        className="w-24 px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        className="w-24 px-3 py-2 border border-slate-300 rounded-lg text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                       />
                     </td>
                   </tr>

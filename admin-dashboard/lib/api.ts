@@ -118,6 +118,12 @@ export const tripsApi = {
 
   getStats: (params?: { from?: string; to?: string }) =>
     api.get('/admin/trips/stats', { params }),
+
+  getRecent: (limit?: number) =>
+    api.get('/admin/trips/recent', { params: { limit } }),
+
+  getActive: () =>
+    api.get('/admin/trips', { params: { status: 'active' } }),
 };
 
 // Settings API

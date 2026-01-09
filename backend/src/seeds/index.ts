@@ -7,6 +7,7 @@ import { seedTrips } from './trips.seed';
 import { seedZones } from './zones.seed';
 import { seedFareSettings } from './fareSettings.seed';
 import { seedPromos } from './promos.seed';
+import { seedDriverLocations } from './driverLocations.seed';
 
 const COLORS = {
   reset: '\x1b[0m',
@@ -48,6 +49,10 @@ async function seed(): Promise<void> {
     const drivers = await seedDrivers(users);
     log(`✅ ${drivers.length} drivers created`, COLORS.green);
 
+    log('\n📍 Seeding driver locations...', COLORS.blue);
+    const driverLocationsCount = await seedDriverLocations(drivers);
+    log(`✅ ${driverLocationsCount} driver locations created`, COLORS.green);
+
     log('\n👥 Seeding passengers...', COLORS.blue);
     const passengers = await seedPassengers(users);
     log(`✅ ${passengers.length} passengers created`, COLORS.green);
@@ -88,32 +93,31 @@ ${COLORS.cyan}${COLORS.bright}
 ===========================================
 ${COLORS.reset}
 ${COLORS.magenta}👤 Admin:${COLORS.reset}
-   Phone: +201000000000
    Email: admin@wasalni.com
    Password: admin123
 
-${COLORS.blue}👥 Passengers (6):${COLORS.reset}
-   +201111111111 - أحمد محمد (Active, has wallet ₤250)
-   +201111111112 - سارة أحمد (Active, has wallet ₤100)
-   +201111111113 - محمود علي (Active)
-   +201111111114 - فاطمة حسن (Active, has wallet ₤500)
-   +201111111115 - عمر خالد (Active)
-   +201111111116 - راكب موقوف (Suspended)
+${COLORS.blue}👥 Passengers (5 Active):${COLORS.reset}
+   passenger1@test.com / 123456 - أحمد محمد (wallet ₤250)
+   passenger2@test.com / 123456 - سارة أحمد (wallet ₤100)
+   passenger3@test.com / 123456 - محمود علي
+   passenger4@test.com / 123456 - فاطمة حسن (wallet ₤500)
+   passenger5@test.com / 123456 - عمر خالد
 
 ${COLORS.green}🚗 Approved Drivers (5):${COLORS.reset}
-   +201222222221 - محمد السائق (Online, Economy, Rating: 4.8)
-   +201222222222 - علي السائق (Online, Comfort, Rating: 4.5)
-   +201222222223 - حسن السائق (Offline, Family, Rating: 4.9)
-   +201222222224 - أحمد السائق (On Trip, Economy, Rating: 4.3)
-   +201222222225 - كريم السائق (Offline, Comfort, Rating: 4.6)
+   driver1@test.com / 123456 - محمد السائق (Online, Economy)
+   driver2@test.com / 123456 - علي السائق (Online, Comfort)
+   driver3@test.com / 123456 - حسن السائق (Offline, Family)
+   driver4@test.com / 123456 - أحمد السائق (On Trip, Economy)
+   driver5@test.com / 123456 - كريم السائق (Offline, Comfort)
 
 ${COLORS.yellow}⏳ Pending Drivers (3):${COLORS.reset}
-   +201333333331 - يوسف السائق (Economy)
-   +201333333332 - إبراهيم السائق (Comfort)
-   +201333333333 - مصطفى السائق (TukTuk)
+   driver.pending1@test.com / 123456 - يوسف السائق
+   driver.pending2@test.com / 123456 - إبراهيم السائق
+   driver.pending3@test.com / 123456 - مصطفى السائق
 
-${COLORS.red}🚫 Suspended Driver (1):${COLORS.reset}
-   +201444444444 - سائق موقوف (Rating: 3.2)
+${COLORS.red}🚫 Suspended:${COLORS.reset}
+   suspended.driver@test.com - سائق موقوف
+   suspended.passenger@test.com - راكب موقوف
 
 ${COLORS.cyan}🚕 Trips:${COLORS.reset}
    - 5 Completed (with ratings)
