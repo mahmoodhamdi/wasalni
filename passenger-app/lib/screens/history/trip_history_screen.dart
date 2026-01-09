@@ -46,7 +46,8 @@ class _TripHistoryScreenState extends ConsumerState<TripHistoryScreen> {
     try {
       final response = await apiService.getTripHistory(page: _page);
       final data = response.data['data'];
-      final trips = (data['trips'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+      // API returns data directly as a list of trips
+      final trips = (data as List?)?.cast<Map<String, dynamic>>() ?? [];
 
       setState(() {
         _trips.addAll(trips);

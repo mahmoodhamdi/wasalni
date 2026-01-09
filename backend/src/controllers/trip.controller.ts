@@ -121,7 +121,7 @@ export const getTrip = async (
 ): Promise<void> => {
   try {
     const { tripId } = req.params;
-    const userId = (req as any).user?._id;
+    const userId = req.user?.userId;
 
     const trip = await tripService.getTripById(tripId);
     if (!trip) {
@@ -137,7 +137,7 @@ export const getTrip = async (
 
     const isPassenger = passenger && trip.passengerId.toString() === passenger._id.toString();
     const isDriver = driver && trip.driverId?.toString() === driver._id.toString();
-    const isAdmin = (req as any).user?.role === 'admin';
+    const isAdmin = req.user?.role === 'admin';
 
     if (!isPassenger && !isDriver && !isAdmin) {
       res.status(StatusCodes.FORBIDDEN).json(
@@ -164,7 +164,7 @@ export const getPassengerTrips = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = (req as any).user?._id;
+    const userId = req.user?.userId;
 
     const passenger = await Passenger.findOne({ userId: new Types.ObjectId(userId) });
     if (!passenger) {
@@ -216,7 +216,7 @@ export const getActiveTrip = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = (req as any).user?._id;
+    const userId = req.user?.userId;
 
     const passenger = await Passenger.findOne({ userId: new Types.ObjectId(userId) });
     if (!passenger) {
@@ -260,7 +260,7 @@ export const cancelTrip = async (
 
     const { tripId } = req.params;
     const { reason } = req.body;
-    const userId = (req as any).user?._id;
+    const userId = req.user?.userId;
 
     const trip = await tripService.getTripById(tripId, false);
     if (!trip) {
@@ -327,7 +327,7 @@ export const rateTrip = async (
 
     const { tripId } = req.params;
     const { score, comment, badges } = req.body;
-    const userId = (req as any).user?._id;
+    const userId = req.user?.userId;
 
     const trip = await tripService.getTripById(tripId, false);
     if (!trip) {
@@ -391,7 +391,7 @@ export const shareTrip = async (
 
     const { tripId } = req.params;
     const { contacts } = req.body;
-    const userId = (req as any).user?._id;
+    const userId = req.user?.userId;
 
     const trip = await tripService.getTripById(tripId, false);
     if (!trip) {
@@ -438,7 +438,7 @@ export const triggerSOS = async (
 ): Promise<void> => {
   try {
     const { tripId } = req.params;
-    const userId = (req as any).user?._id;
+    const userId = req.user?.userId;
 
     const trip = await tripService.getTripById(tripId, false);
     if (!trip) {
@@ -491,7 +491,7 @@ export const getAvailableTrips = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = (req as any).user?._id;
+    const userId = req.user?.userId;
 
     const driver = await Driver.findOne({ userId: new Types.ObjectId(userId) });
     if (!driver) {
@@ -534,7 +534,7 @@ export const acceptTrip = async (
 ): Promise<void> => {
   try {
     const { tripId } = req.params;
-    const userId = (req as any).user?._id;
+    const userId = req.user?.userId;
 
     const driver = await Driver.findOne({ userId: new Types.ObjectId(userId) });
     if (!driver) {
@@ -591,7 +591,7 @@ export const rejectTrip = async (
 ): Promise<void> => {
   try {
     const { tripId } = req.params;
-    const userId = (req as any).user?._id;
+    const userId = req.user?.userId;
 
     const driver = await Driver.findOne({ userId: new Types.ObjectId(userId) });
     if (!driver) {
@@ -623,7 +623,7 @@ export const updateTripStatus = async (
   try {
     const { tripId } = req.params;
     const { status } = req.body;
-    const userId = (req as any).user?._id;
+    const userId = req.user?.userId;
 
     const driver = await Driver.findOne({ userId: new Types.ObjectId(userId) });
     if (!driver) {
@@ -688,7 +688,7 @@ export const completeTrip = async (
   try {
     const { tripId } = req.params;
     const { actualDistance, actualDuration } = req.body;
-    const userId = (req as any).user?._id;
+    const userId = req.user?.userId;
 
     const driver = await Driver.findOne({ userId: new Types.ObjectId(userId) });
     if (!driver) {
@@ -740,7 +740,7 @@ export const getDriverTrips = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = (req as any).user?._id;
+    const userId = req.user?.userId;
 
     const driver = await Driver.findOne({ userId: new Types.ObjectId(userId) });
     if (!driver) {
@@ -792,7 +792,7 @@ export const getDriverActiveTrip = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = (req as any).user?._id;
+    const userId = req.user?.userId;
 
     const driver = await Driver.findOne({ userId: new Types.ObjectId(userId) });
     if (!driver) {
@@ -828,7 +828,7 @@ export const driverCancelTrip = async (
   try {
     const { tripId } = req.params;
     const { reason } = req.body;
-    const userId = (req as any).user?._id;
+    const userId = req.user?.userId;
 
     const driver = await Driver.findOne({ userId: new Types.ObjectId(userId) });
     if (!driver) {
@@ -890,7 +890,7 @@ export const ratePassenger = async (
 
     const { tripId } = req.params;
     const { score, comment, badges } = req.body;
-    const userId = (req as any).user?._id;
+    const userId = req.user?.userId;
 
     const driver = await Driver.findOne({ userId: new Types.ObjectId(userId) });
     if (!driver) {

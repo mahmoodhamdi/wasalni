@@ -8,13 +8,13 @@ import { tripsApi } from '@/lib/api';
 
 interface Trip {
   _id: string;
-  passenger?: {
+  passengerId?: {
     user?: {
       name: string;
       phone: string;
     };
   };
-  driver?: {
+  driverId?: {
     user?: {
       name: string;
       phone: string;
@@ -86,7 +86,29 @@ export default function TripsPage() {
         setTrips(tripsResponse.data.data.trips);
       }
       if (statsResponse.data.success) {
-        setStats(statsResponse.data.data.stats);
+        // Transform byStatus array to stats object
+        const byStatus = statsResponse.data.data.stats?.byStatus || [];
+        const transformedStats: TripStats = {
+          total: 0,
+          completed: 0,
+          cancelled: 0,
+          inProgress: 0,
+        };
+
+        const inProgressStatuses = ['searching', 'driver_assigned', 'driver_arriving', 'driver_arrived', 'trip_started'];
+
+        byStatus.forEach((item: { _id: string; count: number }) => {
+          transformedStats.total += item.count;
+          if (item._id === 'trip_completed' || item._id === 'completed') {
+            transformedStats.completed = item.count;
+          } else if (item._id === 'cancelled') {
+            transformedStats.cancelled = item.count;
+          } else if (inProgressStatuses.includes(item._id)) {
+            transformedStats.inProgress += item.count;
+          }
+        });
+
+        setStats(transformedStats);
       }
     } catch (err) {
       console.error('Failed to fetch trips:', err);
@@ -103,23 +125,35 @@ export default function TripsPage() {
     {
       accessorKey: '_id',
       header: 'رقم الرحلة',
-      cell: ({ row }) => `#${row.original._id.slice(-6).toUpperCase()}`,
+      cell: ({ row }) => (
+        <span className="text-slate-800 font-mono font-semibold">
+          #{row.original._id.slice(-6).toUpperCase()}
+        </span>
+      ),
     },
     {
-      accessorKey: 'passenger',
+      accessorKey: 'passengerId',
       header: 'الراكب',
-      cell: ({ row }) => row.original.passenger?.user?.name || '-',
+      cell: ({ row }) => (
+        <span className="text-slate-800 font-medium">
+          {row.original.passengerId?.user?.name || '-'}
+        </span>
+      ),
     },
     {
-      accessorKey: 'driver',
+      accessorKey: 'driverId',
       header: 'السائق',
-      cell: ({ row }) => row.original.driver?.user?.name || '-',
+      cell: ({ row }) => (
+        <span className="text-slate-800 font-medium">
+          {row.original.driverId?.user?.name || '-'}
+        </span>
+      ),
     },
     {
       accessorKey: 'pickup',
       header: 'من',
       cell: ({ row }) => (
-        <div className="max-w-[150px] truncate" title={row.original.pickup.address}>
+        <div className="max-w-[150px] truncate text-slate-700" title={row.original.pickup.address}>
           {row.original.pickup.address}
         </div>
       ),
@@ -128,7 +162,7 @@ export default function TripsPage() {
       accessorKey: 'dropoff',
       header: 'إلى',
       cell: ({ row }) => (
-        <div className="max-w-[150px] truncate" title={row.original.dropoff.address}>
+        <div className="max-w-[150px] truncate text-slate-700" title={row.original.dropoff.address}>
           {row.original.dropoff.address}
         </div>
       ),
@@ -144,7 +178,11 @@ export default function TripsPage() {
           tuktuk: 'توكتوك',
           motorcycle: 'موتوسيكل',
         };
-        return types[row.original.rideType] || row.original.rideType;
+        return (
+          <span className="text-slate-700">
+            {types[row.original.rideType] || row.original.rideType}
+          </span>
+        );
       },
     },
     {
@@ -153,22 +191,22 @@ export default function TripsPage() {
       cell: ({ row }) => {
         const statusStyles: Record<string, string> = {
           pending: 'bg-amber-100 text-amber-700',
-          searching: 'bg-blue-100 text-blue-700',
-          accepted: 'bg-purple-100 text-purple-700',
-          arriving: 'bg-cyan-100 text-cyan-700',
-          arrived: 'bg-indigo-100 text-indigo-700',
-          in_progress: 'bg-blue-100 text-blue-700',
-          completed: 'bg-emerald-100 text-emerald-700',
+          searching: 'bg-yellow-100 text-yellow-700',
+          driver_assigned: 'bg-blue-100 text-blue-700',
+          driver_arriving: 'bg-cyan-100 text-cyan-700',
+          driver_arrived: 'bg-purple-100 text-purple-700',
+          trip_started: 'bg-indigo-100 text-indigo-700',
+          trip_completed: 'bg-emerald-100 text-emerald-700',
           cancelled: 'bg-red-100 text-red-700',
         };
         const statusLabels: Record<string, string> = {
           pending: 'في الانتظار',
           searching: 'جاري البحث',
-          accepted: 'مقبولة',
-          arriving: 'في الطريق',
-          arrived: 'وصل',
-          in_progress: 'جارية',
-          completed: 'مكتملة',
+          driver_assigned: 'تم التعيين',
+          driver_arriving: 'في الطريق',
+          driver_arrived: 'وصل السائق',
+          trip_started: 'جارية',
+          trip_completed: 'مكتملة',
           cancelled: 'ملغاة',
         };
         return (
@@ -185,13 +223,20 @@ export default function TripsPage() {
     {
       accessorKey: 'fare',
       header: 'الأجرة',
-      cell: ({ row }) => `${(row.original.fare?.total || 0).toFixed(2)} ج.م`,
+      cell: ({ row }) => (
+        <span className="text-slate-800 font-semibold">
+          {(row.original.fare?.total || 0).toFixed(2)} ج.م
+        </span>
+      ),
     },
     {
       accessorKey: 'createdAt',
       header: 'التاريخ',
-      cell: ({ row }) =>
-        new Date(row.original.createdAt).toLocaleDateString('ar-EG'),
+      cell: ({ row }) => (
+        <span className="text-slate-600">
+          {new Date(row.original.createdAt).toLocaleDateString('ar-EG')}
+        </span>
+      ),
     },
     {
       id: 'actions',
@@ -226,9 +271,12 @@ export default function TripsPage() {
             className="px-4 py-2 border border-slate-200 rounded-lg bg-white"
           >
             <option value="">جميع الحالات</option>
-            <option value="pending">في الانتظار</option>
-            <option value="in_progress">جارية</option>
-            <option value="completed">مكتملة</option>
+            <option value="searching">جاري البحث</option>
+            <option value="driver_assigned">تم التعيين</option>
+            <option value="driver_arriving">في الطريق</option>
+            <option value="driver_arrived">وصل السائق</option>
+            <option value="trip_started">جارية</option>
+            <option value="trip_completed">مكتملة</option>
             <option value="cancelled">ملغاة</option>
           </select>
           <input

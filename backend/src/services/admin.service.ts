@@ -56,33 +56,33 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
         $group: {
           _id: null,
           total: { $sum: 1 },
-          completed: { $sum: { $cond: [{ $eq: ['$status', 'completed'] }, 1, 0] } },
+          completed: { $sum: { $cond: [{ $eq: ['$status', 'trip_completed'] }, 1, 0] } },
           cancelled: { $sum: { $cond: [{ $eq: ['$status', 'cancelled'] }, 1, 0] } },
           active: {
             $sum: {
               $cond: [
-                { $in: ['$status', ['searching', 'driver_assigned', 'arriving', 'arrived', 'in_progress']] },
+                { $in: ['$status', ['searching', 'driver_assigned', 'driver_arriving', 'driver_arrived', 'trip_started']] },
                 1,
                 0,
               ],
             },
           },
-          totalRevenue: { $sum: { $ifNull: ['$fare.final', 0] } },
+          totalRevenue: { $sum: { $ifNull: ['$fare.total', 0] } },
           avgDuration: { $avg: '$tripDuration' },
         },
       },
     ]),
     Trip.aggregate([
-      { $match: { createdAt: { $gte: today }, status: 'completed' } },
-      { $group: { _id: null, revenue: { $sum: '$fare.final' } } },
+      { $match: { createdAt: { $gte: today }, status: 'trip_completed' } },
+      { $group: { _id: null, revenue: { $sum: '$fare.total' } } },
     ]),
     Trip.aggregate([
-      { $match: { createdAt: { $gte: weekAgo }, status: 'completed' } },
-      { $group: { _id: null, revenue: { $sum: '$fare.final' } } },
+      { $match: { createdAt: { $gte: weekAgo }, status: 'trip_completed' } },
+      { $group: { _id: null, revenue: { $sum: '$fare.total' } } },
     ]),
     Trip.aggregate([
-      { $match: { createdAt: { $gte: monthAgo }, status: 'completed' } },
-      { $group: { _id: null, revenue: { $sum: '$fare.final' } } },
+      { $match: { createdAt: { $gte: monthAgo }, status: 'trip_completed' } },
+      { $group: { _id: null, revenue: { $sum: '$fare.total' } } },
     ]),
     Driver.aggregate([
       { $match: { rating: { $gt: 0 } } },
@@ -187,9 +187,9 @@ export const getPassengerById = async (passengerId: Types.ObjectId) => {
       $group: {
         _id: null,
         totalTrips: { $sum: 1 },
-        completedTrips: { $sum: { $cond: [{ $eq: ['$status', 'completed'] }, 1, 0] } },
+        completedTrips: { $sum: { $cond: [{ $eq: ['$status', 'trip_completed'] }, 1, 0] } },
         cancelledTrips: { $sum: { $cond: [{ $eq: ['$status', 'cancelled'] }, 1, 0] } },
-        totalSpent: { $sum: { $ifNull: ['$fare.final', 0] } },
+        totalSpent: { $sum: { $ifNull: ['$fare.total', 0] } },
       },
     },
   ]);
@@ -303,21 +303,21 @@ export const getDriverById = async (driverId: Types.ObjectId) => {
   // Get trip and earnings stats
   const [tripStats, recentTrips] = await Promise.all([
     Trip.aggregate([
-      { $match: { driver: driverId } },
+      { $match: { driverId: driverId } },
       {
         $group: {
           _id: null,
           totalTrips: { $sum: 1 },
-          completedTrips: { $sum: { $cond: [{ $eq: ['$status', 'completed'] }, 1, 0] } },
+          completedTrips: { $sum: { $cond: [{ $eq: ['$status', 'trip_completed'] }, 1, 0] } },
           cancelledTrips: { $sum: { $cond: [{ $eq: ['$status', 'cancelled'] }, 1, 0] } },
           totalEarnings: { $sum: { $ifNull: ['$driverEarnings', 0] } },
         },
       },
     ]),
-    Trip.find({ driver: driverId })
+    Trip.find({ driverId: driverId })
       .sort({ createdAt: -1 })
       .limit(10)
-      .populate('passenger', 'user')
+      .populate({ path: 'passengerId', populate: { path: 'user', select: 'name phone' } })
       .lean(),
   ]);
 
@@ -451,11 +451,11 @@ export const getTrips = async (options: TripListOptions) => {
   const [trips, total] = await Promise.all([
     Trip.find(query)
       .populate({
-        path: 'passenger',
+        path: 'passengerId',
         populate: { path: 'user', select: 'name phone' },
       })
       .populate({
-        path: 'driver',
+        path: 'driverId',
         populate: { path: 'user', select: 'name phone' },
       })
       .sort(sort)
@@ -479,11 +479,11 @@ export const getTrips = async (options: TripListOptions) => {
 export const getTripById = async (tripId: Types.ObjectId) => {
   return Trip.findById(tripId)
     .populate({
-      path: 'passenger',
+      path: 'passengerId',
       populate: { path: 'user', select: 'name phone email profileImage' },
     })
     .populate({
-      path: 'driver',
+      path: 'driverId',
       populate: { path: 'user', select: 'name phone email profileImage' },
     })
     .lean();
@@ -503,30 +503,30 @@ export const getTripStats = async (from?: Date, to?: Date) => {
       $group: {
         _id: '$status',
         count: { $sum: 1 },
-        revenue: { $sum: { $ifNull: ['$fare.final', 0] } },
+        revenue: { $sum: { $ifNull: ['$fare.total', 0] } },
       },
     },
   ]);
 
   const byRideType = await Trip.aggregate([
-    { $match: { ...match, status: 'completed' } },
+    { $match: { ...match, status: 'trip_completed' } },
     {
       $group: {
         _id: '$rideType',
         count: { $sum: 1 },
-        revenue: { $sum: { $ifNull: ['$fare.final', 0] } },
-        avgFare: { $avg: '$fare.final' },
+        revenue: { $sum: { $ifNull: ['$fare.total', 0] } },
+        avgFare: { $avg: '$fare.total' },
       },
     },
   ]);
 
   const dailyStats = await Trip.aggregate([
-    { $match: { ...match, status: 'completed' } },
+    { $match: { ...match, status: 'trip_completed' } },
     {
       $group: {
         _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
         trips: { $sum: 1 },
-        revenue: { $sum: '$fare.final' },
+        revenue: { $sum: '$fare.total' },
       },
     },
     { $sort: { _id: 1 } },
@@ -543,11 +543,11 @@ export const getTripStats = async (from?: Date, to?: Date) => {
 export const getRecentTrips = async (limit = 10) => {
   return Trip.find()
     .populate({
-      path: 'passenger',
+      path: 'passengerId',
       populate: { path: 'user', select: 'name phone' },
     })
     .populate({
-      path: 'driver',
+      path: 'driverId',
       populate: { path: 'user', select: 'name phone' },
     })
     .sort({ createdAt: -1 })
@@ -579,27 +579,27 @@ export const getFinanceStats = async (): Promise<FinanceStats> => {
 
   const [totalStats, todayStats, weekStats, monthStats] = await Promise.all([
     Trip.aggregate([
-      { $match: { status: 'completed' } },
+      { $match: { status: 'trip_completed' } },
       {
         $group: {
           _id: null,
-          totalRevenue: { $sum: '$fare.final' },
+          totalRevenue: { $sum: '$fare.total' },
           platformEarnings: { $sum: '$platformFee' },
           driverPayouts: { $sum: '$driverEarnings' },
         },
       },
     ]),
     Trip.aggregate([
-      { $match: { status: 'completed', createdAt: { $gte: today } } },
-      { $group: { _id: null, revenue: { $sum: '$fare.final' } } },
+      { $match: { status: 'trip_completed', createdAt: { $gte: today } } },
+      { $group: { _id: null, revenue: { $sum: '$fare.total' } } },
     ]),
     Trip.aggregate([
-      { $match: { status: 'completed', createdAt: { $gte: weekAgo } } },
-      { $group: { _id: null, revenue: { $sum: '$fare.final' } } },
+      { $match: { status: 'trip_completed', createdAt: { $gte: weekAgo } } },
+      { $group: { _id: null, revenue: { $sum: '$fare.total' } } },
     ]),
     Trip.aggregate([
-      { $match: { status: 'completed', createdAt: { $gte: monthAgo } } },
-      { $group: { _id: null, revenue: { $sum: '$fare.final' } } },
+      { $match: { status: 'trip_completed', createdAt: { $gte: monthAgo } } },
+      { $group: { _id: null, revenue: { $sum: '$fare.total' } } },
     ]),
   ]);
 
@@ -628,11 +628,11 @@ export const getRevenueChart = async (days = 30) => {
   startDate.setHours(0, 0, 0, 0);
 
   return Trip.aggregate([
-    { $match: { status: 'completed', createdAt: { $gte: startDate } } },
+    { $match: { status: 'trip_completed', createdAt: { $gte: startDate } } },
     {
       $group: {
         _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
-        revenue: { $sum: '$fare.final' },
+        revenue: { $sum: '$fare.total' },
         trips: { $sum: 1 },
         platformFee: { $sum: '$platformFee' },
       },

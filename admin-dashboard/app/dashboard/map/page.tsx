@@ -1,82 +1,81 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { RefreshCw, Car, MapPin, Clock, Loader2 } from 'lucide-react';
+import { RefreshCw, Car, Clock, Loader2 } from 'lucide-react';
 import { locationApi } from '@/lib/api';
 import { io, Socket } from 'socket.io-client';
 import dynamic from 'next/dynamic';
+import type { DriverLocation } from '@/components/map/LiveMap';
 
-// TODO: Switch to Google Maps when billing is ready
-// import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api';
-
-// Dynamically import Leaflet components (required for Next.js SSR)
-const MapContainer = dynamic(
-  () => import('react-leaflet').then((mod) => mod.MapContainer),
-  { ssr: false }
-);
-const TileLayer = dynamic(
-  () => import('react-leaflet').then((mod) => mod.TileLayer),
-  { ssr: false }
-);
-const Marker = dynamic(
-  () => import('react-leaflet').then((mod) => mod.Marker),
-  { ssr: false }
-);
-const Popup = dynamic(
-  () => import('react-leaflet').then((mod) => mod.Popup),
-  { ssr: false }
+// Dynamically import the entire Map component to avoid re-initialization issues
+const LiveMap = dynamic(
+  () => import('@/components/map/LiveMap'),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center h-full bg-slate-100">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 text-emerald-600 animate-spin mx-auto mb-4" />
+          <p className="text-slate-600">جاري تحميل الخريطة...</p>
+        </div>
+      </div>
+    )
+  }
 );
 
-interface DriverLocation {
+// API response format from backend
+interface ApiDriverResponse {
   driverId: string;
-  userId: string;
-  name: string;
-  phone: string;
-  vehicleType: string;
-  vehicleCategory: string;
-  vehicle?: {
-    make: string;
-    model: string;
-    color: string;
-    plateNumber: string;
-  };
-  location: {
-    lat: number;
-    lng: number;
-  };
+  distance: number;
+  lat: number;
+  lng: number;
   heading?: number;
-  isAvailable: boolean;
-  lastUpdate: string;
+  driver: {
+    _id: string;
+    name: string;
+    phone: string;
+    avatar?: string;
+    rating: number;
+    vehicle?: {
+      type: string;
+      category: string;
+      make: string;
+      model: string;
+      color: string;
+      plateNumber: string;
+    };
+  };
 }
 
-// Egypt map center (Bagour area)
-const mapCenter: [number, number] = [30.4167, 30.9667];
+// Egypt map center (Cairo area)
+const mapCenter: [number, number] = [30.0444, 31.2357];
 
 export default function LiveMapPage() {
   const [drivers, setDrivers] = useState<DriverLocation[]>([]);
   const [selectedDriver, setSelectedDriver] = useState<DriverLocation | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [socket, setSocket] = useState<Socket | null>(null);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
-  const [mapReady, setMapReady] = useState(false);
 
-  // Load Leaflet CSS
-  useEffect(() => {
-    // Import Leaflet CSS on client side
-    import('leaflet/dist/leaflet.css');
-
-    // Fix for default marker icons in Leaflet with Next.js
-    import('leaflet').then((L) => {
-      delete (L.Icon.Default.prototype as any)._getIconUrl;
-      L.Icon.Default.mergeOptions({
-        iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-        iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-      });
-      setMapReady(true);
-    });
-  }, []);
+  // Transform API response to our format
+  const transformDriverData = (apiDrivers: ApiDriverResponse[]): DriverLocation[] => {
+    return apiDrivers.map((d) => ({
+      driverId: d.driverId,
+      userId: d.driver._id,
+      name: d.driver.name || 'سائق',
+      phone: d.driver.phone || '',
+      vehicleType: d.driver.vehicle?.type || 'car',
+      vehicleCategory: d.driver.vehicle?.category || 'economy',
+      vehicle: d.driver.vehicle,
+      location: {
+        lat: d.lat,
+        lng: d.lng,
+      },
+      heading: d.heading,
+      isAvailable: true,
+      lastUpdate: new Date().toISOString(),
+    }));
+  };
 
   // Fetch online drivers
   const fetchDrivers = useCallback(async () => {
@@ -84,7 +83,8 @@ export default function LiveMapPage() {
       setLoading(true);
       const response = await locationApi.getOnlineDrivers();
       if (response.data.success) {
-        setDrivers(response.data.data.drivers || []);
+        const transformedDrivers = transformDriverData(response.data.data.drivers || []);
+        setDrivers(transformedDrivers);
         setError(null);
       }
     } catch (err) {
@@ -100,7 +100,6 @@ export default function LiveMapPage() {
   useEffect(() => {
     const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:5000';
 
-    // Get token from zustand store
     let token = null;
     const storedAuth = localStorage.getItem('wasalni-admin-auth');
     if (storedAuth) {
@@ -112,17 +111,17 @@ export default function LiveMapPage() {
       }
     }
 
-    const newSocket = io(socketUrl, {
+    const socket = io(socketUrl, {
       transports: ['websocket'],
       auth: { token },
     });
 
-    newSocket.on('connect', () => {
+    socket.on('connect', () => {
       console.log('Connected to socket for live map');
-      newSocket.emit('admin:subscribeToDriverLocations');
+      socket.emit('admin:subscribeToDriverLocations');
     });
 
-    newSocket.on('driver:locationUpdate', (data: DriverLocation) => {
+    socket.on('driver:locationUpdate', (data: DriverLocation) => {
       setDrivers((prev) => {
         const index = prev.findIndex((d) => d.driverId === data.driverId);
         if (index >= 0) {
@@ -134,7 +133,7 @@ export default function LiveMapPage() {
       });
     });
 
-    newSocket.on('driver:online', (data: DriverLocation) => {
+    socket.on('driver:online', (data: DriverLocation) => {
       setDrivers((prev) => {
         const exists = prev.find((d) => d.driverId === data.driverId);
         if (!exists) {
@@ -144,17 +143,15 @@ export default function LiveMapPage() {
       });
     });
 
-    newSocket.on('driver:offline', (data: { driverId: string }) => {
+    socket.on('driver:offline', (data: { driverId: string }) => {
       setDrivers((prev) => prev.filter((d) => d.driverId !== data.driverId));
       if (selectedDriver?.driverId === data.driverId) {
         setSelectedDriver(null);
       }
     });
 
-    setSocket(newSocket);
-
     return () => {
-      newSocket.disconnect();
+      socket.disconnect();
     };
   }, [selectedDriver?.driverId]);
 
@@ -169,7 +166,7 @@ export default function LiveMapPage() {
     return () => clearInterval(interval);
   }, [fetchDrivers]);
 
-  const formatLastUpdate = (dateString: string) => {
+  const formatLastUpdate = useCallback((dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
     const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
@@ -177,7 +174,7 @@ export default function LiveMapPage() {
     if (diff < 60) return `منذ ${diff} ثانية`;
     if (diff < 3600) return `منذ ${Math.floor(diff / 60)} دقيقة`;
     return `منذ ${Math.floor(diff / 3600)} ساعة`;
-  };
+  }, []);
 
   return (
     <div className="space-y-4">
@@ -235,77 +232,13 @@ export default function LiveMapPage() {
 
       {/* Map Container */}
       <div className="bg-white rounded-lg shadow-sm overflow-hidden h-[calc(100vh-280px)]">
-        {!mapReady ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <Loader2 className="w-12 h-12 text-emerald-600 animate-spin mx-auto mb-4" />
-              <p className="text-slate-600">جاري تحميل الخريطة...</p>
-            </div>
-          </div>
-        ) : (
-          <MapContainer
-            center={mapCenter}
-            zoom={12}
-            style={{ height: '100%', width: '100%' }}
-          >
-            {/* OpenStreetMap Tile Layer (FREE) */}
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-
-            {drivers.map((driver) => (
-              <Marker
-                key={driver.driverId}
-                position={[driver.location.lat, driver.location.lng]}
-                eventHandlers={{
-                  click: () => setSelectedDriver(driver),
-                }}
-              >
-                <Popup>
-                  <div className="p-2 min-w-[200px]" dir="rtl">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
-                        <Car className="w-5 h-5 text-emerald-600" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-slate-800">{driver.name}</h3>
-                        <p className="text-sm text-slate-500">{driver.phone}</p>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2 text-sm">
-                      {driver.vehicle && (
-                        <div className="flex justify-between">
-                          <span className="text-slate-500">المركبة:</span>
-                          <span className="text-slate-800">
-                            {driver.vehicle.make} {driver.vehicle.model} - {driver.vehicle.color}
-                          </span>
-                        </div>
-                      )}
-                      {driver.vehicle && (
-                        <div className="flex justify-between">
-                          <span className="text-slate-500">اللوحة:</span>
-                          <span className="text-slate-800">{driver.vehicle.plateNumber}</span>
-                        </div>
-                      )}
-                      <div className="flex justify-between">
-                        <span className="text-slate-500">الحالة:</span>
-                        <span className={`font-medium ${driver.isAvailable ? 'text-emerald-600' : 'text-amber-600'}`}>
-                          {driver.isAvailable ? 'متاح' : 'مشغول'}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-500">آخر تحديث:</span>
-                        <span className="text-slate-800">{formatLastUpdate(driver.lastUpdate)}</span>
-                      </div>
-                    </div>
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
-          </MapContainer>
-        )}
+        <LiveMap
+          drivers={drivers}
+          center={mapCenter}
+          zoom={12}
+          onDriverSelect={setSelectedDriver}
+          formatLastUpdate={formatLastUpdate}
+        />
       </div>
 
       {/* Driver List */}
@@ -344,39 +277,3 @@ export default function LiveMapPage() {
     </div>
   );
 }
-
-/*
-// TODO: Switch to Google Maps when billing is ready
-// Original Google Maps implementation:
-
-import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api';
-
-const { isLoaded, loadError } = useJsApiLoader({
-  googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
-});
-
-<GoogleMap
-  mapContainerStyle={mapContainerStyle}
-  center={mapCenter}
-  zoom={12}
-  options={mapOptions}
->
-  {drivers.map((driver) => (
-    <Marker
-      key={driver.driverId}
-      position={driver.location}
-      icon={...}
-      onClick={() => setSelectedDriver(driver)}
-    />
-  ))}
-
-  {selectedDriver && (
-    <InfoWindow
-      position={selectedDriver.location}
-      onCloseClick={() => setSelectedDriver(null)}
-    >
-      ...
-    </InfoWindow>
-  )}
-</GoogleMap>
-*/
