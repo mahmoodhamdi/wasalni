@@ -38,7 +38,6 @@ const userSchema = new Schema<IUser>(
     phone: {
       type: String,
       trim: true,
-      sparse: true,
       match: [/^\+?[0-9]{10,15}$/, 'Please enter a valid phone number'],
     },
     password: {
@@ -107,9 +106,7 @@ const userSchema = new Schema<IUser>(
   }
 );
 
-// Indexes
-userSchema.index({ email: 1 });
-userSchema.index({ googleId: 1 }, { sparse: true });
+// Indexes (email and googleId already indexed via unique: true)
 userSchema.index({ phone: 1 }, { sparse: true });
 userSchema.index({ role: 1 });
 userSchema.index({ isActive: 1 });

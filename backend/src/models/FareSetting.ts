@@ -141,8 +141,7 @@ const fareSettingSchema = new Schema<IFareSetting>(
   }
 );
 
-// Indexes
-fareSettingSchema.index({ rideType: 1 });
+// Indexes (rideType already indexed via unique: true)
 fareSettingSchema.index({ isActive: 1 });
 
 // Static: Get fare setting by ride type

@@ -158,8 +158,7 @@ const promoCodeSchema = new Schema<IPromoCode>(
   }
 );
 
-// Indexes
-promoCodeSchema.index({ code: 1 });
+// Indexes (code already indexed via unique: true)
 promoCodeSchema.index({ isActive: 1, validFrom: 1, validUntil: 1 });
 promoUsageSchema.index({ promoCodeId: 1, userId: 1 });
 

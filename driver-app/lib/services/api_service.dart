@@ -7,11 +7,26 @@ class ApiService {
   factory ApiService() => _instance;
   ApiService._internal();
 
-  late final Dio _dio;
+  Dio? _dioInstance;
   String? _token;
+  bool _isInitialized = false;
+
+  // Safe getter for Dio instance
+  Dio get _dio {
+    if (_dioInstance == null) {
+      throw StateError('ApiService.init() must be called before using the service');
+    }
+    return _dioInstance!;
+  }
 
   void init() {
-    _dio = Dio(
+    // Prevent double initialization
+    if (_isInitialized) {
+      return;
+    }
+    _isInitialized = true;
+
+    _dioInstance = Dio(
       BaseOptions(
         baseUrl: AppConfig.apiBaseUrl,
         connectTimeout: AppConfig.apiTimeout,
@@ -24,7 +39,7 @@ class ApiService {
       ),
     );
 
-    _dio.interceptors.add(
+    _dioInstance!.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
           if (_token != null) {

@@ -81,8 +81,7 @@ const transactionSchema = new Schema<ITransaction>(
   }
 );
 
-// Indexes
-transactionSchema.index({ transactionNumber: 1 });
+// Indexes (transactionNumber already indexed via unique: true)
 transactionSchema.index({ userId: 1 });
 transactionSchema.index({ tripId: 1 });
 transactionSchema.index({ type: 1 });

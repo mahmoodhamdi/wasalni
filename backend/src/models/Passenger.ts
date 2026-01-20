@@ -181,8 +181,7 @@ const passengerSchema = new Schema<IPassenger>(
   }
 );
 
-// Indexes
-passengerSchema.index({ userId: 1 });
+// Indexes (userId already indexed via unique: true)
 passengerSchema.index({ 'savedPlaces.location': '2dsphere' });
 
 // Virtual population for user

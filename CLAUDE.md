@@ -8,7 +8,7 @@ Wasalni (وصّلني) is a local ride-hailing platform for Bagour city and surr
 
 ## Development Commands
 
-### Backend (Node.js/Express/TypeScript)
+### Backend (Node.js 20+ / Express 5 / TypeScript)
 ```bash
 cd backend
 npm install
@@ -23,6 +23,7 @@ npm test -- --testPathPattern="auth"  # Run single test file
 npm test -- --watch  # Watch mode for development
 npm run seed         # Seed database with sample data
 npm run seed:fresh   # Clear DB and reseed
+npm run docs:generate  # Generate Swagger JSON file
 ```
 
 ### Admin Dashboard (Next.js 16 with App Router)
@@ -34,7 +35,7 @@ npm run build        # Production build
 npm run lint         # ESLint check
 ```
 
-### Passenger App (Flutter)
+### Passenger App (Flutter SDK ^3.6.2)
 ```bash
 cd passenger-app
 flutter pub get
@@ -46,11 +47,11 @@ flutter build apk              # Android release
 flutter build ios              # iOS release
 ```
 
-### Driver App (Flutter)
+### Driver App (Flutter SDK ^3.6.2)
 ```bash
 cd driver-app
 flutter pub get
-dart run build_runner build    # Generate Riverpod providers
+dart run build_runner build    # Generate Riverpod providers and freezed classes
 flutter analyze                # Static analysis
 flutter run
 flutter build apk
@@ -71,6 +72,12 @@ Development services:
 - Mongo Express UI: localhost:8081 (admin/admin123)
 - Redis Commander: localhost:8082
 
+### Running Full Stack Locally
+1. Start Docker services: `docker compose -f docker-compose.dev.yml up -d`
+2. In terminal 1: `cd backend && npm run dev` (API on port 5000)
+3. In terminal 2: `cd admin-dashboard && npm run dev` (Dashboard on port 3000)
+4. In terminal 3: `cd passenger-app && flutter run` or `cd driver-app && flutter run`
+
 ## Architecture
 
 ### Monorepo Structure
@@ -84,7 +91,8 @@ wasalni/
 └── scripts/           # MongoDB init and utilities
 ```
 
-### Backend Architecture
+### Backend Architecture (Express 5)
+Note: Uses Express 5 which has async error handling built-in and some API changes from Express 4.
 - **Entry point:** `backend/src/index.ts` → `backend/src/app.ts`
 - **API prefix:** `/api/v1/`
 - **API docs:** `/api/docs` (Swagger UI), `/api/docs/redoc` (Redoc)
@@ -109,7 +117,24 @@ Key patterns:
 - JWT authentication with email/OTP verification and Google Sign-In
 - Socket.io for real-time driver location and trip updates
 - Redis for caching and driver location tracking (with MongoDB fallback)
-- **Error classes:** Use `AppError` subclasses from `backend/src/utils/errors.ts` (BadRequestError, NotFoundError, etc.) - all require bilingual messages
+- **Error classes:** Use `AppError` subclasses from `backend/src/utils/errors.ts`:
+  - `BadRequestError`, `UnauthorizedError`, `ForbiddenError`, `NotFoundError`
+  - `ConflictError`, `ValidationError`, `TooManyRequestsError`, `ServiceUnavailableError`
+  - All constructors accept `(message, messageAr)` for bilingual support
+
+### Backend Services Layer
+Key services in `backend/src/services/`:
+- `auth.service.ts` - OTP generation, JWT tokens, user registration
+- `trip.service.ts` - Trip lifecycle (create, assign, status updates, cancel, complete)
+- `matching.service.ts` - Driver matching with EventEmitter for async events
+- `fare.service.ts` - Fare calculation, surge pricing, promo discounts
+- `location.service.ts` - Redis GEO for driver locations (MongoDB fallback)
+- `maps.service.ts` - Google Maps integration (routes, geocoding, places)
+- `notification.service.ts` - FCM push notifications with multi-device support
+- `safety.service.ts` - Emergency contacts, SOS, trip sharing
+- `scheduled.service.ts` - Scheduled rides with time slot management
+- `promo.service.ts` - Promo code validation and usage tracking
+- `admin.service.ts` - Dashboard stats, driver approval, finance reports
 
 ### Socket.io Room Architecture
 Socket rooms are used for targeted real-time communication:
@@ -132,25 +157,31 @@ Both passenger-app and driver-app use:
 - **Navigation:** GoRouter
 - **Network:** Dio for HTTP, socket_io_client for real-time
 - **Storage:** shared_preferences + flutter_secure_storage
-- **Maps:** flutter_map (OpenStreetMap) + geolocator (Google Maps planned for future)
+- **Maps:** flutter_map (OpenStreetMap) + geolocator
+- **Code Generation:** Run `dart run build_runner build` after modifying providers or models
 
 Structure pattern:
 ```
 lib/
 ├── config/         # app_config.dart, theme.dart, router.dart
-├── providers/      # Riverpod providers
+├── providers/      # Riverpod providers (*.g.dart generated files)
 ├── screens/        # UI screens by feature (auth/, home/)
 ├── services/       # api_service.dart, socket_service.dart
 └── widgets/        # Reusable components
 ```
 
+Driver-app additionally uses:
+- **freezed** for immutable data classes
+- **sqflite** for local offline storage
+
 ### Admin Dashboard Architecture
-- **Framework:** Next.js 16 with App Router
+- **Framework:** Next.js 16 with App Router (React 19)
 - **State:** Zustand store (`lib/store.ts`)
 - **API Client:** Axios with auth interceptors (`lib/api.ts`)
-- **UI:** Tailwind CSS + custom components
+- **UI:** Tailwind CSS 4 + custom components
 - **Routing:** `app/` directory with nested layouts
 - **Maps:** Leaflet (react-leaflet) for admin map views
+- **Charts:** Recharts for analytics
 - **Components:** `components/layout/` (Sidebar, Header), `components/ui/` (StatsCard, DataTable)
 
 ### Shared Types
@@ -176,13 +207,34 @@ lib/
 
 Copy `backend/.env.example` to `backend/.env`. Key variables:
 - `MONGODB_URI`: MongoDB connection string
-- `REDIS_URL`: Redis connection string
+- `REDIS_URL`: Redis connection string (optional, has MongoDB fallback)
 - `JWT_SECRET`: JWT signing key
 - `GOOGLE_MAPS_API_KEY`: Required for maps functionality
 - `FIREBASE_*`: Push notification configuration
 - `RESEND_API_KEY`: Email service for OTP delivery
+- `SMS_PROVIDER`: `mock` | `twilio` | `unifonic` for SMS OTP
 
 For admin dashboard, set `NEXT_PUBLIC_API_URL` (defaults to `http://localhost:5000/api/v1`).
+
+## Testing
+
+### Backend Tests
+```bash
+cd backend
+npm test                              # Run all tests
+npm test -- --testPathPattern="auth"  # Run tests matching "auth"
+npm test -- --watch                   # Watch mode
+npm test -- --coverage                # With coverage report
+```
+
+Tests use `mongodb-memory-server` for in-memory MongoDB - no external database needed.
+
+### Flutter Tests
+```bash
+cd passenger-app  # or driver-app
+flutter test                          # Run all tests
+flutter test test/widget_test.dart    # Run specific test file
+```
 
 ## Documentation
 

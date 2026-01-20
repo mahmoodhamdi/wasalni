@@ -514,8 +514,7 @@ const tripSchema = new Schema<ITrip>(
   }
 );
 
-// Indexes
-tripSchema.index({ tripNumber: 1 });
+// Indexes (tripNumber already indexed via unique: true)
 tripSchema.index({ passengerId: 1 });
 tripSchema.index({ driverId: 1 });
 tripSchema.index({ status: 1 });
