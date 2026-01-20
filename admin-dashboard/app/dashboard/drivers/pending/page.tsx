@@ -22,13 +22,16 @@ interface PendingDriver {
     year: number;
     color: string;
     plateNumber: string;
+    vehicleImage?: string;
+    registrationImage?: string;
   };
   documents?: {
     nationalIdFront?: string;
     nationalIdBack?: string;
-    driverLicense?: string;
-    vehicleLicense?: string;
-    vehiclePhoto?: string;
+    nationalIdNumber?: string;
+    drivingLicenseFront?: string;
+    drivingLicenseBack?: string;
+    criminalRecord?: string;
   };
   createdAt: string;
 }
@@ -39,6 +42,9 @@ export default function PendingDriversPage() {
   const [selectedDriver, setSelectedDriver] = useState<PendingDriver | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [commissionRate, setCommissionRate] = useState(15);
+  const [viewingImage, setViewingImage] = useState<string | null>(null);
+
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:5000';
 
   const fetchPendingDrivers = useCallback(async () => {
     try {
@@ -224,7 +230,7 @@ export default function PendingDriversPage() {
                     <div className="p-3 bg-slate-50 rounded-lg">
                       <p className="text-sm text-slate-500">الرقم القومي</p>
                       <p className="font-medium text-slate-900">
-                        {selectedDriver.nationalId}
+                        {selectedDriver.documents?.nationalIdNumber || selectedDriver.nationalId || '-'}
                       </p>
                     </div>
                     <div className="p-3 bg-slate-50 rounded-lg">
@@ -292,11 +298,11 @@ export default function PendingDriversPage() {
                   </h3>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     {[
-                      { key: 'nationalIdFront', label: 'البطاقة (أمام)' },
-                      { key: 'nationalIdBack', label: 'البطاقة (خلف)' },
-                      { key: 'driverLicense', label: 'رخصة القيادة' },
-                      { key: 'vehicleLicense', label: 'رخصة المركبة' },
-                      { key: 'vehiclePhoto', label: 'صورة المركبة' },
+                      { key: 'nationalIdFront', label: 'البطاقة (أمام)', path: selectedDriver.documents?.nationalIdFront },
+                      { key: 'nationalIdBack', label: 'البطاقة (خلف)', path: selectedDriver.documents?.nationalIdBack },
+                      { key: 'drivingLicenseFront', label: 'رخصة القيادة', path: selectedDriver.documents?.drivingLicenseFront },
+                      { key: 'vehicleLicense', label: 'رخصة المركبة', path: selectedDriver.vehicle?.registrationImage },
+                      { key: 'vehiclePhoto', label: 'صورة المركبة', path: selectedDriver.vehicle?.vehicleImage },
                     ].map((doc) => (
                       <div
                         key={doc.key}
@@ -308,13 +314,14 @@ export default function PendingDriversPage() {
                             {doc.label}
                           </p>
                           <p className="text-xs text-slate-500">
-                            {selectedDriver.documents?.[doc.key as keyof typeof selectedDriver.documents]
-                              ? 'مرفق'
-                              : 'غير مرفق'}
+                            {doc.path ? 'مرفق' : 'غير مرفق'}
                           </p>
                         </div>
-                        {selectedDriver.documents?.[doc.key as keyof typeof selectedDriver.documents] && (
-                          <button className="p-1 text-emerald-600 hover:bg-emerald-50 rounded">
+                        {doc.path && (
+                          <button
+                            onClick={() => setViewingImage(`${API_BASE}${doc.path}`)}
+                            className="p-1 text-emerald-600 hover:bg-emerald-50 rounded"
+                          >
                             <Eye size={16} />
                           </button>
                         )}
@@ -377,6 +384,29 @@ export default function PendingDriversPage() {
           )}
         </div>
       </div>
+
+      {/* Image Viewer Modal */}
+      {viewingImage && (
+        <div
+          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+          onClick={() => setViewingImage(null)}
+        >
+          <div className="relative max-w-4xl max-h-[90vh]">
+            <button
+              onClick={() => setViewingImage(null)}
+              className="absolute -top-10 right-0 text-white hover:text-slate-300"
+            >
+              <X size={32} />
+            </button>
+            <img
+              src={viewingImage}
+              alt="Document"
+              className="max-w-full max-h-[85vh] object-contain rounded-lg"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

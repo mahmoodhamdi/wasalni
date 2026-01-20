@@ -5,6 +5,7 @@ import morgan from 'morgan';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import swaggerUi from 'swagger-ui-express';
+import path from 'path';
 import { config } from './config';
 import { swaggerSpec } from './config/swagger';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
@@ -20,6 +21,7 @@ import adminRoutes from './routes/admin.routes';
 import notificationRoutes from './routes/notification.routes';
 import paymentRoutes from './routes/payment.routes';
 import chatRoutes from './routes/chat.routes';
+import passengerRoutes from './routes/passenger.routes';
 
 // Create Express app
 const app: Application = express();
@@ -141,6 +143,10 @@ app.use(`/api/${config.apiVersion}/admin`, adminRoutes);
 app.use(`/api/${config.apiVersion}/notifications`, notificationRoutes);
 app.use(`/api/${config.apiVersion}/payment`, paymentRoutes);
 app.use(`/api/${config.apiVersion}/chat`, chatRoutes);
+app.use(`/api/${config.apiVersion}/passenger`, passengerRoutes);
+
+// Static file serving for uploads
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // 404 handler
 app.use(notFoundHandler);

@@ -418,15 +418,19 @@ class ApiService {
 
   // Saved Places
   Future<Response> getSavedPlaces() async {
-    return await _dio.get('/places');
+    return await _dio.get('/passenger/saved-places');
   }
 
   Future<Response> addSavedPlace(Map<String, dynamic> place) async {
-    return await _dio.post('/places', data: place);
+    return await _dio.post('/passenger/saved-places', data: place);
+  }
+
+  Future<Response> updateSavedPlace(String placeId, Map<String, dynamic> updates) async {
+    return await _dio.put('/passenger/saved-places/$placeId', data: updates);
   }
 
   Future<Response> deleteSavedPlace(String placeId) async {
-    return await _dio.delete('/places/$placeId');
+    return await _dio.delete('/passenger/saved-places/$placeId');
   }
 
   // Promo Codes

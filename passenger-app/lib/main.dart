@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 import 'config/router.dart';
 import 'config/theme.dart';
@@ -15,6 +16,9 @@ bool isFirebaseInitialized = false;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Arabic date formatting
+  await initializeDateFormatting('ar', null);
 
   // Initialize Firebase (optional - continues if not configured)
   try {

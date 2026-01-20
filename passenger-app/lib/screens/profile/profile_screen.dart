@@ -31,7 +31,7 @@ class ProfileScreen extends ConsumerWidget {
             // Profile Avatar
             CircleAvatar(
               radius: 50.r,
-              backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+              backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
               child: Text(
                 userName.isNotEmpty ? userName[0].toUpperCase() : 'م',
                 style: TextStyle(
@@ -155,17 +155,17 @@ class ProfileScreen extends ConsumerWidget {
   void _showLogoutConfirmation(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('تسجيل الخروج'),
         content: const Text('هل أنت متأكد من رغبتك في تسجيل الخروج؟'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('إلغاء'),
           ),
           TextButton(
             onPressed: () async {
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
               await ref.read(authProvider.notifier).logout();
               if (context.mounted) {
                 context.go('/welcome');

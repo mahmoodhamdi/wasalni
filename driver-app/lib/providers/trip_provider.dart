@@ -93,24 +93,46 @@ class TripRequest {
     this.timeoutSeconds = 30,
   });
 
-  factory TripRequest.fromJson(Map<String, dynamic> json) => TripRequest(
-        tripId: json['tripId'] ?? json['_id'] ?? '',
-        tripNumber: json['tripNumber'] ?? '',
-        pickup: LocationPoint.fromJson(json['pickup'] ?? {}),
-        dropoff: LocationPoint.fromJson(json['dropoff'] ?? {}),
-        rideType: json['rideType'] ?? 'economy',
-        estimatedFare: (json['estimatedFare'] ?? json['fare'] ?? 0).toDouble(),
-        distanceKm: (json['distanceKm'] ?? json['distance'] ?? 0).toDouble(),
-        durationMinutes: (json['durationMinutes'] ?? json['duration'] ?? 0).toInt(),
-        paymentMethod: json['paymentMethod'] ?? 'cash',
-        passenger: json['passenger'] != null
-            ? PassengerInfo.fromJson(json['passenger'])
-            : null,
-        requestedAt: json['requestedAt'] != null
-            ? DateTime.parse(json['requestedAt'])
-            : DateTime.now(),
-        timeoutSeconds: json['timeoutSeconds'] ?? 30,
-      );
+  factory TripRequest.fromJson(Map<String, dynamic> json) {
+    // Handle estimatedFare which can be a number or an object {min, max}
+    double fare = 0;
+    final estimatedFare = json['estimatedFare'] ?? json['fare'];
+    if (estimatedFare is num) {
+      fare = estimatedFare.toDouble();
+    } else if (estimatedFare is Map) {
+      // Use average of min and max
+      final min = (estimatedFare['min'] ?? 0).toDouble();
+      final max = (estimatedFare['max'] ?? 0).toDouble();
+      fare = (min + max) / 2;
+    }
+
+    // Handle distance which might be in meters
+    double distanceKm = 0;
+    final distance = json['distanceKm'] ?? json['distance'];
+    if (distance is num) {
+      // If value is > 100, assume it's meters
+      distanceKm = distance > 100 ? distance / 1000 : distance.toDouble();
+    }
+
+    return TripRequest(
+      tripId: json['tripId'] ?? json['_id'] ?? '',
+      tripNumber: json['tripNumber'] ?? '',
+      pickup: LocationPoint.fromJson(json['pickup'] ?? {}),
+      dropoff: LocationPoint.fromJson(json['dropoff'] ?? {}),
+      rideType: json['rideType'] ?? 'economy',
+      estimatedFare: fare,
+      distanceKm: distanceKm,
+      durationMinutes: (json['durationMinutes'] ?? json['duration'] ?? 0).toInt(),
+      paymentMethod: json['paymentMethod'] ?? 'cash',
+      passenger: json['passenger'] != null
+          ? PassengerInfo.fromJson(json['passenger'])
+          : null,
+      requestedAt: json['requestedAt'] != null
+          ? DateTime.parse(json['requestedAt'])
+          : DateTime.now(),
+      timeoutSeconds: json['timeout'] ?? json['timeoutSeconds'] ?? 30,
+    );
+  }
 
   String get rideTypeAr {
     switch (rideType) {

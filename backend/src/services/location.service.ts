@@ -234,37 +234,49 @@ export const findNearbyDrivers = async (
     const nearbyFromMongo: NearbyDriver[] = [];
 
     for (const result of mongoResults) {
-      const driver = await Driver.findById(result.driverId)
-        .populate('userId', 'name phone avatar')
-        .lean();
+      // driverId is populated, so it's the full Driver document
+      const populatedDriver = result.driverId as unknown as {
+        _id: Types.ObjectId;
+        userId: { name: string; phone: string; avatar?: string };
+        rating: number;
+        status: string;
+        vehicle: {
+          type: string;
+          category: string;
+          make: string;
+          model: string;
+          color: string;
+          plateNumber: string;
+        };
+      };
 
-      if (!driver || driver.status !== 'approved') continue;
-      if (vehicleType && driver.vehicle.type !== vehicleType) continue;
-      if (category && driver.vehicle.category !== category) continue;
+      if (!populatedDriver || populatedDriver.status !== 'approved') continue;
+      if (vehicleType && populatedDriver.vehicle.type !== vehicleType) continue;
+      if (category && populatedDriver.vehicle.category !== category) continue;
 
-      const user = driver.userId as unknown as { name: string; phone: string; avatar?: string } | undefined;
+      const user = populatedDriver.userId;
       const [driverLng, driverLat] = result.location.coordinates;
       const distance = calculateHaversineDistance(lat, lng, driverLat, driverLng);
 
       nearbyFromMongo.push({
-        driverId: result.driverId.toString(),
+        driverId: populatedDriver._id.toString(),
         distance,
         lat: driverLat,
         lng: driverLng,
         heading: result.heading,
         driver: {
-          _id: driver._id.toString(),
+          _id: populatedDriver._id.toString(),
           name: user?.name || '',
           phone: user?.phone || '',
           avatar: user?.avatar,
-          rating: driver.rating,
+          rating: populatedDriver.rating,
           vehicle: {
-            type: driver.vehicle.type,
-            category: driver.vehicle.category,
-            make: driver.vehicle.make,
-            model: driver.vehicle.model,
-            color: driver.vehicle.color,
-            plateNumber: driver.vehicle.plateNumber,
+            type: populatedDriver.vehicle.type,
+            category: populatedDriver.vehicle.category,
+            make: populatedDriver.vehicle.make,
+            model: populatedDriver.vehicle.model,
+            color: populatedDriver.vehicle.color,
+            plateNumber: populatedDriver.vehicle.plateNumber,
           },
         },
       });
