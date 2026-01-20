@@ -303,13 +303,11 @@ const driverSchema = new Schema<IDriver>(
   }
 );
 
-// Indexes
-driverSchema.index({ userId: 1 });
+// Indexes (userId already indexed via unique: true, currentLocation via index: '2dsphere')
 driverSchema.index({ status: 1 });
 driverSchema.index({ isOnline: 1, isAvailable: 1 });
 driverSchema.index({ 'vehicle.type': 1, 'vehicle.category': 1 });
 driverSchema.index({ rating: -1 });
-driverSchema.index({ currentLocation: '2dsphere' });
 
 // Virtual population for user
 driverSchema.virtual('user', {

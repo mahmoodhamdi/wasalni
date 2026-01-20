@@ -414,12 +414,19 @@ class AuthService {
         if (role === 'passenger') {
           await Passenger.create({ userId: user._id });
         } else {
+          // Create driver profile with placeholder vehicle info
+          // Driver must complete their profile before approval
           await Driver.create({
             userId: user._id,
             status: 'pending',
             vehicle: {
               type: 'car',
               category: 'economy',
+              make: 'TBD', // To be provided by driver
+              model: 'TBD',
+              year: new Date().getFullYear(),
+              color: 'TBD',
+              plateNumber: 'TBD-0000',
               seats: 4,
             },
           });

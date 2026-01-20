@@ -76,9 +76,8 @@ const driverLocationSchema = new Schema<IDriverLocation>(
   }
 );
 
-// Indexes
+// Indexes (driverId already indexed via unique: true)
 driverLocationSchema.index({ location: '2dsphere' });
-driverLocationSchema.index({ driverId: 1 });
 driverLocationSchema.index({ isOnline: 1, isAvailable: 1 });
 driverLocationSchema.index({ updatedAt: 1 }, { expireAfterSeconds: 3600 }); // TTL: 1 hour
 
