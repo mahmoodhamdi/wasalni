@@ -60,22 +60,40 @@ interface TripStats {
   inProgress: number;
 }
 
+interface PaginationState {
+  page: number;
+  limit: number;
+  total: number;
+  hasMore: boolean;
+}
+
 export default function TripsPage() {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [stats, setStats] = useState<TripStats>({ total: 0, completed: 0, cancelled: 0, inProgress: 0 });
   const [isLoading, setIsLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [dateFilter, setDateFilter] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [pagination, setPagination] = useState<PaginationState>({
+    page: 1,
+    limit: 10,
+    total: 0,
+    hasMore: false,
+  });
 
   const fetchTrips = useCallback(async () => {
     try {
       setIsLoading(true);
-      const params: { status?: string; from?: string; to?: string } = {};
+      const params: { page: number; limit: number; status?: string; from?: string; to?: string; search?: string } = {
+        page: pagination.page,
+        limit: pagination.limit,
+      };
       if (statusFilter) params.status = statusFilter;
       if (dateFilter) {
         params.from = dateFilter;
         params.to = dateFilter;
       }
+      if (searchQuery) params.search = searchQuery;
 
       const [tripsResponse, statsResponse] = await Promise.all([
         tripsApi.getAll(params),
@@ -84,6 +102,10 @@ export default function TripsPage() {
 
       if (tripsResponse.data.success) {
         setTrips(tripsResponse.data.data.trips);
+        // Update pagination from API response
+        if (tripsResponse.data.data.pagination) {
+          setPagination(tripsResponse.data.data.pagination);
+        }
       }
       if (statsResponse.data.success) {
         // Transform byStatus array to stats object
@@ -115,11 +137,20 @@ export default function TripsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [statusFilter, dateFilter]);
+  }, [pagination.page, pagination.limit, statusFilter, dateFilter, searchQuery]);
 
   useEffect(() => {
     fetchTrips();
   }, [fetchTrips]);
+
+  const handlePageChange = (newPage: number) => {
+    setPagination(prev => ({ ...prev, page: newPage }));
+  };
+
+  const handleSearch = (search: string) => {
+    setSearchQuery(search);
+    setPagination(prev => ({ ...prev, page: 1 })); // Reset to first page on search
+  };
 
   const columns: ColumnDef<Trip, unknown>[] = [
     {
@@ -267,7 +298,10 @@ export default function TripsPage() {
         <div className="flex gap-2">
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setPagination(prev => ({ ...prev, page: 1 })); // Reset to first page on filter change
+            }}
             className="px-4 py-2 border border-slate-200 rounded-lg bg-white"
           >
             <option value="">جميع الحالات</option>
@@ -282,7 +316,10 @@ export default function TripsPage() {
           <input
             type="date"
             value={dateFilter}
-            onChange={(e) => setDateFilter(e.target.value)}
+            onChange={(e) => {
+              setDateFilter(e.target.value);
+              setPagination(prev => ({ ...prev, page: 1 })); // Reset to first page on filter change
+            }}
             className="px-4 py-2 border border-slate-200 rounded-lg bg-white"
           />
           <button
@@ -347,6 +384,9 @@ export default function TripsPage() {
         data={trips}
         columns={columns}
         searchPlaceholder="بحث عن رحلة..."
+        pagination={pagination}
+        onPageChange={handlePageChange}
+        onSearch={handleSearch}
       />
     </div>
   );

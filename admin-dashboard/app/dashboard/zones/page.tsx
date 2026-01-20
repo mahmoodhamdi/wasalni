@@ -91,7 +91,12 @@ export default function ZonesPage() {
 
   const handleSaveFare = async (fare: Partial<FareSetting>) => {
     try {
-      await settingsApi.updateFareSettings(fare);
+      if (!fare._id) {
+        console.error('Fare ID is required');
+        return;
+      }
+      const { _id, ...fareData } = fare;
+      await settingsApi.updateFareSetting(_id, fareData as Record<string, unknown>);
       setEditingFare(null);
       fetchData();
     } catch (err) {

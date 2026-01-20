@@ -1,14 +1,17 @@
 import 'dart:async';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:intl/intl.dart';
 
 import '../../config/theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/trip_provider.dart';
+import '../../providers/earnings_provider.dart';
 import '../../services/location_service.dart';
 import '../../services/api_service.dart';
 import '../../services/storage_service.dart';
@@ -89,15 +92,14 @@ class _HomeTabState extends ConsumerState<_HomeTab> {
   Timer? _locationUpdateTimer;
   bool _isShowingTripDialog = false;
 
-  // Stats (will be fetched from API in phase 4)
-  final int _todayTrips = 0;
-  final String _todayHours = '0:00';
-  final String _todayEarnings = '0';
-
   @override
   void initState() {
     super.initState();
     _initLocation();
+    // Load today's earnings stats
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(earningsProvider.notifier).loadEarnings(period: EarningsPeriod.today);
+    });
   }
 
   void _showTripRequestDialog(TripRequest request) async {
@@ -391,14 +393,25 @@ class _HomeTabState extends ConsumerState<_HomeTab> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Today's Stats
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _StatItem(icon: Icons.route, label: 'الرحلات', value: '$_todayTrips'),
-                    _StatItem(icon: Icons.timer, label: 'ساعات العمل', value: _todayHours),
-                    _StatItem(icon: Icons.attach_money, label: 'الأرباح', value: '$_todayEarnings ج.م'),
-                  ],
+                // Today's Stats - Connected to earnings provider
+                Consumer(
+                  builder: (context, ref, child) {
+                    final earnings = ref.watch(earningsProvider);
+                    final summary = earnings.summary;
+                    final todayTrips = summary?.totalTrips ?? 0;
+                    final todayHours = summary?.totalHours ?? 0;
+                    final todayEarnings = summary?.totalEarnings ?? 0;
+                    final hoursDisplay = '${todayHours.toInt()}:${((todayHours % 1) * 60).toInt().toString().padLeft(2, '0')}';
+
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _StatItem(icon: Icons.route, label: 'الرحلات', value: '$todayTrips'),
+                        _StatItem(icon: Icons.timer, label: 'ساعات العمل', value: hoursDisplay),
+                        _StatItem(icon: Icons.attach_money, label: 'الأرباح', value: '${todayEarnings.toStringAsFixed(0)} ج.م'),
+                      ],
+                    );
+                  },
                 ),
                 SizedBox(height: 20.h),
 
@@ -475,23 +488,300 @@ class _StatItem extends StatelessWidget {
 }
 
 // Trips History Tab
-class _TripsTab extends StatelessWidget {
+class _TripsTab extends ConsumerStatefulWidget {
   const _TripsTab();
 
   @override
+  ConsumerState<_TripsTab> createState() => _TripsTabState();
+}
+
+class _TripsTabState extends ConsumerState<_TripsTab> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    // Load trips on first build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(earningsProvider.notifier).loadTripHistory(refresh: true);
+    });
+
+    // Setup pagination scroll listener
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+      ref.read(earningsProvider.notifier).loadTripHistory();
+    }
+  }
+
+  Future<void> _onRefresh() async {
+    await ref.read(earningsProvider.notifier).loadTripHistory(refresh: true);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final state = ref.watch(earningsProvider);
+    final trips = state.tripHistory;
+    final isLoading = state.isLoadingHistory;
+    final error = state.errorMessage;
+
     return Scaffold(
       appBar: AppBar(title: const Text('رحلاتي')),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.directions_car_outlined, size: 80.sp, color: AppColors.textSecondary),
-            SizedBox(height: 16.h),
-            Text('لا توجد رحلات سابقة', style: AppTextStyles.heading3),
-            SizedBox(height: 8.h),
-            Text('رحلاتك ستظهر هنا', style: AppTextStyles.subtitle),
-          ],
+      body: Builder(
+        builder: (context) {
+          // Loading state
+          if (isLoading && trips.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          // Error state
+          if (error != null && trips.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error_outline, size: 64.sp, color: AppColors.error),
+                  SizedBox(height: 16.h),
+                  Text(error, style: AppTextStyles.body),
+                  SizedBox(height: 16.h),
+                  ElevatedButton(
+                    onPressed: () => ref.read(earningsProvider.notifier).loadTripHistory(refresh: true),
+                    child: const Text('إعادة المحاولة'),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          // Empty state
+          if (trips.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.directions_car_outlined, size: 80.sp, color: AppColors.textSecondary),
+                  SizedBox(height: 16.h),
+                  Text('لا توجد رحلات سابقة', style: AppTextStyles.heading3),
+                  SizedBox(height: 8.h),
+                  Text('رحلاتك ستظهر هنا', style: AppTextStyles.subtitle),
+                ],
+              ),
+            );
+          }
+
+          // Trips list
+          return RefreshIndicator(
+            onRefresh: _onRefresh,
+            child: ListView.builder(
+              controller: _scrollController,
+              padding: EdgeInsets.all(16.w),
+              itemCount: trips.length + (isLoading ? 1 : 0),
+              itemBuilder: (context, index) {
+                if (index == trips.length) {
+                  return Padding(
+                    padding: EdgeInsets.symmetric(vertical: 16.h),
+                    child: const Center(child: CircularProgressIndicator()),
+                  );
+                }
+
+                final trip = trips[index];
+                return _TripHistoryCard(trip: trip);
+              },
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+// Trip History Card Widget
+class _TripHistoryCard extends StatelessWidget {
+  final TripEarning trip;
+
+  const _TripHistoryCard({required this.trip});
+
+  @override
+  Widget build(BuildContext context) {
+    final dateFormat = DateFormat('dd/MM/yyyy', 'ar');
+    final timeFormat = DateFormat('hh:mm a', 'ar');
+
+    return Container(
+      margin: EdgeInsets.only(bottom: 12.h),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12.r),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(12.r),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12.r),
+          onTap: () {
+            // TODO: Navigate to trip details
+          },
+          child: Padding(
+            padding: EdgeInsets.all(16.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header - Trip number and payment method
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.receipt_outlined, size: 20.sp, color: AppColors.primary),
+                        SizedBox(width: 8.w),
+                        Text(
+                          'رحلة #${trip.tripNumber}',
+                          style: AppTextStyles.body.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+                      decoration: BoxDecoration(
+                        color: AppColors.success.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                      child: Text(
+                        trip.paymentMethodAr,
+                        style: AppTextStyles.caption.copyWith(
+                          color: AppColors.success,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 12.h),
+
+                // Locations
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Column(
+                      children: [
+                        Container(
+                          width: 10.w,
+                          height: 10.w,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        Container(
+                          width: 2.w,
+                          height: 30.h,
+                          color: AppColors.textSecondary.withValues(alpha: 0.3),
+                        ),
+                        Container(
+                          width: 10.w,
+                          height: 10.w,
+                          decoration: BoxDecoration(
+                            color: AppColors.error,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            trip.pickupAddress.isNotEmpty ? trip.pickupAddress : 'موقع البداية',
+                            style: AppTextStyles.body,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          SizedBox(height: 28.h),
+                          Text(
+                            trip.dropoffAddress.isNotEmpty ? trip.dropoffAddress : 'موقع الوصول',
+                            style: AppTextStyles.body,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 12.h),
+
+                // Trip info - Date and time
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.calendar_today, size: 14.sp, color: AppColors.textSecondary),
+                        SizedBox(width: 4.w),
+                        Text(
+                          dateFormat.format(trip.date),
+                          style: AppTextStyles.caption,
+                        ),
+                        SizedBox(width: 12.w),
+                        Icon(Icons.access_time, size: 14.sp, color: AppColors.textSecondary),
+                        SizedBox(width: 4.w),
+                        Text(
+                          timeFormat.format(trip.date),
+                          style: AppTextStyles.caption,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                SizedBox(height: 8.h),
+
+                // Fare breakdown
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'الأجرة الكلية: ${trip.fare.toStringAsFixed(2)} ج.م',
+                          style: AppTextStyles.caption,
+                        ),
+                        SizedBox(height: 2.h),
+                        Text(
+                          'رسوم المنصة: ${trip.platformFee.toStringAsFixed(2)} ج.م',
+                          style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
+                        ),
+                      ],
+                    ),
+                    Text(
+                      '${trip.driverEarnings.toStringAsFixed(2)} ج.م',
+                      style: AppTextStyles.body.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.success,
+                        fontSize: 18.sp,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -680,7 +970,7 @@ class _ProfileTab extends ConsumerWidget {
                         Text(
                           userPhone,
                           style: AppTextStyles.caption,
-                          textDirection: TextDirection.ltr,
+                          textDirection: ui.TextDirection.ltr,
                         ),
                         SizedBox(height: 4.h),
                         Row(

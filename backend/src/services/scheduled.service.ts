@@ -317,14 +317,14 @@ export const cancelScheduledTrip = async (
       logger.info(`Notifying driver ${trip.driverId} of cancelled scheduled trip`);
       try {
         const notificationService = await import('./notification.service');
-        await notificationService.default.sendNotification(
-          trip.driverId.toString(),
-          'driver',
+        await notificationService.sendNotification(
+          trip.driverId as Types.ObjectId,
           {
             title: 'Scheduled Trip Cancelled',
             titleAr: 'تم إلغاء الرحلة المجدولة',
             body: `The scheduled trip ${trip.tripNumber} has been cancelled by the passenger`,
             bodyAr: `تم إلغاء الرحلة المجدولة ${trip.tripNumber} من قبل الراكب`,
+            type: 'trip',
             data: { tripId: trip._id.toString(), type: 'scheduled_cancelled' },
           }
         );
@@ -393,7 +393,7 @@ export const startScheduledTripSearch = async (
     // Emit socket event to start matching for scheduled trip
     try {
       const matchingService = await import('./matching.service');
-      matchingService.default.startMatching(tripId);
+      matchingService.startMatching(trip);
     } catch (matchError) {
       logger.error(`Failed to start matching for scheduled trip: ${matchError}`);
     }

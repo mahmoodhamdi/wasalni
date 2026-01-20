@@ -8,6 +8,7 @@ import 'package:intl/date_symbol_data_local.dart';
 
 import 'config/router.dart';
 import 'config/theme.dart';
+import 'services/api_service.dart';
 import 'services/notification_service.dart';
 import 'services/storage_service.dart';
 
@@ -32,8 +33,11 @@ void main() async {
     debugPrint('📱 App will run without push notifications');
   }
 
-  // Initialize storage
+  // Initialize storage and API service
   await storageService.init();
+
+  // Initialize API service after storage (for token access)
+  apiService.init();
 
   // Set preferred orientations
   await SystemChrome.setPreferredOrientations([

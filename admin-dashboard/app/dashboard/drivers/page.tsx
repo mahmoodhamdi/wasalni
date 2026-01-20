@@ -31,28 +31,50 @@ interface Driver {
   createdAt: string;
 }
 
+interface PaginationState {
+  page: number;
+  limit: number;
+  total: number;
+  hasMore: boolean;
+}
+
 export default function DriversPage() {
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [pagination, setPagination] = useState<PaginationState>({
+    page: 1,
+    limit: 10,
+    total: 0,
+    hasMore: false,
+  });
 
   const fetchDrivers = useCallback(async () => {
     try {
       setIsLoading(true);
-      const params: { status?: string } = {};
+      const params: { page: number; limit: number; status?: string; search?: string } = {
+        page: pagination.page,
+        limit: pagination.limit,
+      };
       if (statusFilter) params.status = statusFilter;
+      if (searchQuery) params.search = searchQuery;
 
       const response = await driversApi.getAll(params);
       if (response.data.success) {
         setDrivers(response.data.data.drivers);
+        // Update pagination from API response
+        if (response.data.data.pagination) {
+          setPagination(response.data.data.pagination);
+        }
       }
     } catch (err) {
       console.error('Failed to fetch drivers:', err);
     } finally {
       setIsLoading(false);
     }
-  }, [statusFilter]);
+  }, [pagination.page, pagination.limit, statusFilter, searchQuery]);
 
   useEffect(() => {
     fetchDrivers();
@@ -110,6 +132,15 @@ export default function DriversPage() {
     } finally {
       setActionLoading(null);
     }
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setPagination(prev => ({ ...prev, page: newPage }));
+  };
+
+  const handleSearch = (search: string) => {
+    setSearchQuery(search);
+    setPagination(prev => ({ ...prev, page: 1 })); // Reset to first page on search
   };
 
   const columns: ColumnDef<Driver, unknown>[] = [
@@ -284,7 +315,10 @@ export default function DriversPage() {
         <div className="flex gap-2">
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setPagination(prev => ({ ...prev, page: 1 })); // Reset to first page on filter change
+            }}
             className="px-4 py-2 border border-slate-200 rounded-lg bg-white"
           >
             <option value="">جميع الحالات</option>
@@ -307,6 +341,9 @@ export default function DriversPage() {
         data={drivers}
         columns={columns}
         searchPlaceholder="بحث عن سائق..."
+        pagination={pagination}
+        onPageChange={handlePageChange}
+        onSearch={handleSearch}
       />
     </div>
   );
