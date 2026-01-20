@@ -121,7 +121,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               backgroundColor: Colors.green,
             ),
           );
-          context.pop();
+          // Check if we can pop, otherwise go to home
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go('/home');
+          }
         }
       } else {
         throw Exception(response.data['messageAr'] ?? 'حدث خطأ');

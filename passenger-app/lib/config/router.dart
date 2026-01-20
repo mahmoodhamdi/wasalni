@@ -20,6 +20,7 @@ import '../screens/scheduled/schedule_trip_screen.dart';
 import '../screens/promo/promos_screen.dart';
 import '../screens/profile/profile_screen.dart';
 import '../screens/profile/edit_profile_screen.dart';
+import '../screens/profile/change_password_screen.dart';
 import '../screens/settings/settings_screen.dart';
 import '../screens/history/trip_history_screen.dart';
 import '../screens/help/help_screen.dart';
@@ -147,6 +148,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/edit-profile',
         name: 'edit-profile',
         builder: (context, state) => const EditProfileScreen(),
+      ),
+      GoRoute(
+        path: '/change-password',
+        name: 'change-password',
+        builder: (context, state) => const ChangePasswordScreen(),
       ),
       GoRoute(
         path: '/settings',
