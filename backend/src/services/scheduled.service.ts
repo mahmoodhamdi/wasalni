@@ -312,9 +312,25 @@ export const cancelScheduledTrip = async (
 
     await trip.save();
 
-    // TODO: Notify driver if assigned
+    // Notify driver if assigned
     if (trip.driverId) {
       logger.info(`Notifying driver ${trip.driverId} of cancelled scheduled trip`);
+      try {
+        const notificationService = await import('./notification.service');
+        await notificationService.default.sendNotification(
+          trip.driverId.toString(),
+          'driver',
+          {
+            title: 'Scheduled Trip Cancelled',
+            titleAr: 'تم إلغاء الرحلة المجدولة',
+            body: `The scheduled trip ${trip.tripNumber} has been cancelled by the passenger`,
+            bodyAr: `تم إلغاء الرحلة المجدولة ${trip.tripNumber} من قبل الراكب`,
+            data: { tripId: trip._id.toString(), type: 'scheduled_cancelled' },
+          }
+        );
+      } catch (notifyError) {
+        logger.error(`Failed to notify driver of cancellation: ${notifyError}`);
+      }
     }
 
     logger.info(`Scheduled trip ${trip.tripNumber} cancelled`);
@@ -374,8 +390,13 @@ export const startScheduledTripSearch = async (
 
     logger.info(`Started driver search for scheduled trip ${trip.tripNumber}`);
 
-    // TODO: Emit socket event to start matching
-    // matchingService.startMatching(tripId);
+    // Emit socket event to start matching for scheduled trip
+    try {
+      const matchingService = await import('./matching.service');
+      matchingService.default.startMatching(tripId);
+    } catch (matchError) {
+      logger.error(`Failed to start matching for scheduled trip: ${matchError}`);
+    }
 
     return trip;
   } catch (error) {

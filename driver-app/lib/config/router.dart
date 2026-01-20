@@ -9,6 +9,7 @@ import '../screens/auth/otp_screen.dart';
 import '../screens/auth/register_screen.dart';
 import '../screens/auth/documents_screen.dart';
 import '../screens/auth/pending_approval_screen.dart';
+import '../screens/auth/reset_password_screen.dart';
 import '../screens/home/home_screen.dart';
 import '../screens/trip/active_trip_screen.dart';
 import '../screens/trip/trip_complete_screen.dart';
@@ -46,6 +47,17 @@ final routerProvider = Provider<GoRouter>((ref) {
           final email = extra?['email'] as String? ?? '';
           final purpose = extra?['purpose'] as String? ?? 'login';
           return OTPScreen(email: email, purpose: purpose);
+        },
+      ),
+      GoRoute(
+        path: '/reset-password',
+        name: 'reset-password',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return ResetPasswordScreen(
+            email: extra?['email'] as String? ?? '',
+            otp: extra?['otp'] as String? ?? '',
+          );
         },
       ),
       GoRoute(

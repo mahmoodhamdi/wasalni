@@ -367,7 +367,7 @@ class ApiService {
     required String rideType,
     required double fare,
   }) async {
-    return await _dio.post('/fare/promo/validate', data: {
+    return await _dio.post('/promo/validate', data: {
       'code': code,
       'rideType': rideType,
       'fare': fare,

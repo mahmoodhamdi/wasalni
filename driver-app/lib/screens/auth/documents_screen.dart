@@ -179,7 +179,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
             child: ElevatedButton(
               onPressed: () {
                 Navigator.pop(context);
-                context.go('/');
+                context.go('/pending-approval');
               },
               child: const Text('حسناً'),
             ),
