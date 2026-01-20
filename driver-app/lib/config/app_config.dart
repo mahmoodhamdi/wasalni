@@ -9,10 +9,14 @@ class AppConfig {
   static const AppEnvironment environment = AppEnvironment.development;
 
   // API URLs based on environment
+  // Override with --dart-define=API_BASE_URL=your_url for custom server
   static String get apiBaseUrl {
+    const envUrl = String.fromEnvironment('API_BASE_URL', defaultValue: '');
+    if (envUrl.isNotEmpty) return envUrl;
+
     switch (environment) {
       case AppEnvironment.development:
-        return 'https://pronouncedly-resupine-benito.ngrok-free.dev/api/v1'; // ngrok tunnel
+        return 'http://10.0.2.2:5000/api/v1'; // Android emulator localhost
       case AppEnvironment.staging:
         return 'https://staging-api.wasalni.app/api/v1';
       case AppEnvironment.production:
@@ -21,9 +25,12 @@ class AppConfig {
   }
 
   static String get socketUrl {
+    const envUrl = String.fromEnvironment('SOCKET_URL', defaultValue: '');
+    if (envUrl.isNotEmpty) return envUrl;
+
     switch (environment) {
       case AppEnvironment.development:
-        return 'https://pronouncedly-resupine-benito.ngrok-free.dev'; // ngrok tunnel
+        return 'http://10.0.2.2:5000'; // Android emulator localhost
       case AppEnvironment.staging:
         return 'https://staging-api.wasalni.app';
       case AppEnvironment.production:
