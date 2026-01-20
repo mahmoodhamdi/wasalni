@@ -8,6 +8,9 @@
     <!-- Phone Permission for calling drivers -->
     <uses-permission android:name="android.permission.CALL_PHONE" />
 
+    <!-- Contacts Permission for emergency contacts -->
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
+
     <!-- Notifications -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 

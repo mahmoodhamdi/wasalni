@@ -16,7 +16,7 @@ class AppConfig {
 
     switch (environment) {
       case AppEnvironment.development:
-        return 'http://10.0.2.2:5000/api/v1'; // Android emulator localhost
+        return 'https://pronouncedly-resupine-benito.ngrok-free.dev/api/v1'; // ngrok tunnel
       case AppEnvironment.staging:
         return 'https://staging-api.wasalni.app/api/v1';
       case AppEnvironment.production:
@@ -30,7 +30,7 @@ class AppConfig {
 
     switch (environment) {
       case AppEnvironment.development:
-        return 'http://10.0.2.2:5000'; // Android emulator localhost
+        return 'https://pronouncedly-resupine-benito.ngrok-free.dev'; // ngrok tunnel
       case AppEnvironment.staging:
         return 'https://staging-api.wasalni.app';
       case AppEnvironment.production:

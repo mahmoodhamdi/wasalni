@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_contacts/flutter_contacts.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../../providers/safety_provider.dart';
 
@@ -68,6 +70,71 @@ class _EmergencyContactsScreenState extends ConsumerState<EmergencyContactsScree
     }
   }
 
+  Future<void> _pickFromContacts() async {
+    // Request permission
+    final permissionStatus = await Permission.contacts.request();
+
+    if (permissionStatus.isGranted) {
+      // Open native contact picker
+      final Contact? contact = await FlutterContacts.openExternalPick();
+
+      if (contact != null && mounted) {
+        // Get full contact with phone numbers
+        final fullContact = await FlutterContacts.getContact(contact.id, withProperties: true);
+
+        if (fullContact != null && mounted) {
+          String phone = '';
+          if (fullContact.phones.isNotEmpty) {
+            // Get first phone number and clean it
+            phone = fullContact.phones.first.number
+                .replaceAll(' ', '')
+                .replaceAll('-', '')
+                .replaceAll('(', '')
+                .replaceAll(')', '');
+
+            // Convert to Egyptian format if needed
+            if (phone.startsWith('+2')) {
+              phone = phone.substring(2);
+            } else if (phone.startsWith('002')) {
+              phone = phone.substring(3);
+            }
+          }
+
+          // Show the add contact sheet with pre-filled data
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (context) => _AddContactSheet(
+              prefilledName: fullContact.displayName,
+              prefilledPhone: phone,
+            ),
+          );
+        }
+      }
+    } else if (permissionStatus.isPermanentlyDenied) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('يرجى السماح بالوصول لجهات الاتصال من الإعدادات'),
+            action: SnackBarAction(
+              label: 'الإعدادات',
+              onPressed: () => openAppSettings(),
+            ),
+          ),
+        );
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('يجب السماح بالوصول لجهات الاتصال'),
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final safetyState = ref.watch(safetyProvider);
@@ -85,7 +152,7 @@ class _EmergencyContactsScreenState extends ConsumerState<EmergencyContactsScree
                 Container(
                   width: double.infinity,
                   padding: EdgeInsets.all(16.w),
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   child: Row(
                     children: [
                       Icon(
@@ -139,11 +206,27 @@ class _EmergencyContactsScreenState extends ConsumerState<EmergencyContactsScree
               ],
             ),
       floatingActionButton: safetyState.contacts.length < 5
-          ? FloatingActionButton.extended(
-              onPressed: _showAddContactDialog,
-              icon: const Icon(Icons.add),
-              label: const Text('إضافة جهة اتصال'),
-              backgroundColor: AppColors.primary,
+          ? Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Pick from contacts button
+                FloatingActionButton(
+                  heroTag: 'pick_contact',
+                  onPressed: _pickFromContacts,
+                  backgroundColor: Colors.white,
+                  foregroundColor: AppColors.primary,
+                  child: const Icon(Icons.contacts),
+                ),
+                SizedBox(height: 12.h),
+                // Add manually button
+                FloatingActionButton.extended(
+                  heroTag: 'add_contact',
+                  onPressed: _showAddContactDialog,
+                  icon: const Icon(Icons.add),
+                  label: const Text('إضافة يدوياً'),
+                  backgroundColor: AppColors.primary,
+                ),
+              ],
             )
           : null,
     );
@@ -178,13 +261,25 @@ class _EmergencyContactsScreenState extends ConsumerState<EmergencyContactsScree
             textAlign: TextAlign.center,
           ),
           SizedBox(height: 24.h),
+          // Pick from device contacts
           ElevatedButton.icon(
-            onPressed: _showAddContactDialog,
-            icon: const Icon(Icons.add),
-            label: const Text('إضافة جهة اتصال'),
+            onPressed: _pickFromContacts,
+            icon: const Icon(Icons.contacts),
+            label: const Text('اختر من جهات الاتصال'),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
+              padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+            ),
+          ),
+          SizedBox(height: 12.h),
+          // Add manually
+          OutlinedButton.icon(
+            onPressed: _showAddContactDialog,
+            icon: const Icon(Icons.edit),
+            label: const Text('أدخل يدوياً'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.primary,
               padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
             ),
           ),
@@ -217,7 +312,7 @@ class _ContactCard extends StatelessWidget {
             Row(
               children: [
                 CircleAvatar(
-                  backgroundColor: AppColors.primary.withOpacity(0.1),
+                  backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                   child: Text(
                     contact.name.isNotEmpty ? contact.name[0].toUpperCase() : '?',
                     style: TextStyle(
@@ -302,8 +397,14 @@ class _ContactCard extends StatelessWidget {
 
 class _AddContactSheet extends ConsumerStatefulWidget {
   final EmergencyContact? contact;
+  final String? prefilledName;
+  final String? prefilledPhone;
 
-  const _AddContactSheet({this.contact});
+  const _AddContactSheet({
+    this.contact,
+    this.prefilledName,
+    this.prefilledPhone,
+  });
 
   @override
   ConsumerState<_AddContactSheet> createState() => _AddContactSheetState();
@@ -321,8 +422,12 @@ class _AddContactSheetState extends ConsumerState<_AddContactSheet> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.contact?.name ?? '');
-    _phoneController = TextEditingController(text: widget.contact?.phone ?? '');
+    _nameController = TextEditingController(
+      text: widget.contact?.name ?? widget.prefilledName ?? '',
+    );
+    _phoneController = TextEditingController(
+      text: widget.contact?.phone ?? widget.prefilledPhone ?? '',
+    );
     if (widget.contact != null) {
       _relationship = widget.contact!.relationship;
       _notifyOnTrip = widget.contact!.notifyOnTrip;
@@ -335,6 +440,52 @@ class _AddContactSheetState extends ConsumerState<_AddContactSheet> {
     _nameController.dispose();
     _phoneController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickFromContacts() async {
+    final permissionStatus = await Permission.contacts.request();
+
+    if (permissionStatus.isGranted) {
+      final Contact? contact = await FlutterContacts.openExternalPick();
+
+      if (contact != null && mounted) {
+        final fullContact = await FlutterContacts.getContact(contact.id, withProperties: true);
+
+        if (fullContact != null && mounted) {
+          setState(() {
+            _nameController.text = fullContact.displayName;
+
+            if (fullContact.phones.isNotEmpty) {
+              String phone = fullContact.phones.first.number
+                  .replaceAll(' ', '')
+                  .replaceAll('-', '')
+                  .replaceAll('(', '')
+                  .replaceAll(')', '');
+
+              if (phone.startsWith('+2')) {
+                phone = phone.substring(2);
+              } else if (phone.startsWith('002')) {
+                phone = phone.substring(3);
+              }
+
+              _phoneController.text = phone;
+            }
+          });
+        }
+      }
+    } else if (permissionStatus.isPermanentlyDenied) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('يرجى السماح بالوصول لجهات الاتصال من الإعدادات'),
+            action: SnackBarAction(
+              label: 'الإعدادات',
+              onPressed: () => openAppSettings(),
+            ),
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _save() async {
@@ -375,6 +526,9 @@ class _AddContactSheetState extends ConsumerState<_AddContactSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final isEditing = widget.contact != null;
+    final hasPrefilledData = widget.prefilledName != null || widget.prefilledPhone != null;
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -402,12 +556,31 @@ class _AddContactSheetState extends ConsumerState<_AddContactSheet> {
                 ),
               ),
               SizedBox(height: 20.h),
-              Text(
-                widget.contact != null ? 'تعديل جهة الاتصال' : 'إضافة جهة اتصال طارئة',
-                style: TextStyle(
-                  fontSize: 20.sp,
-                  fontWeight: FontWeight.bold,
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      isEditing
+                          ? 'تعديل جهة الاتصال'
+                          : hasPrefilledData
+                              ? 'تأكيد البيانات'
+                              : 'إضافة جهة اتصال طارئة',
+                      style: TextStyle(
+                        fontSize: 20.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  if (!isEditing)
+                    TextButton.icon(
+                      onPressed: _pickFromContacts,
+                      icon: const Icon(Icons.contacts, size: 20),
+                      label: const Text('اختر'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.primary,
+                      ),
+                    ),
+                ],
               ),
               SizedBox(height: 20.h),
 
@@ -450,7 +623,7 @@ class _AddContactSheetState extends ConsumerState<_AddContactSheet> {
 
               // Relationship
               DropdownButtonFormField<String>(
-                value: _relationship,
+                initialValue: _relationship,
                 decoration: const InputDecoration(
                   labelText: 'العلاقة',
                   prefixIcon: Icon(Icons.family_restroom),
@@ -507,7 +680,7 @@ class _AddContactSheetState extends ConsumerState<_AddContactSheet> {
                   ),
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
-                      : Text(widget.contact != null ? 'حفظ التغييرات' : 'إضافة'),
+                      : Text(isEditing ? 'حفظ التغييرات' : 'إضافة'),
                 ),
               ),
               SizedBox(height: 20.h),
