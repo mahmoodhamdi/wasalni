@@ -131,8 +131,11 @@ export const settingsApi = {
   getFareSettings: () =>
     api.get('/admin/settings/fares'),
 
-  updateFareSettings: (data: Record<string, unknown>) =>
-    api.put('/admin/settings/fares', data),
+  createFareSetting: (data: Record<string, unknown>) =>
+    api.post('/admin/settings/fares', data),
+
+  updateFareSetting: (fareId: string, data: Record<string, unknown>) =>
+    api.put(`/admin/settings/fares/${fareId}`, data),
 
   getZones: () =>
     api.get('/admin/settings/zones'),

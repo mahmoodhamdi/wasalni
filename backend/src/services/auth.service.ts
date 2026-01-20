@@ -282,7 +282,7 @@ class AuthService {
   /**
    * Register new driver with email
    */
-  async registerDriver(data: RegisterDriverData): Promise<{ user: IUser; tokens: TokenPair }> {
+  async registerDriver(data: RegisterDriverData & { googleId?: string; avatar?: string }): Promise<{ user: IUser; tokens: TokenPair }> {
     const normalizedEmail = data.email.toLowerCase();
 
     // Check if email already registered
@@ -303,14 +303,17 @@ class AuthService {
       );
     }
 
-    // Create user (inactive until approved)
+    // Create new user (inactive until approved)
+    const isGoogleAuth = !!data.googleId;
     const user = await User.create({
       email: normalizedEmail,
-      password: data.password,
+      password: isGoogleAuth ? undefined : data.password,
+      googleId: data.googleId,
       name: data.name,
       phone: data.phone,
+      avatar: data.avatar,
       role: 'driver',
-      authProvider: 'email',
+      authProvider: isGoogleAuth ? 'google' : 'email',
       isActive: false, // Will be activated after admin approval
       isEmailVerified: true,
     });
@@ -350,7 +353,7 @@ class AuthService {
   /**
    * Google Sign-In authentication
    */
-  async googleSignIn(idToken: string, role: 'passenger' | 'driver' = 'passenger'): Promise<{ user: IUser; tokens: TokenPair; isNewUser: boolean }> {
+  async googleSignIn(idToken: string, role: 'passenger' | 'driver' = 'passenger'): Promise<{ user: IUser; tokens: TokenPair; isNewUser: boolean; driver: any; needsDriverRegistration: boolean }> {
     const firebaseApp = getFirebaseApp();
     if (!firebaseApp) {
       throw new BadRequestError(
@@ -397,8 +400,31 @@ class AuthService {
         }
         await user.save();
       } else {
-        // Create new user
+        // New user
         isNewUser = true;
+
+        if (role === 'driver') {
+          // For drivers: DON'T create User yet - just return Google info
+          // User will be created when they complete the registration form
+          return {
+            user: {
+              email: normalizedEmail,
+              name: name || email.split('@')[0],
+              avatar: picture,
+              role: 'driver',
+              googleId,
+            } as unknown as IUser,
+            tokens: {
+              accessToken: '', // No token yet - not registered
+              refreshToken: '',
+            },
+            isNewUser: true,
+            driver: null,
+            needsDriverRegistration: true,
+          };
+        }
+
+        // For passengers: create user immediately
         user = await User.create({
           email: normalizedEmail,
           googleId,
@@ -406,31 +432,11 @@ class AuthService {
           avatar: picture,
           role,
           authProvider: 'google',
-          isActive: role === 'passenger', // Drivers need approval
+          isActive: true,
           isEmailVerified: true,
         });
 
-        // Create profile based on role
-        if (role === 'passenger') {
-          await Passenger.create({ userId: user._id });
-        } else {
-          // Create driver profile with placeholder vehicle info
-          // Driver must complete their profile before approval
-          await Driver.create({
-            userId: user._id,
-            status: 'pending',
-            vehicle: {
-              type: 'car',
-              category: 'economy',
-              make: 'TBD', // To be provided by driver
-              model: 'TBD',
-              year: new Date().getFullYear(),
-              color: 'TBD',
-              plateNumber: 'TBD-0000',
-              seats: 4,
-            },
-          });
-        }
+        await Passenger.create({ userId: user._id });
 
         // Send welcome email
         await sendWelcomeEmail(normalizedEmail, user.name, role);
@@ -444,6 +450,16 @@ class AuthService {
       );
     }
 
+    // Check if driver needs to complete registration
+    let driver = null;
+    let needsDriverRegistration = false;
+    if (user.role === 'driver') {
+      driver = await Driver.findOne({ userId: user._id });
+      if (!driver) {
+        needsDriverRegistration = true;
+      }
+    }
+
     // Update last login
     user.lastLoginAt = new Date();
     await user.save();
@@ -455,7 +471,7 @@ class AuthService {
       email: user.email,
     });
 
-    return { user: user as unknown as IUser, tokens, isNewUser };
+    return { user: user as unknown as IUser, tokens, isNewUser, driver, needsDriverRegistration };
   }
 
   /**

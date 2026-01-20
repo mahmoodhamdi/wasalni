@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import tripController from '../controllers/trip.controller';
+import driverController from '../controllers/driver.controller';
 import {
   tripListValidator,
   driverTripActionValidator,
@@ -8,8 +9,152 @@ import {
 } from '../validators/trip.validator';
 import { body } from 'express-validator';
 import { authenticate, authorize } from '../middleware/auth.middleware';
+import { documentUpload, driverDocumentFields } from '../middleware/upload.middleware';
 
 const router = Router();
+
+// ==================== Driver Status Routes ====================
+
+/**
+ * @swagger
+ * /driver/status:
+ *   get:
+ *     summary: Get driver status
+ *     description: Returns the driver's current status including approval, online status, earnings, and capabilities
+ *     tags: [Driver]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Driver status retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Driver status retrieved successfully
+ *                 messageAr:
+ *                   type: string
+ *                   example: تم استرجاع حالة السائق بنجاح
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     approvalStatus:
+ *                       type: string
+ *                       enum: [pending, approved, rejected, suspended]
+ *                       example: approved
+ *                     onlineStatus:
+ *                       type: string
+ *                       enum: [offline, online, busy]
+ *                       example: online
+ *                     totalEarnings:
+ *                       type: number
+ *                       example: 5000
+ *                     totalTrips:
+ *                       type: number
+ *                       example: 150
+ *                     rating:
+ *                       type: number
+ *                       example: 4.8
+ *                     documentsVerified:
+ *                       type: boolean
+ *                       example: true
+ *                     vehicleType:
+ *                       type: string
+ *                       example: economy
+ *                     isApproved:
+ *                       type: boolean
+ *                       example: true
+ *                     canGoOnline:
+ *                       type: boolean
+ *                       example: true
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       404:
+ *         description: Driver profile not found
+ */
+router.get(
+  '/status',
+  authenticate,
+  authorize('driver'),
+  driverController.getDriverStatus
+);
+
+// ==================== Driver Document Routes ====================
+
+/**
+ * @swagger
+ * /driver/documents/batch:
+ *   post:
+ *     summary: Upload driver documents (batch)
+ *     description: Upload multiple driver documents at once
+ *     tags: [Driver]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nationalIdFront:
+ *                 type: string
+ *                 format: binary
+ *               nationalIdBack:
+ *                 type: string
+ *                 format: binary
+ *               driverLicense:
+ *                 type: string
+ *                 format: binary
+ *               vehicleLicense:
+ *                 type: string
+ *                 format: binary
+ *               vehiclePhoto:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: Documents uploaded successfully
+ *       400:
+ *         description: No files uploaded
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ */
+router.post(
+  '/documents/batch',
+  authenticate,
+  authorize('driver'),
+  documentUpload.fields(driverDocumentFields),
+  driverController.uploadDocuments
+);
+
+/**
+ * @swagger
+ * /driver/documents:
+ *   get:
+ *     summary: Get driver documents status
+ *     description: Get the current status of uploaded driver documents
+ *     tags: [Driver]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Documents retrieved successfully
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ */
+router.get(
+  '/documents',
+  authenticate,
+  authorize('driver'),
+  driverController.getDocuments
+);
 
 // ==================== Driver Trip Routes ====================
 

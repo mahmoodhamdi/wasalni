@@ -256,7 +256,7 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                     )
                   else if (tripState.fareEstimates.isNotEmpty)
                     SizedBox(
-                      height: 110.h,
+                      height: 125.h,
                       child: ListView.builder(
                         scrollDirection: Axis.horizontal,
                         padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
@@ -287,48 +287,52 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                                   width: 2,
                                 ),
                               ),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    _getIconForRideType(estimate.rideType),
-                                    size: 28.sp,
-                                    color: isSelected ? AppColors.primary : AppColors.textSecondary,
-                                  ),
-                                  SizedBox(height: 4.h),
-                                  Text(
-                                    rideInfo.nameAr,
-                                    style: AppTextStyles.caption.copyWith(
-                                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                      color: isSelected ? AppColors.primary : AppColors.textPrimary,
-                                    ),
-                                  ),
-                                  SizedBox(height: 2.h),
-                                  Text(
-                                    estimate.fareRange,
-                                    style: AppTextStyles.caption.copyWith(
-                                      fontSize: 10.sp,
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      _getIconForRideType(estimate.rideType),
+                                      size: 28.sp,
                                       color: isSelected ? AppColors.primary : AppColors.textSecondary,
                                     ),
-                                  ),
-                                  if (estimate.surgeMultiplier > 1)
-                                    Container(
-                                      margin: EdgeInsets.only(top: 2.h),
-                                      padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.warning.withValues(alpha: 0.2),
-                                        borderRadius: BorderRadius.circular(4.r),
-                                      ),
-                                      child: Text(
-                                        '${estimate.surgeMultiplier}x',
-                                        style: TextStyle(
-                                          fontSize: 8.sp,
-                                          color: AppColors.warning,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                    SizedBox(height: 4.h),
+                                    Text(
+                                      rideInfo.nameAr,
+                                      style: AppTextStyles.caption.copyWith(
+                                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                        color: isSelected ? AppColors.primary : AppColors.textPrimary,
                                       ),
                                     ),
-                                ],
+                                    SizedBox(height: 2.h),
+                                    Text(
+                                      estimate.fareRange,
+                                      style: AppTextStyles.caption.copyWith(
+                                        fontSize: 10.sp,
+                                        color: isSelected ? AppColors.primary : AppColors.textSecondary,
+                                      ),
+                                    ),
+                                    if (estimate.surgeMultiplier > 1)
+                                      Container(
+                                        margin: EdgeInsets.only(top: 2.h),
+                                        padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.warning.withValues(alpha: 0.2),
+                                          borderRadius: BorderRadius.circular(4.r),
+                                        ),
+                                        child: Text(
+                                          '${estimate.surgeMultiplier}x',
+                                          style: TextStyle(
+                                            fontSize: 8.sp,
+                                            color: AppColors.warning,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
                               ),
                             ),
                           );

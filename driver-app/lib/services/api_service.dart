@@ -114,26 +114,30 @@ class ApiService {
     });
   }
 
-  /// Register new driver with email and password
+  /// Register new driver with email/password or Google auth
   Future<Response> registerDriver({
     required String email,
-    required String password,
+    String? password,
     required String name,
     String? phone,
     required String nationalId,
     required String vehicleType,
     required String vehicleCategory,
     required Map<String, dynamic> vehicle,
+    String? googleId,
+    String? avatar,
   }) async {
     return await _dio.post('/auth/register/driver', data: {
       'email': email,
-      'password': password,
+      if (password != null) 'password': password,
       'name': name,
       if (phone != null) 'phone': phone,
       'nationalId': nationalId,
       'vehicleType': vehicleType,
       'vehicleCategory': vehicleCategory,
       'vehicle': vehicle,
+      if (googleId != null) 'googleId': googleId,
+      if (avatar != null) 'avatar': avatar,
     });
   }
 
@@ -168,11 +172,15 @@ class ApiService {
   }
 
   Future<Response> goOnline() async {
-    return await _dio.put('/driver/online');
+    return await _dio.post('/location/status', data: {
+      'isOnline': true,
+    });
   }
 
   Future<Response> goOffline() async {
-    return await _dio.put('/driver/offline');
+    return await _dio.post('/location/status', data: {
+      'isOnline': false,
+    });
   }
 
   Future<Response> updateLocation({
@@ -181,7 +189,7 @@ class ApiService {
     double? heading,
     double? speed,
   }) async {
-    return await _dio.put('/driver/location', data: {
+    return await _dio.post('/location/update', data: {
       'lat': lat,
       'lng': lng,
       if (heading != null) 'heading': heading,
@@ -191,19 +199,23 @@ class ApiService {
 
   // Trip Endpoints
   Future<Response> acceptTrip(String tripId) async {
-    return await _dio.post('/driver/trips/$tripId/accept');
+    return await _dio.put('/driver/trips/$tripId/accept');
   }
 
   Future<Response> rejectTrip(String tripId) async {
-    return await _dio.post('/driver/trips/$tripId/reject');
+    return await _dio.put('/driver/trips/$tripId/reject');
   }
 
   Future<Response> arrivedAtPickup(String tripId) async {
-    return await _dio.put('/driver/trips/$tripId/arrived');
+    return await _dio.put('/driver/trips/$tripId/status', data: {
+      'status': 'driver_arrived',
+    });
   }
 
   Future<Response> startTrip(String tripId) async {
-    return await _dio.put('/driver/trips/$tripId/start');
+    return await _dio.put('/driver/trips/$tripId/status', data: {
+      'status': 'trip_started',
+    });
   }
 
   Future<Response> completeTrip(String tripId) async {

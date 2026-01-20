@@ -122,8 +122,14 @@ driverLocationSchema.statics.setOnlineStatus = async function (
         isAvailable: isOnline ? isAvailable : false,
         updatedAt: new Date(),
       },
+      $setOnInsert: {
+        location: {
+          type: 'Point',
+          coordinates: [0, 0], // Will be updated by first location update
+        },
+      },
     },
-    { new: true }
+    { new: true, upsert: true }
   );
 };
 

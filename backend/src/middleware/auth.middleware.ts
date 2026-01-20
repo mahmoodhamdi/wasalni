@@ -58,7 +58,9 @@ export const authenticate = async (
       throw new UnauthorizedError('المستخدم غير موجود');
     }
 
-    if (!user.isActive) {
+    // Allow drivers even if inactive (they may be pending approval)
+    // Only block inactive passengers and admins
+    if (!user.isActive && user.role !== 'driver') {
       console.log(`🔐 [Auth] FAILED: User not active`);
       throw new UnauthorizedError('الحساب غير مفعل');
     }

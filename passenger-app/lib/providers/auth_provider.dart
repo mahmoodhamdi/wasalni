@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:google_sign_in/google_sign_in.dart';
 import '../services/api_service.dart';
 import '../services/storage_service.dart';
+import '../services/socket_service.dart';
 
 // Auth State
 enum AuthStatus {
@@ -88,9 +89,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
           final response = await apiService.getProfile();
           if (response.statusCode == 200 && response.data['success'] == true) {
             final userData = response.data['data']['user'];
+
+            // Connect socket for real-time updates
+            final userId = userData['_id'];
+            if (userId != null && token != null) {
+              socketService.connect(userId, token);
+            }
+
             state = state.copyWith(
               status: AuthStatus.authenticated,
-              userId: userData['_id'],
+              userId: userId,
               email: userData['email'],
               name: userData['name'],
               phone: userData['phone'],
@@ -139,9 +147,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
         await _saveAuthData(tokens, user);
 
+        // Connect socket for real-time updates
+        final userId = user['_id'];
+        final accessToken = tokens['accessToken'];
+        if (userId != null && accessToken != null) {
+          socketService.connect(userId, accessToken);
+        }
+
         state = state.copyWith(
           status: AuthStatus.authenticated,
-          userId: user['_id'],
+          userId: userId,
           email: user['email'],
           name: user['name'],
           phone: user['phone'],
@@ -224,6 +239,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
             isNewUser: true,
           );
         } else {
+          // Connect socket for real-time updates
+          final passengerId = user['_id'];
+          final accessToken = tokens['accessToken'];
+          if (passengerId != null && accessToken != null) {
+            socketService.connect(passengerId, accessToken);
+          }
+
           state = state.copyWith(
             status: AuthStatus.authenticated,
             userId: user['_id'],
@@ -293,6 +315,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
         final user = data['user'];
 
         await _saveAuthData(tokens, user);
+
+        // Connect socket for real-time updates
+        final passengerId = user['_id'];
+        final accessToken = tokens['accessToken'];
+        if (passengerId != null && accessToken != null) {
+          socketService.connect(passengerId, accessToken);
+        }
 
         state = state.copyWith(
           status: AuthStatus.authenticated,
@@ -374,6 +403,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
         final user = data['user'];
 
         await _saveAuthData(tokens, user);
+
+        // Connect socket for real-time updates
+        final passengerId = user['_id'];
+        final accessToken = tokens['accessToken'];
+        if (passengerId != null && accessToken != null) {
+          socketService.connect(passengerId, accessToken);
+        }
 
         state = state.copyWith(
           status: AuthStatus.authenticated,
@@ -480,6 +516,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
   /// Logout
   Future<void> logout() async {
     try {
+      // Disconnect socket
+      socketService.disconnect();
       // Sign out from Google
       await _googleSignIn.signOut();
       // Sign out from Firebase

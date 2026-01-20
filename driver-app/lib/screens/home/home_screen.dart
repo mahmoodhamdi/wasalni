@@ -728,12 +728,12 @@ class _ProfileTab extends ConsumerWidget {
             _ProfileMenuItem(
               icon: Icons.account_balance_outlined,
               title: 'الحساب البنكي',
-              onTap: () {},
+              onTap: () => _showBankAccountSheet(context),
             ),
             _ProfileMenuItem(
               icon: Icons.help_outline,
               title: 'المساعدة والدعم',
-              onTap: () {},
+              onTap: () => _showHelpSheet(context),
             ),
             _ProfileMenuItem(
               icon: Icons.info_outline,
@@ -761,17 +761,17 @@ class _ProfileTab extends ConsumerWidget {
   void _showLogoutDialog(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('تسجيل الخروج'),
         content: const Text('هل أنت متأكد من رغبتك في تسجيل الخروج؟'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('إلغاء'),
           ),
           TextButton(
             onPressed: () async {
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
               await ref.read(authProvider.notifier).logout();
               if (context.mounted) {
                 context.go('/welcome');
@@ -800,6 +800,258 @@ class _ProfileTab extends ConsumerWidget {
           textAlign: TextAlign.center,
         ),
       ],
+    );
+  }
+
+  void _showHelpSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+      ),
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        expand: false,
+        builder: (context, scrollController) => Container(
+          padding: EdgeInsets.all(20.w),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'المساعدة والدعم',
+                    style: AppTextStyles.heading2,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+              SizedBox(height: 16.h),
+              Expanded(
+                child: SingleChildScrollView(
+                  controller: scrollController,
+                  child: Column(
+                    children: [
+                      _HelpItem(
+                        icon: Icons.phone,
+                        title: 'اتصل بنا',
+                        subtitle: '01000000000',
+                        onTap: () {},
+                      ),
+                      _HelpItem(
+                        icon: Icons.email,
+                        title: 'البريد الإلكتروني',
+                        subtitle: 'drivers@wasalni.app',
+                        onTap: () {},
+                      ),
+                      _HelpItem(
+                        icon: Icons.chat,
+                        title: 'الدردشة المباشرة',
+                        subtitle: 'تحدث مع فريق الدعم',
+                        onTap: () {},
+                      ),
+                      SizedBox(height: 24.h),
+                      Text('الأسئلة الشائعة', style: AppTextStyles.heading3),
+                      SizedBox(height: 16.h),
+                      _FaqItem(
+                        question: 'كيف أستلم أرباحي؟',
+                        answer: 'يتم تحويل الأرباح أسبوعياً إلى حسابك البنكي المسجل.',
+                      ),
+                      _FaqItem(
+                        question: 'ماذا أفعل إذا واجهت مشكلة مع راكب؟',
+                        answer: 'يمكنك الإبلاغ عن أي مشكلة من خلال تفاصيل الرحلة أو الاتصال بالدعم.',
+                      ),
+                      _FaqItem(
+                        question: 'كيف أحدث بيانات مركبتي؟',
+                        answer: 'انتقل إلى بيانات المركبة من صفحة حسابي وقم بتحديث البيانات.',
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showBankAccountSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+      ),
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: Container(
+          padding: EdgeInsets.all(20.w),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'الحساب البنكي',
+                    style: AppTextStyles.heading2,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+              SizedBox(height: 16.h),
+              Container(
+                padding: EdgeInsets.all(16.w),
+                decoration: BoxDecoration(
+                  color: AppColors.warning.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, color: AppColors.warning),
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: Text(
+                        'لم يتم إضافة حساب بنكي بعد. أضف حسابك لاستلام أرباحك.',
+                        style: AppTextStyles.caption,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 24.h),
+              TextField(
+                decoration: InputDecoration(
+                  labelText: 'اسم البنك',
+                  hintText: 'مثال: البنك الأهلي المصري',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                ),
+              ),
+              SizedBox(height: 16.h),
+              TextField(
+                decoration: InputDecoration(
+                  labelText: 'اسم صاحب الحساب',
+                  hintText: 'الاسم كما هو في البنك',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                ),
+              ),
+              SizedBox(height: 16.h),
+              TextField(
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: 'رقم الحساب / IBAN',
+                  hintText: 'أدخل رقم الحساب',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                ),
+              ),
+              SizedBox(height: 24.h),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('سيتم إضافة هذه الميزة قريباً')),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(vertical: 14.h),
+                  ),
+                  child: const Text('حفظ'),
+                ),
+              ),
+              SizedBox(height: 16.h),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HelpItem extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _HelpItem({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: Container(
+        padding: EdgeInsets.all(8.w),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(8.r),
+        ),
+        child: Icon(icon, color: AppColors.primary),
+      ),
+      title: Text(title, style: AppTextStyles.body),
+      subtitle: Text(subtitle, style: AppTextStyles.caption),
+      trailing: const Icon(Icons.chevron_left),
+      onTap: onTap,
+    );
+  }
+}
+
+class _FaqItem extends StatefulWidget {
+  final String question;
+  final String answer;
+
+  const _FaqItem({
+    required this.question,
+    required this.answer,
+  });
+
+  @override
+  State<_FaqItem> createState() => _FaqItemState();
+}
+
+class _FaqItemState extends State<_FaqItem> {
+  bool _isExpanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: EdgeInsets.only(bottom: 8.h),
+      child: ExpansionTile(
+        title: Text(widget.question, style: AppTextStyles.body),
+        trailing: Icon(_isExpanded ? Icons.expand_less : Icons.expand_more),
+        onExpansionChanged: (expanded) => setState(() => _isExpanded = expanded),
+        children: [
+          Padding(
+            padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
+            child: Text(widget.answer, style: AppTextStyles.caption),
+          ),
+        ],
+      ),
     );
   }
 }

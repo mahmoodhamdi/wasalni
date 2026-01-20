@@ -1,8 +1,10 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:google_sign_in/google_sign_in.dart';
 import '../services/api_service.dart';
 import '../services/storage_service.dart';
+import '../services/socket_service.dart';
 
 // Driver approval status
 enum DriverApprovalStatus {
@@ -32,6 +34,7 @@ class AuthState {
   final String? phone;
   final String? name;
   final String? avatar;
+  final String? googleId;
   final DriverApprovalStatus? approvalStatus;
   final String? rejectionReason;
   final String? errorMessage;
@@ -44,6 +47,7 @@ class AuthState {
     this.phone,
     this.name,
     this.avatar,
+    this.googleId,
     this.approvalStatus,
     this.rejectionReason,
     this.errorMessage,
@@ -63,6 +67,7 @@ class AuthState {
     String? phone,
     String? name,
     String? avatar,
+    String? googleId,
     DriverApprovalStatus? approvalStatus,
     String? rejectionReason,
     String? errorMessage,
@@ -75,6 +80,7 @@ class AuthState {
       phone: phone ?? this.phone,
       name: name ?? this.name,
       avatar: avatar ?? this.avatar,
+      googleId: googleId ?? this.googleId,
       approvalStatus: approvalStatus ?? this.approvalStatus,
       rejectionReason: rejectionReason ?? this.rejectionReason,
       errorMessage: errorMessage,
@@ -119,6 +125,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
                 approvalStatus: approvalStatus,
               );
             } else if (approvalStatus == DriverApprovalStatus.approved) {
+              // Connect socket for real-time updates
+              final driverId = driverData?['_id'];
+              if (driverId != null && token != null) {
+                socketService.connect(driverId, token);
+              }
+
               state = state.copyWith(
                 status: AuthStatus.authenticated,
                 userId: userData['_id'],
@@ -179,6 +191,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
         final approvalStatus = _parseApprovalStatus(driver?['status']);
 
         if (approvalStatus == DriverApprovalStatus.approved) {
+          // Connect socket for real-time updates
+          final driverId = driver?['_id'];
+          final accessToken = tokens['accessToken'];
+          if (driverId != null && accessToken != null) {
+            socketService.connect(driverId, accessToken);
+          }
+
           state = state.copyWith(
             status: AuthStatus.authenticated,
             userId: user['_id'],
@@ -262,13 +281,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
         final user = data['user'];
         final driver = data['driver'];
         final isNewUser = data['isNewUser'] ?? false;
+        final needsDriverRegistration = data['needsDriverRegistration'] ?? false;
 
-        if (isNewUser) {
-          // New user needs to complete driver registration
+        if (isNewUser || needsDriverRegistration) {
+          // User needs to complete driver registration
+          // Don't save tokens - user is not registered yet
           state = state.copyWith(
             status: AuthStatus.needsRegistration,
             email: user['email'],
             name: user['name'],
+            avatar: user['avatar'],
+            googleId: user['googleId'],
             isNewUser: true,
           );
           return true;
@@ -279,6 +302,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
         final approvalStatus = _parseApprovalStatus(driver?['status']);
 
         if (approvalStatus == DriverApprovalStatus.approved) {
+          // Connect socket for real-time updates
+          final driverId = driver?['_id'];
+          final accessToken = tokens['accessToken'];
+          if (driverId != null && accessToken != null) {
+            socketService.connect(driverId, accessToken);
+          }
+
           state = state.copyWith(
             status: AuthStatus.authenticated,
             userId: user['_id'],
@@ -365,6 +395,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
         final approvalStatus = _parseApprovalStatus(driver?['status']);
 
         if (approvalStatus == DriverApprovalStatus.approved) {
+          // Connect socket for real-time updates
+          final driverId = driver?['_id'];
+          final accessToken = tokens['accessToken'];
+          if (driverId != null && accessToken != null) {
+            socketService.connect(driverId, accessToken);
+          }
+
           state = state.copyWith(
             status: AuthStatus.authenticated,
             userId: user['_id'],
@@ -436,7 +473,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   /// Register new driver
   Future<bool> register({
     required String email,
-    required String password,
+    String? password,
     required String name,
     String? phone,
     required String nationalId,
@@ -446,6 +483,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }) async {
     state = state.copyWith(status: AuthStatus.loading);
     try {
+      // Use googleId from state if available (Google Sign-In flow)
+      final googleId = state.googleId;
+      final avatar = state.avatar;
+
       final response = await apiService.registerDriver(
         email: email,
         password: password,
@@ -455,6 +496,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
         vehicleType: vehicleType,
         vehicleCategory: vehicleCategory,
         vehicle: vehicle,
+        googleId: googleId,
+        avatar: avatar,
       );
 
       if ((response.statusCode == 200 || response.statusCode == 201) &&
@@ -540,6 +583,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
   /// Logout
   Future<void> logout() async {
     try {
+      // Disconnect socket
+      socketService.disconnect();
       // Sign out from Google
       await _googleSignIn.signOut();
       // Sign out from Firebase
@@ -586,6 +631,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   String _getErrorMessage(dynamic error) {
+    // Handle DioException to extract Arabic error message
+    if (error is DioException && error.response?.data != null) {
+      final data = error.response!.data;
+      if (data is Map) {
+        return data['messageAr'] ?? data['message'] ?? 'حدث خطأ';
+      }
+    }
+
     if (error.toString().contains('SocketException') ||
         error.toString().contains('Connection refused')) {
       return 'لا يمكن الاتصال بالخادم';

@@ -3,6 +3,7 @@ import { authService } from '../services/auth.service';
 import { sendSuccess, sendCreated } from '../utils/response';
 import { BadRequestError } from '../utils/errors';
 import { OTPPurpose } from '../types';
+import Driver from '../models/Driver';
 
 /**
  * Send OTP to email
@@ -159,6 +160,8 @@ export const googleSignIn = async (
       user: result.user,
       tokens: result.tokens,
       isNewUser: result.isNewUser,
+      driver: result.driver,
+      needsDriverRegistration: result.needsDriverRegistration,
     }, result.isNewUser ? 'Account created successfully' : 'Login successful',
        result.isNewUser ? 'تم إنشاء الحساب بنجاح' : 'تم تسجيل الدخول بنجاح');
   } catch (error) {
@@ -223,16 +226,20 @@ export const registerDriver = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { email, password, name, phone, nationalId, vehicleType, vehicleCategory, vehicle } = req.body;
+    const { email, password, name, phone, nationalId, vehicleType, vehicleCategory, vehicle, googleId, avatar } = req.body;
 
-    if (!email || !password || !name || !nationalId || !vehicleType || !vehicleCategory || !vehicle) {
+    const isGoogleAuth = !!googleId;
+
+    // Validate required fields
+    if (!email || !name || !nationalId || !vehicleType || !vehicleCategory || !vehicle) {
       throw new BadRequestError(
         'All required fields must be provided',
         'جميع البيانات المطلوبة يجب ملؤها'
       );
     }
 
-    if (password.length < 6) {
+    // Password required only for email auth
+    if (!isGoogleAuth && (!password || password.length < 6)) {
       throw new BadRequestError(
         'Password must be at least 6 characters',
         'كلمة المرور يجب أن تكون 6 أحرف على الأقل'
@@ -262,6 +269,8 @@ export const registerDriver = async (
       vehicleType,
       vehicleCategory,
       vehicle,
+      googleId,
+      avatar,
     });
 
     sendCreated(res, result, 'Driver account created - pending approval', 'تم إنشاء حساب السائق - في انتظار الموافقة');
@@ -396,7 +405,14 @@ export const getProfile = async (
 ): Promise<void> => {
   try {
     const user = await authService.getProfile(req.user!.userId);
-    sendSuccess(res, { user }, 'Profile retrieved', 'تم جلب البيانات');
+
+    // Include driver data if user is a driver
+    let driver: any = null;
+    if (user.role === 'driver') {
+      driver = await Driver.findOne({ userId: user._id }).lean();
+    }
+
+    sendSuccess(res, { user, driver }, 'Profile retrieved', 'تم جلب البيانات');
   } catch (error) {
     next(error);
   }

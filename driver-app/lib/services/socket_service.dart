@@ -128,7 +128,7 @@ class SocketService {
 
   void _joinDriverRoom() {
     if (_driverId != null && _socket != null) {
-      _socket!.emit('join:driver', _driverId);
+      _socket!.emit('join:driver', {'driverId': _driverId});
     }
   }
 

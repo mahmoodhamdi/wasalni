@@ -348,8 +348,8 @@ export const approveDriver = async (driverId: Types.ObjectId, adminId: Types.Obj
   driver.approvedBy = adminId;
   await driver.save();
 
-  // Update user verification
-  await User.findByIdAndUpdate(driver.user, { isVerified: true });
+  // Update user verification and activation
+  await User.findByIdAndUpdate(driver.userId, { isVerified: true, isActive: true });
 
   return driver;
 };
