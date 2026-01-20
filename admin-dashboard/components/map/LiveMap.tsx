@@ -1,17 +1,19 @@
 'use client';
 
-import { useState, useId } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import L from 'leaflet';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { Car } from 'lucide-react';
 
-// Fix for default marker icons in Leaflet
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-});
+// Fix for default marker icons in Leaflet - only run once
+if (typeof window !== 'undefined') {
+  delete (L.Icon.Default.prototype as any)._getIconUrl;
+  L.Icon.Default.mergeOptions({
+    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+  });
+}
 
 export interface DriverLocation {
   driverId: string;
@@ -52,12 +54,32 @@ export default function LiveMap({
   onDriverSelect,
   formatLastUpdate,
 }: LiveMapProps) {
-  // Use a stable key to prevent re-initialization issues in Strict Mode
-  const [mapKey] = useState(() => `map-${Date.now()}`);
+  // Use mounted state to ensure single initialization in React Strict Mode
+  const [isMounted, setIsMounted] = useState(false);
+  const mapRef = useRef<L.Map | null>(null);
+
+  useEffect(() => {
+    setIsMounted(true);
+    return () => {
+      // Cleanup map on unmount
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+    };
+  }, []);
+
+  if (!isMounted) {
+    return (
+      <div className="h-full w-full flex items-center justify-center bg-slate-100">
+        <div className="text-slate-500">جارٍ تحميل الخريطة...</div>
+      </div>
+    );
+  }
 
   return (
     <MapContainer
-      key={mapKey}
+      ref={mapRef}
       center={center}
       zoom={zoom}
       style={{ height: '100%', width: '100%' }}
