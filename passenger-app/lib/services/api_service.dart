@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../config/app_config.dart';
@@ -47,13 +48,11 @@ class ApiService {
     _dioInstance!.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
-          print('🔑 ApiService Request: ${options.method} ${options.path}');
-          print('🔑 Token present: ${_token != null}');
+          if (kDebugMode) {
+            debugPrint('🔑 ApiService: ${options.method} ${options.path}');
+          }
           if (_token != null) {
             options.headers['Authorization'] = 'Bearer $_token';
-            print('🔑 Added Authorization header');
-          } else {
-            print('⚠️ No token available for request');
           }
           return handler.next(options);
         },
@@ -85,12 +84,13 @@ class ApiService {
               }
             } catch (e) {
               // Refresh failed with exception
-              print('🔑 Token refresh failed: $e');
+              if (kDebugMode) {
+                debugPrint('🔑 Token refresh failed: $e');
+              }
             }
             _isRefreshing = false;
             // Only clear token if refresh actually failed
             if (!refreshSucceeded) {
-              print('🔑 Clearing token due to refresh failure');
               _token = null;
               _refreshToken = null;
               _onTokenExpired?.call();
@@ -129,7 +129,6 @@ class ApiService {
   }
 
   void setToken(String token) {
-    print('🔑 setToken called: ${token.substring(0, 20)}...');
     _token = token;
   }
 

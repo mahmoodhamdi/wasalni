@@ -231,7 +231,7 @@ class ApiService {
   }
 
   Future<Response> getTripHistory({int page = 1, int limit = 20}) async {
-    return await _dio.get('/driver/trips/history', queryParameters: {
+    return await _dio.get('/driver/trips', queryParameters: {
       'page': page,
       'limit': limit,
     });

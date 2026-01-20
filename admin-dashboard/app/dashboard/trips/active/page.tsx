@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { GoogleMap, useJsApiLoader, Marker, Polyline, InfoWindow } from '@react-google-maps/api';
-import { RefreshCw, MapPin, User, Car, Phone, Clock, Loader2 } from 'lucide-react';
+import { RefreshCw, MapPin, User, Car, Phone, Clock, Loader2, AlertTriangle, Wifi, WifiOff } from 'lucide-react';
 import { tripsApi } from '@/lib/api';
 import { io, Socket } from 'socket.io-client';
 
@@ -56,6 +56,8 @@ export default function ActiveTripsPage() {
   const [selectedTrip, setSelectedTrip] = useState<ActiveTrip | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [socket, setSocket] = useState<Socket | null>(null);
+  const [socketError, setSocketError] = useState<string | null>(null);
+  const [isSocketConnected, setIsSocketConnected] = useState(false);
 
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
@@ -98,7 +100,36 @@ export default function ActiveTripsPage() {
 
     newSocket.on('connect', () => {
       console.log('Connected to socket for active trips');
+      setIsSocketConnected(true);
+      setSocketError(null);
       newSocket.emit('admin:subscribeToTrips');
+    });
+
+    newSocket.on('connect_error', (error) => {
+      console.error('Socket connection error:', error);
+      setIsSocketConnected(false);
+      setSocketError('فشل الاتصال بالتحديثات المباشرة');
+    });
+
+    newSocket.on('disconnect', (reason) => {
+      console.log('Socket disconnected:', reason);
+      setIsSocketConnected(false);
+      if (reason === 'io server disconnect') {
+        // Server disconnected us, try to reconnect with new token
+        const storedAuth = localStorage.getItem('wasalni-admin-auth');
+        if (storedAuth) {
+          try {
+            const parsed = JSON.parse(storedAuth);
+            const newToken = parsed?.state?.token;
+            if (newToken) {
+              newSocket.auth = { token: newToken };
+              newSocket.connect();
+            }
+          } catch {
+            setSocketError('فشل إعادة الاتصال - يرجى تسجيل الدخول مجدداً');
+          }
+        }
+      }
     });
 
     newSocket.on('trip:statusUpdate', (data: { tripId: string; status: string }) => {
@@ -164,12 +195,23 @@ export default function ActiveTripsPage() {
     in_progress: '#10B981',
   };
 
-  if (loadError) {
+  // Check for missing API key
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+  const isApiKeyMissing = !apiKey || apiKey === '';
+
+  if (loadError || isApiKeyMissing) {
     return (
       <div className="flex items-center justify-center h-64 bg-white rounded-lg">
         <div className="text-center">
-          <MapPin className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-slate-800 mb-2">خطأ في تحميل الخريطة</h2>
+          <AlertTriangle className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-slate-800 mb-2">
+            {isApiKeyMissing ? 'مفتاح Google Maps غير مُعدّ' : 'خطأ في تحميل الخريطة'}
+          </h2>
+          {isApiKeyMissing && (
+            <p className="text-sm text-slate-500">
+              يرجى تعيين NEXT_PUBLIC_GOOGLE_MAPS_API_KEY في ملف .env.local
+            </p>
+          )}
         </div>
       </div>
     );
@@ -177,11 +219,28 @@ export default function ActiveTripsPage() {
 
   return (
     <div className="space-y-4">
+      {/* Socket Error Alert */}
+      {socketError && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 flex items-center gap-2">
+          <AlertTriangle className="w-5 h-5 text-yellow-600" />
+          <span className="text-yellow-800 text-sm">{socketError}</span>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800">الرحلات النشطة</h1>
-          <p className="text-slate-600">{trips.length} رحلة نشطة الآن</p>
+        <div className="flex items-center gap-3">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800">الرحلات النشطة</h1>
+            <p className="text-slate-600">{trips.length} رحلة نشطة الآن</p>
+          </div>
+          {/* Socket Connection Status */}
+          <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
+            isSocketConnected ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+          }`}>
+            {isSocketConnected ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
+            {isSocketConnected ? 'مباشر' : 'غير متصل'}
+          </div>
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-4 bg-white rounded-lg px-4 py-2 shadow-sm">
