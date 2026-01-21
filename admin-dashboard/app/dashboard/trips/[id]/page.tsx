@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { GoogleMap, useJsApiLoader, Marker, Polyline } from '@react-google-maps/api';
-import { MapPin, User, Car, Phone, Calendar, DollarSign, Clock, ArrowRight, RefreshCw, Loader2 } from 'lucide-react';
+import { MapPin, User, Car, Phone, Clock, ArrowRight, RefreshCw, Loader2 } from 'lucide-react';
 import { tripsApi } from '@/lib/api';
 
 interface Trip {

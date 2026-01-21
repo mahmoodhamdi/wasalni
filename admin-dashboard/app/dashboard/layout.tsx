@@ -1,10 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useLayoutEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
 import { useSidebarStore, useAuthStore } from '@/lib/store';
+
+// Use useLayoutEffect on client, useEffect on server to avoid SSR warnings
+const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
 export default function DashboardLayout({
   children,
@@ -15,11 +18,15 @@ export default function DashboardLayout({
   const { isOpen } = useSidebarStore();
   const [mounted, setMounted] = useState(false);
 
+  // Handle hydration with layout effect to prevent flash
+  useIsomorphicLayoutEffect(() => {
+    setMounted(true);
+  }, []);
+
   useEffect(() => {
     // Hydrate the auth store
     useAuthStore.persist.rehydrate();
 
-    setMounted(true);
     const storedAuth = localStorage.getItem('wasalni-admin-auth');
     let token = null;
     if (storedAuth) {

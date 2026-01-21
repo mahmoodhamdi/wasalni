@@ -127,7 +127,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
             } else if (approvalStatus == DriverApprovalStatus.approved) {
               // Connect socket for real-time updates
               final driverId = driverData?['_id'];
-              if (driverId != null && token != null) {
+              if (driverId != null) {
                 socketService.connect(driverId, token);
               }
 

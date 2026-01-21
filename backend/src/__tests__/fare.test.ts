@@ -6,10 +6,10 @@ describe('FareSetting Model', () => {
       const fareData = {
         rideType: 'economy',
         baseFare: 10,
-        perKmRate: 3.5,
-        perMinuteRate: 0.5,
+        perKm: 3.5,
+        perMinute: 0.5,
         minimumFare: 15,
-        platformFeePercent: 15,
+        bookingFee: 3,
         isActive: true,
       };
 
@@ -18,18 +18,18 @@ describe('FareSetting Model', () => {
       expect(fare._id).toBeDefined();
       expect(fare.rideType).toBe(fareData.rideType);
       expect(fare.baseFare).toBe(fareData.baseFare);
-      expect(fare.perKmRate).toBe(fareData.perKmRate);
-      expect(fare.platformFeePercent).toBe(fareData.platformFeePercent);
+      expect(fare.perKm).toBe(fareData.perKm);
+      expect(fare.perMinute).toBe(fareData.perMinute);
     });
 
     it('should validate ride type enum', async () => {
       const fareData = {
         rideType: 'invalid-type',
         baseFare: 10,
-        perKmRate: 3.5,
-        perMinuteRate: 0.5,
+        perKm: 3.5,
+        perMinute: 0.5,
         minimumFare: 15,
-        platformFeePercent: 15,
+        bookingFee: 3,
       };
 
       await expect(FareSetting.create(fareData)).rejects.toThrow();
@@ -39,10 +39,10 @@ describe('FareSetting Model', () => {
       const fareData = {
         rideType: 'comfort',
         baseFare: 15,
-        perKmRate: 4.5,
-        perMinuteRate: 0.75,
+        perKm: 4.5,
+        perMinute: 0.75,
         minimumFare: 20,
-        platformFeePercent: 15,
+        bookingFee: 5,
       };
 
       await FareSetting.create(fareData);
@@ -53,17 +53,17 @@ describe('FareSetting Model', () => {
       const fareData = {
         rideType: 'family',
         baseFare: 20,
-        perKmRate: 5,
-        perMinuteRate: 1,
+        perKm: 5,
+        perMinute: 1,
         minimumFare: 25,
-        platformFeePercent: 15,
+        bookingFee: 5,
       };
 
       const fare = await FareSetting.create(fareData);
 
       expect(fare.isActive).toBe(true);
-      expect(fare.waitingChargePerMin).toBe(0);
-      expect(fare.freeWaitingMinutes).toBe(3);
+      expect(fare.waitingFare.perMinute).toBe(0.5);
+      expect(fare.waitingFare.freeMinutes).toBe(3);
     });
   });
 });
@@ -72,12 +72,12 @@ describe('Fare Calculations', () => {
   describe('Basic fare calculation', () => {
     it('should calculate fare correctly', () => {
       const baseFare = 10;
-      const perKmRate = 3.5;
-      const perMinuteRate = 0.5;
+      const perKm = 3.5;
+      const perMinute = 0.5;
       const distance = 5; // km
       const duration = 15; // minutes
 
-      const fare = baseFare + (distance * perKmRate) + (duration * perMinuteRate);
+      const fare = baseFare + (distance * perKm) + (duration * perMinute);
 
       expect(fare).toBe(10 + 17.5 + 7.5);
       expect(fare).toBe(35);
@@ -85,13 +85,13 @@ describe('Fare Calculations', () => {
 
     it('should apply minimum fare', () => {
       const baseFare = 10;
-      const perKmRate = 3.5;
-      const perMinuteRate = 0.5;
+      const perKm = 3.5;
+      const perMinute = 0.5;
       const minimumFare = 20;
       const distance = 1; // km
       const duration = 2; // minutes
 
-      let fare = baseFare + (distance * perKmRate) + (duration * perMinuteRate);
+      let fare = baseFare + (distance * perKm) + (duration * perMinute);
       fare = Math.max(fare, minimumFare);
 
       expect(fare).toBe(20); // minimum fare applied
@@ -118,12 +118,12 @@ describe('Fare Calculations', () => {
     });
 
     it('should calculate waiting charges', () => {
-      const waitingChargePerMin = 1;
-      const freeWaitingMinutes = 3;
+      const perMinute = 1;
+      const freeMinutes = 3;
       const totalWaitingMinutes = 10;
 
-      const chargeableMinutes = Math.max(0, totalWaitingMinutes - freeWaitingMinutes);
-      const waitingCharge = chargeableMinutes * waitingChargePerMin;
+      const chargeableMinutes = Math.max(0, totalWaitingMinutes - freeMinutes);
+      const waitingCharge = chargeableMinutes * perMinute;
 
       expect(chargeableMinutes).toBe(7);
       expect(waitingCharge).toBe(7);

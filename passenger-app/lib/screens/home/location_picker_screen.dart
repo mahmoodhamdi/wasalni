@@ -76,13 +76,6 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
     });
   }
 
-  void _onCameraIdle() {
-    if (_isDragging && _selectedLocation != null) {
-      setState(() => _isDragging = false);
-      _getAddressFromLocation(_selectedLocation!);
-    }
-  }
-
   Future<void> _getAddressFromLocation(LatLng location) async {
     setState(() => _isLoadingAddress = true);
 

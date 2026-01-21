@@ -123,9 +123,10 @@ export default function DashboardPage() {
         }
         alert('تمت الموافقة على السائق بنجاح');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to approve driver:', err);
-      alert(err.response?.data?.messageAr || 'فشل في الموافقة على السائق');
+      const axiosErr = err as { response?: { data?: { messageAr?: string } } };
+      alert(axiosErr.response?.data?.messageAr || 'فشل في الموافقة على السائق');
     } finally {
       setActionLoading(null);
     }
@@ -146,9 +147,10 @@ export default function DashboardPage() {
         }
         alert('تم رفض السائق');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to reject driver:', err);
-      alert(err.response?.data?.messageAr || 'فشل في رفض السائق');
+      const axiosErr = err as { response?: { data?: { messageAr?: string } } };
+      alert(axiosErr.response?.data?.messageAr || 'فشل في رفض السائق');
     } finally {
       setActionLoading(null);
     }
@@ -166,7 +168,7 @@ export default function DashboardPage() {
         if (statsResponse.data.success) {
           setStats(statsResponse.data.data.stats);
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Failed to fetch stats:', err);
         setError('فشل في تحميل الإحصائيات');
       } finally {

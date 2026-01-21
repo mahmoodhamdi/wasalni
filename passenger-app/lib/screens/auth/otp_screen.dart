@@ -80,15 +80,6 @@ class _OTPScreenState extends ConsumerState<OTPScreen> {
     }
   }
 
-  void _onKeyPressed(int index, KeyEvent event) {
-    if (event is KeyDownEvent &&
-        event.logicalKey == LogicalKeyboardKey.backspace &&
-        _controllers[index].text.isEmpty &&
-        index > 0) {
-      _focusNodes[index - 1].requestFocus();
-    }
-  }
-
   Future<void> _verifyOTP() async {
     if (_otp.length != AppConfig.otpLength) return;
 

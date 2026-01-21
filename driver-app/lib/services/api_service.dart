@@ -57,6 +57,8 @@ class ApiService {
     );
   }
 
+  // Stored for future token refresh implementation
+  // ignore: unused_field
   String? _refreshToken;
 
   void setToken(String token) {

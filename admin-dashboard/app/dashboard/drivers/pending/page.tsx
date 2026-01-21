@@ -73,9 +73,10 @@ export default function PendingDriversPage() {
         fetchPendingDrivers();
         alert('تمت الموافقة على السائق بنجاح');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to approve driver:', err);
-      const errorMessage = err.response?.data?.messageAr || err.response?.data?.message || 'فشل في الموافقة على السائق';
+      const axiosErr = err as { response?: { data?: { messageAr?: string; message?: string } } };
+      const errorMessage = axiosErr.response?.data?.messageAr || axiosErr.response?.data?.message || 'فشل في الموافقة على السائق';
       alert(errorMessage);
     } finally {
       setActionLoading(null);
@@ -94,9 +95,10 @@ export default function PendingDriversPage() {
         fetchPendingDrivers();
         alert('تم رفض السائق');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to reject driver:', err);
-      const errorMessage = err.response?.data?.messageAr || err.response?.data?.message || 'فشل في رفض السائق';
+      const axiosErr = err as { response?: { data?: { messageAr?: string; message?: string } } };
+      const errorMessage = axiosErr.response?.data?.messageAr || axiosErr.response?.data?.message || 'فشل في رفض السائق';
       alert(errorMessage);
     } finally {
       setActionLoading(null);

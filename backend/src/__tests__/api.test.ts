@@ -2,7 +2,7 @@ import request from 'supertest';
 import express from 'express';
 import User from '../models/User';
 import OTP from '../models/OTP';
-import { generateToken } from '../utils/jwt';
+import { generateAccessToken, JWTPayload } from '../utils/jwt';
 
 // Create a minimal test app
 const createTestApp = () => {
@@ -14,21 +14,22 @@ const createTestApp = () => {
     res.json({ status: 'ok' });
   });
 
-  // Mock auth endpoints for testing
+  // Mock auth endpoints for testing (email-based)
   app.post('/api/v1/auth/send-otp', async (req, res) => {
-    const { phone } = req.body;
+    const { email } = req.body;
 
-    if (!phone) {
+    if (!email) {
       return res.status(400).json({
         success: false,
-        message: 'Phone number is required',
+        message: 'Email is required',
+        messageAr: 'البريد الإلكتروني مطلوب',
       });
     }
 
     // Create OTP
     const code = '123456'; // Fixed for testing
     await OTP.create({
-      phone,
+      email,
       code,
       purpose: 'login',
       expiresAt: new Date(Date.now() + 5 * 60 * 1000),
@@ -37,21 +38,23 @@ const createTestApp = () => {
     res.json({
       success: true,
       message: 'OTP sent successfully',
+      messageAr: 'تم إرسال رمز التحقق بنجاح',
     });
   });
 
   app.post('/api/v1/auth/verify-otp', async (req, res) => {
-    const { phone, code } = req.body;
+    const { email, code } = req.body;
 
-    if (!phone || !code) {
+    if (!email || !code) {
       return res.status(400).json({
         success: false,
-        message: 'Phone and code are required',
+        message: 'Email and code are required',
+        messageAr: 'البريد الإلكتروني والرمز مطلوبان',
       });
     }
 
     const otp = await OTP.findOne({
-      phone,
+      email,
       code,
       isUsed: false,
       expiresAt: { $gt: new Date() },
@@ -61,6 +64,7 @@ const createTestApp = () => {
       return res.status(400).json({
         success: false,
         message: 'Invalid or expired OTP',
+        messageAr: 'رمز التحقق غير صالح أو منتهي الصلاحية',
       });
     }
 
@@ -68,11 +72,16 @@ const createTestApp = () => {
     await otp.save();
 
     // Check if user exists
-    let user = await User.findOne({ phone });
+    const user = await User.findOne({ email });
     const isNewUser = !user;
 
     if (!isNewUser) {
-      const token = generateToken(user!._id.toString(), user!.role);
+      const payload: JWTPayload = {
+        userId: user!._id.toString(),
+        role: user!.role,
+        email: user!.email || email,
+      };
+      const token = generateAccessToken(payload);
       return res.json({
         success: true,
         data: {
@@ -90,22 +99,28 @@ const createTestApp = () => {
   });
 
   app.post('/api/v1/auth/register', async (req, res) => {
-    const { phone, name, role } = req.body;
+    const { email, name, role } = req.body;
 
-    if (!phone || !name) {
+    if (!email || !name) {
       return res.status(400).json({
         success: false,
-        message: 'Phone and name are required',
+        message: 'Email and name are required',
+        messageAr: 'البريد الإلكتروني والاسم مطلوبان',
       });
     }
 
     const user = await User.create({
-      phone,
+      email,
       name,
       role: role || 'passenger',
     });
 
-    const token = generateToken(user._id.toString(), user.role);
+    const payload: JWTPayload = {
+      userId: user._id.toString(),
+      role: user.role,
+      email: user.email || email,
+    };
+    const token = generateAccessToken(payload);
 
     res.status(201).json({
       success: true,
@@ -139,14 +154,14 @@ describe('API Endpoints', () => {
       it('should send OTP successfully', async () => {
         const response = await request(app)
           .post('/api/v1/auth/send-otp')
-          .send({ phone: '+201012345678' });
+          .send({ email: 'test@example.com' });
 
         expect(response.status).toBe(200);
         expect(response.body.success).toBe(true);
         expect(response.body.message).toBe('OTP sent successfully');
       });
 
-      it('should fail without phone number', async () => {
+      it('should fail without email', async () => {
         const response = await request(app)
           .post('/api/v1/auth/send-otp')
           .send({});
@@ -159,7 +174,7 @@ describe('API Endpoints', () => {
     describe('POST /api/v1/auth/verify-otp', () => {
       beforeEach(async () => {
         await OTP.create({
-          phone: '+201012345678',
+          email: 'test@example.com',
           code: '123456',
           purpose: 'login',
           expiresAt: new Date(Date.now() + 5 * 60 * 1000),
@@ -169,7 +184,7 @@ describe('API Endpoints', () => {
       it('should verify OTP for new user', async () => {
         const response = await request(app)
           .post('/api/v1/auth/verify-otp')
-          .send({ phone: '+201012345678', code: '123456' });
+          .send({ email: 'test@example.com', code: '123456' });
 
         expect(response.status).toBe(200);
         expect(response.body.success).toBe(true);
@@ -178,14 +193,14 @@ describe('API Endpoints', () => {
 
       it('should verify OTP for existing user', async () => {
         await User.create({
-          phone: '+201012345678',
+          email: 'test@example.com',
           name: 'Existing User',
           role: 'passenger',
         });
 
         const response = await request(app)
           .post('/api/v1/auth/verify-otp')
-          .send({ phone: '+201012345678', code: '123456' });
+          .send({ email: 'test@example.com', code: '123456' });
 
         expect(response.status).toBe(200);
         expect(response.body.success).toBe(true);
@@ -196,7 +211,7 @@ describe('API Endpoints', () => {
       it('should fail with invalid OTP', async () => {
         const response = await request(app)
           .post('/api/v1/auth/verify-otp')
-          .send({ phone: '+201012345678', code: '000000' });
+          .send({ email: 'test@example.com', code: '000000' });
 
         expect(response.status).toBe(400);
         expect(response.body.success).toBe(false);
@@ -217,7 +232,7 @@ describe('API Endpoints', () => {
         const response = await request(app)
           .post('/api/v1/auth/register')
           .send({
-            phone: '+201012345678',
+            email: 'newuser@example.com',
             name: 'Test User',
             role: 'passenger',
           });
@@ -231,7 +246,7 @@ describe('API Endpoints', () => {
       it('should fail without required fields', async () => {
         const response = await request(app)
           .post('/api/v1/auth/register')
-          .send({ phone: '+201012345678' });
+          .send({ email: 'newuser@example.com' });
 
         expect(response.status).toBe(400);
         expect(response.body.success).toBe(false);
@@ -241,30 +256,28 @@ describe('API Endpoints', () => {
 });
 
 describe('Request Validation', () => {
-  describe('Phone number validation', () => {
-    it('should accept valid Egyptian phone numbers', () => {
-      const validNumbers = [
-        '+201012345678',
-        '+201112345678',
-        '+201212345678',
-        '+201512345678',
+  describe('Email validation', () => {
+    it('should accept valid email addresses', () => {
+      const validEmails = [
+        'test@example.com',
+        'user.name@domain.com',
+        'user+tag@example.org',
       ];
 
-      validNumbers.forEach((phone) => {
-        expect(phone).toMatch(/^\+20(10|11|12|15)\d{8}$/);
+      validEmails.forEach((email) => {
+        expect(email).toMatch(/^\S+@\S+\.\S+$/);
       });
     });
 
-    it('should reject invalid phone numbers', () => {
-      const invalidNumbers = [
-        '01012345678', // Missing country code
-        '+20101234567', // Too short
-        '+2010123456789', // Too long
-        '+201312345678', // Invalid prefix (13)
+    it('should reject invalid email addresses', () => {
+      const invalidEmails = [
+        'invalid-email',
+        '@nodomain.com',
+        'no@domain',
       ];
 
-      invalidNumbers.forEach((phone) => {
-        expect(phone).not.toMatch(/^\+20(10|11|12|15)\d{8}$/);
+      invalidEmails.forEach((email) => {
+        expect(email).not.toMatch(/^\S+@\S+\.\S+$/);
       });
     });
   });

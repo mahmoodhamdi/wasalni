@@ -43,7 +43,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
 
   // Animation controller for smooth transitions
   late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
 
   final List<_VehicleTypeOption> _vehicleTypes = [
     _VehicleTypeOption(
@@ -96,9 +95,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 300),
-    );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
     _animationController.forward();
   }
