@@ -13,14 +13,14 @@ describe('Trip Model', () => {
   beforeEach(async () => {
     // Create test users
     const passengerUser = await User.create({
-      phone: '+201012345678',
+      email: 'passenger@test.com',
       name: 'Test Passenger',
       role: 'passenger',
     });
     passengerUserId = passengerUser._id as mongoose.Types.ObjectId;
 
     const driverUser = await User.create({
-      phone: '+201012345679',
+      email: 'driver@test.com',
       name: 'Test Driver',
       role: 'driver',
     });
@@ -28,13 +28,13 @@ describe('Trip Model', () => {
 
     // Create passenger profile
     const passenger = await Passenger.create({
-      user: passengerUserId,
+      userId: passengerUserId,
     });
     passengerId = passenger._id as mongoose.Types.ObjectId;
 
     // Create driver profile
     const driver = await Driver.create({
-      user: driverUserId,
+      userId: driverUserId,
       nationalId: '12345678901234',
       vehicle: {
         type: 'car',
@@ -54,46 +54,46 @@ describe('Trip Model', () => {
     it('should create a trip with valid data', async () => {
       const tripData = {
         tripNumber: 'TRP-001',
-        passenger: passengerId,
+        passengerId: passengerId,
         pickup: {
           address: 'Test Pickup Address',
-          coordinates: {
+          location: {
             type: 'Point',
             coordinates: [31.2357, 30.0444],
           },
         },
         dropoff: {
           address: 'Test Dropoff Address',
-          coordinates: {
+          location: {
             type: 'Point',
             coordinates: [31.2400, 30.0500],
           },
         },
         rideType: 'economy',
-        status: 'pending',
-        fare: {
-          estimated: 50,
-          baseFare: 10,
-          distanceFare: 25,
-          timeFare: 10,
-          platformFee: 5,
-          driverEarnings: 45,
+        tripType: 'instant',
+        status: 'searching',
+        estimatedFare: {
+          min: 45,
+          max: 55,
         },
         route: {
-          distanceKm: 5,
-          durationMinutes: 15,
-          polyline: 'encoded_polyline_string',
+          distanceMeters: 5000,
+          durationSeconds: 900,
+          distanceText: '5 km',
+          durationText: '15 min',
         },
         paymentMethod: 'cash',
+        paymentStatus: 'pending',
       };
 
       const trip = await Trip.create(tripData);
 
       expect(trip._id).toBeDefined();
       expect(trip.tripNumber).toBe(tripData.tripNumber);
-      expect(trip.status).toBe('pending');
+      expect(trip.status).toBe('searching');
       expect(trip.rideType).toBe('economy');
-      expect(trip.fare.estimated).toBe(50);
+      expect(trip.estimatedFare?.min).toBe(45);
+      expect(trip.estimatedFare?.max).toBe(55);
     });
 
     it('should validate required fields', async () => {
@@ -104,20 +104,27 @@ describe('Trip Model', () => {
     it('should validate status enum', async () => {
       const tripData = {
         tripNumber: 'TRP-002',
-        passenger: passengerId,
+        passengerId: passengerId,
         pickup: {
           address: 'Test Address',
-          coordinates: { type: 'Point', coordinates: [31.2357, 30.0444] },
+          location: { type: 'Point', coordinates: [31.2357, 30.0444] },
         },
         dropoff: {
           address: 'Test Address',
-          coordinates: { type: 'Point', coordinates: [31.2400, 30.0500] },
+          location: { type: 'Point', coordinates: [31.2400, 30.0500] },
         },
         rideType: 'economy',
+        tripType: 'instant',
         status: 'invalid-status',
-        fare: { estimated: 50 },
-        route: { distanceKm: 5, durationMinutes: 15 },
+        estimatedFare: { min: 45, max: 55 },
+        route: {
+          distanceMeters: 5000,
+          durationSeconds: 900,
+          distanceText: '5 km',
+          durationText: '15 min',
+        },
         paymentMethod: 'cash',
+        paymentStatus: 'pending',
       };
 
       await expect(Trip.create(tripData)).rejects.toThrow();
@@ -126,20 +133,27 @@ describe('Trip Model', () => {
     it('should validate ride type enum', async () => {
       const tripData = {
         tripNumber: 'TRP-003',
-        passenger: passengerId,
+        passengerId: passengerId,
         pickup: {
           address: 'Test Address',
-          coordinates: { type: 'Point', coordinates: [31.2357, 30.0444] },
+          location: { type: 'Point', coordinates: [31.2357, 30.0444] },
         },
         dropoff: {
           address: 'Test Address',
-          coordinates: { type: 'Point', coordinates: [31.2400, 30.0500] },
+          location: { type: 'Point', coordinates: [31.2400, 30.0500] },
         },
         rideType: 'invalid-type',
-        status: 'pending',
-        fare: { estimated: 50 },
-        route: { distanceKm: 5, durationMinutes: 15 },
+        tripType: 'instant',
+        status: 'searching',
+        estimatedFare: { min: 45, max: 55 },
+        route: {
+          distanceMeters: 5000,
+          durationSeconds: 900,
+          distanceText: '5 km',
+          durationText: '15 min',
+        },
         paymentMethod: 'cash',
+        paymentStatus: 'pending',
       };
 
       await expect(Trip.create(tripData)).rejects.toThrow();
@@ -147,73 +161,89 @@ describe('Trip Model', () => {
   });
 
   describe('Trip Status Transitions', () => {
-    let trip: any;
+    let trip: InstanceType<typeof Trip>;
 
     beforeEach(async () => {
       trip = await Trip.create({
         tripNumber: 'TRP-100',
-        passenger: passengerId,
+        passengerId: passengerId,
         pickup: {
           address: 'Pickup Address',
-          coordinates: { type: 'Point', coordinates: [31.2357, 30.0444] },
+          location: { type: 'Point', coordinates: [31.2357, 30.0444] },
         },
         dropoff: {
           address: 'Dropoff Address',
-          coordinates: { type: 'Point', coordinates: [31.2400, 30.0500] },
+          location: { type: 'Point', coordinates: [31.2400, 30.0500] },
         },
         rideType: 'economy',
-        status: 'pending',
-        fare: { estimated: 50 },
-        route: { distanceKm: 5, durationMinutes: 15 },
+        tripType: 'instant',
+        status: 'searching',
+        estimatedFare: { min: 45, max: 55 },
+        route: {
+          distanceMeters: 5000,
+          durationSeconds: 900,
+          distanceText: '5 km',
+          durationText: '15 min',
+        },
         paymentMethod: 'cash',
+        paymentStatus: 'pending',
       });
     });
 
-    it('should update status from pending to searching', async () => {
-      trip.status = 'searching';
+    it('should update status to driver_arriving', async () => {
+      trip.status = 'driver_arriving';
       const updatedTrip = await trip.save();
-      expect(updatedTrip.status).toBe('searching');
+      expect(updatedTrip.status).toBe('driver_arriving');
     });
 
-    it('should update status to accepted with driver', async () => {
-      trip.status = 'accepted';
-      trip.driver = driverId;
-      trip.timestamps = { acceptedAt: new Date() };
+    it('should update status to driver_assigned with driver', async () => {
+      trip.status = 'driver_assigned';
+      trip.driverId = driverId;
+      trip.driverAssignedAt = new Date();
       const updatedTrip = await trip.save();
 
-      expect(updatedTrip.status).toBe('accepted');
-      expect(updatedTrip.driver).toEqual(driverId);
+      expect(updatedTrip.status).toBe('driver_assigned');
+      expect(updatedTrip.driverId).toEqual(driverId);
     });
 
-    it('should update status to completed with final fare', async () => {
-      trip.driver = driverId;
-      trip.status = 'completed';
-      trip.fare.final = 55;
-      trip.timestamps = {
-        acceptedAt: new Date(Date.now() - 30 * 60000),
-        arrivedAt: new Date(Date.now() - 25 * 60000),
-        startedAt: new Date(Date.now() - 20 * 60000),
-        completedAt: new Date(),
+    it('should update status to trip_completed with final fare', async () => {
+      trip.driverId = driverId;
+      trip.status = 'trip_completed';
+      trip.fare = {
+        baseFare: 10,
+        distanceFare: 25,
+        timeFare: 10,
+        waitingFare: 0,
+        surgeMultiplier: 1,
+        surgeAmount: 0,
+        bookingFee: 5,
+        tolls: 0,
+        discount: 0,
+        subtotal: 50,
+        total: 55,
       };
+      trip.driverAssignedAt = new Date(Date.now() - 30 * 60000);
+      trip.driverArrivedAt = new Date(Date.now() - 25 * 60000);
+      trip.tripStartedAt = new Date(Date.now() - 20 * 60000);
+      trip.tripCompletedAt = new Date();
 
       const updatedTrip = await trip.save();
 
-      expect(updatedTrip.status).toBe('completed');
-      expect(updatedTrip.fare.final).toBe(55);
+      expect(updatedTrip.status).toBe('trip_completed');
+      expect(updatedTrip.fare?.total).toBe(55);
     });
 
     it('should allow cancellation with reason', async () => {
       trip.status = 'cancelled';
-      trip.cancellation = {
-        cancelledBy: 'passenger',
-        reason: 'Changed my mind',
-        cancelledAt: new Date(),
-      };
+      trip.isCancelled = true;
+      trip.cancelledBy = 'passenger';
+      trip.cancelReason = 'Changed my mind';
+      trip.cancelledAt = new Date();
 
       const updatedTrip = await trip.save();
 
       expect(updatedTrip.status).toBe('cancelled');
-      expect(updatedTrip.cancellation.cancelledBy).toBe('passenger');
+      expect(updatedTrip.cancelledBy).toBe('passenger');
     });
   });
 
@@ -221,55 +251,82 @@ describe('Trip Model', () => {
     it('should store passenger rating for driver', async () => {
       const trip = await Trip.create({
         tripNumber: 'TRP-200',
-        passenger: passengerId,
-        driver: driverId,
+        passengerId: passengerId,
+        driverId: driverId,
         pickup: {
           address: 'Pickup',
-          coordinates: { type: 'Point', coordinates: [31.2357, 30.0444] },
+          location: { type: 'Point', coordinates: [31.2357, 30.0444] },
         },
         dropoff: {
           address: 'Dropoff',
-          coordinates: { type: 'Point', coordinates: [31.2400, 30.0500] },
+          location: { type: 'Point', coordinates: [31.2400, 30.0500] },
         },
         rideType: 'economy',
-        status: 'completed',
-        fare: { estimated: 50, final: 55 },
-        route: { distanceKm: 5, durationMinutes: 15 },
+        tripType: 'instant',
+        status: 'trip_completed',
+        estimatedFare: { min: 45, max: 55 },
+        fare: {
+          baseFare: 10,
+          distanceFare: 25,
+          timeFare: 10,
+          waitingFare: 0,
+          surgeMultiplier: 1,
+          surgeAmount: 0,
+          bookingFee: 5,
+          tolls: 0,
+          discount: 0,
+          subtotal: 50,
+          total: 55,
+        },
+        route: {
+          distanceMeters: 5000,
+          durationSeconds: 900,
+          distanceText: '5 km',
+          durationText: '15 min',
+        },
         paymentMethod: 'cash',
-        rating: {
-          passenger: {
-            rating: 5,
-            comment: 'Great ride!',
-          },
+        paymentStatus: 'paid',
+        passengerRating: {
+          score: 5,
+          comment: 'Great ride!',
+          badges: [],
+          createdAt: new Date(),
         },
       });
 
-      expect(trip.rating.passenger.rating).toBe(5);
-      expect(trip.rating.passenger.comment).toBe('Great ride!');
+      expect(trip.passengerRating?.score).toBe(5);
+      expect(trip.passengerRating?.comment).toBe('Great ride!');
     });
 
     it('should validate rating range', async () => {
       const tripData = {
         tripNumber: 'TRP-201',
-        passenger: passengerId,
-        driver: driverId,
+        passengerId: passengerId,
+        driverId: driverId,
         pickup: {
           address: 'Pickup',
-          coordinates: { type: 'Point', coordinates: [31.2357, 30.0444] },
+          location: { type: 'Point', coordinates: [31.2357, 30.0444] },
         },
         dropoff: {
           address: 'Dropoff',
-          coordinates: { type: 'Point', coordinates: [31.2400, 30.0500] },
+          location: { type: 'Point', coordinates: [31.2400, 30.0500] },
         },
         rideType: 'economy',
-        status: 'completed',
-        fare: { estimated: 50 },
-        route: { distanceKm: 5, durationMinutes: 15 },
+        tripType: 'instant',
+        status: 'trip_completed',
+        estimatedFare: { min: 45, max: 55 },
+        route: {
+          distanceMeters: 5000,
+          durationSeconds: 900,
+          distanceText: '5 km',
+          durationText: '15 min',
+        },
         paymentMethod: 'cash',
-        rating: {
-          passenger: {
-            rating: 6, // Invalid - should be 1-5
-          },
+        paymentStatus: 'paid',
+        passengerRating: {
+          score: 6, // Invalid - should be 1-5
+          badges: [],
+          createdAt: new Date(),
         },
       };
 
@@ -284,20 +341,27 @@ describe('Trip Model', () => {
       for (const method of paymentMethods) {
         const trip = await Trip.create({
           tripNumber: `TRP-PM-${method}`,
-          passenger: passengerId,
+          passengerId: passengerId,
           pickup: {
             address: 'Pickup',
-            coordinates: { type: 'Point', coordinates: [31.2357, 30.0444] },
+            location: { type: 'Point', coordinates: [31.2357, 30.0444] },
           },
           dropoff: {
             address: 'Dropoff',
-            coordinates: { type: 'Point', coordinates: [31.2400, 30.0500] },
+            location: { type: 'Point', coordinates: [31.2400, 30.0500] },
           },
           rideType: 'economy',
-          status: 'pending',
-          fare: { estimated: 50 },
-          route: { distanceKm: 5, durationMinutes: 15 },
+          tripType: 'instant',
+          status: 'searching',
+          estimatedFare: { min: 45, max: 55 },
+          route: {
+            distanceMeters: 5000,
+            durationSeconds: 900,
+            distanceText: '5 km',
+            durationText: '15 min',
+          },
           paymentMethod: method,
+          paymentStatus: 'pending',
         });
 
         expect(trip.paymentMethod).toBe(method);

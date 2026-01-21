@@ -340,22 +340,24 @@ function PromoForm({
   onSave: (promo: Partial<PromoCode>) => void;
   onCancel: () => void;
 }) {
-  const [formData, setFormData] = useState({
-    code: promo?.code || '',
-    description: promo?.description || '',
-    descriptionAr: promo?.descriptionAr || '',
-    discountType: promo?.discountType || 'percentage',
-    discountValue: promo?.discountValue || 10,
-    maxDiscount: promo?.maxDiscount || 50,
-    minFare: promo?.minFare || 20,
-    maxUsesTotal: promo?.maxUsesTotal || 100,
-    maxUsesPerUser: promo?.maxUsesPerUser || 1,
-    validFrom: promo?.validFrom ? promo.validFrom.split('T')[0] : new Date().toISOString().split('T')[0],
-    validUntil: promo?.validUntil
-      ? promo.validUntil.split('T')[0]
-      : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    rideTypes: promo?.rideTypes || [],
-    isActive: promo?.isActive ?? true,
+  const [formData, setFormData] = useState(() => {
+    const today = new Date().toISOString().split('T')[0];
+    const thirtyDaysLater = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    return {
+      code: promo?.code || '',
+      description: promo?.description || '',
+      descriptionAr: promo?.descriptionAr || '',
+      discountType: promo?.discountType || 'percentage',
+      discountValue: promo?.discountValue || 10,
+      maxDiscount: promo?.maxDiscount || 50,
+      minFare: promo?.minFare || 20,
+      maxUsesTotal: promo?.maxUsesTotal || 100,
+      maxUsesPerUser: promo?.maxUsesPerUser || 1,
+      validFrom: promo?.validFrom ? promo.validFrom.split('T')[0] : today,
+      validUntil: promo?.validUntil ? promo.validUntil.split('T')[0] : thirtyDaysLater,
+      rideTypes: promo?.rideTypes || [],
+      isActive: promo?.isActive ?? true,
+    };
   });
 
   const rideTypes = [

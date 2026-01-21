@@ -342,27 +342,6 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
     _selectedLocation = widget.initialLocation;
   }
 
-  Future<void> _onMapTap(LatLng position) async {
-    setState(() {
-      _selectedLocation = position;
-      _isLoadingAddress = true;
-    });
-
-    try {
-      final place = await mapService.reverseGeocode(position.latitude, position.longitude);
-      if (mounted) {
-        setState(() {
-          _selectedPlace = place;
-          _isLoadingAddress = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isLoadingAddress = false);
-      }
-    }
-  }
-
   void _confirmSelection() {
     if (_selectedLocation != null) {
       final result = _selectedPlace ?? PlaceResult(

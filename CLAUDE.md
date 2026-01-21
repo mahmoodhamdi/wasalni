@@ -35,6 +35,7 @@ npm run build        # Production build
 npm run lint         # ESLint check
 npm run test:e2e     # Playwright E2E tests (headless)
 npm run test:e2e:ui  # Playwright E2E tests with UI
+npx playwright test e2e/auth.spec.ts  # Run specific E2E test file
 ```
 
 ### Passenger App (Flutter SDK ^3.6.2)
@@ -106,6 +107,10 @@ Note: Uses Express 5 which has async error handling built-in and some API change
 - **Config:** `backend/src/config/` - Database, Redis, Firebase, Maps setup
 - **Sockets:** `backend/src/sockets/` - Socket.io event handlers (e.g., `trip.socket.ts`)
 
+**TypeScript Path Aliases** (use these in imports):
+- `@/*` → `src/*`, `@config/*`, `@controllers/*`, `@middleware/*`
+- `@models/*`, `@routes/*`, `@services/*`, `@validators/*`, `@utils/*`, `@types/*`
+
 Key patterns:
 - **Bilingual responses:** ALL API responses must include both `message` (English) and `messageAr` (Arabic). This applies to success messages, error messages, and validation errors.
 ```json
@@ -160,7 +165,7 @@ Both passenger-app and driver-app use:
 - **Network:** Dio for HTTP, socket_io_client for real-time
 - **Storage:** shared_preferences + flutter_secure_storage
 - **Maps:** flutter_map (OpenStreetMap) + geolocator
-- **Code Generation:** Run `dart run build_runner build` after modifying providers or models
+- **Code Generation:** Run `dart run build_runner build` after modifying providers or models (IMPORTANT: always run this after adding/changing `@riverpod` annotated providers or `@freezed` classes)
 
 Structure pattern:
 ```

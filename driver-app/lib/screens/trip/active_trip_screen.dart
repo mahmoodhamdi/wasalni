@@ -23,7 +23,6 @@ class ActiveTripScreen extends ConsumerStatefulWidget {
 class _ActiveTripScreenState extends ConsumerState<ActiveTripScreen> {
   WasalniMapController? _mapController;
   final List<WasalniMarker> _markers = [];
-  final List<LatLng> _polylinePoints = [];
   Position? _currentPosition;
   StreamSubscription<Position>? _locationSubscription;
   Timer? _locationUpdateTimer;

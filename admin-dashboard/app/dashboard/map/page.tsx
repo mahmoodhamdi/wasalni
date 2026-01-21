@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { RefreshCw, Car, Clock, Loader2 } from 'lucide-react';
 import { locationApi } from '@/lib/api';
-import { io, Socket } from 'socket.io-client';
+import { io } from 'socket.io-client';
 import dynamic from 'next/dynamic';
 import type { DriverLocation } from '@/components/map/LiveMap';
 

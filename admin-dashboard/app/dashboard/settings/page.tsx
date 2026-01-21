@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { Save, DollarSign, MapPin, Percent } from 'lucide-react';
-import { settingsApi } from '@/lib/api';
 
 interface FareSettings {
   baseFare: { [key: string]: number };

@@ -92,7 +92,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
             // Connect socket for real-time updates
             final userId = userData['_id'];
-            if (userId != null && token != null) {
+            if (userId != null) {
               socketService.connect(userId, token);
             }
 
