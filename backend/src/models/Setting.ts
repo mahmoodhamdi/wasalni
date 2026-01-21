@@ -59,7 +59,7 @@ settingSchema.statics.get = async function <T = unknown>(
   key: string,
   defaultValue?: T
 ): Promise<T | undefined> {
-  const setting = await this.findOne({ key: key.toLowerCase() });
+  const setting = await (this as unknown as Model<ISetting>).findOne({ key: key.toLowerCase() });
   return setting ? (setting.value as T) : defaultValue;
 };
 

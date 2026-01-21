@@ -18,7 +18,6 @@ import {
   logout,
 } from '../controllers/auth.controller';
 import { authenticate } from '../middleware/auth.middleware';
-import { body } from 'express-validator';
 
 const router = Router();
 

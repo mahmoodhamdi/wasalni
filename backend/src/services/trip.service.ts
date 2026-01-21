@@ -3,7 +3,6 @@ import Trip, { ITrip } from '../models/Trip';
 import Driver from '../models/Driver';
 import Passenger from '../models/Passenger';
 import User from '../models/User';
-import { config } from '../config';
 import { logger } from '../utils/logger';
 import fareService, { RideType } from './fare.service';
 import { calculateRoute, Coordinates } from './maps.service';

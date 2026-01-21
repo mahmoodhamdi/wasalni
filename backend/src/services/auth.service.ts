@@ -4,7 +4,6 @@ import Driver from '../models/Driver';
 import OTP from '../models/OTP';
 import { IUser, OTPPurpose } from '../types';
 import { generateTokenPair, TokenPair, verifyToken } from '../utils/jwt';
-import { generateOTP, getOTPExpiry } from '../utils/otp';
 import { sendOTPEmail, sendWelcomeEmail } from './email.service';
 import { BadRequestError, NotFoundError, UnauthorizedError } from '../utils/errors';
 import { config } from '../config';
@@ -366,7 +365,7 @@ class AuthService {
     let decodedToken: admin.auth.DecodedIdToken;
     try {
       decodedToken = await admin.auth(firebaseApp).verifyIdToken(idToken);
-    } catch (error) {
+    } catch {
       throw new UnauthorizedError(
         'Invalid Google token',
         'رمز جوجل غير صالح'

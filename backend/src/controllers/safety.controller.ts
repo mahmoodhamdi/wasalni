@@ -3,7 +3,7 @@ import { Types } from 'mongoose';
 import { validationResult } from 'express-validator';
 import safetyService from '../services/safety.service';
 import { successResponse, errorResponse } from '../utils/response';
-import { logger } from '../utils/logger';
+import { logger, getErrorMessage } from '../utils/logger';
 
 /**
  * Get emergency contacts
@@ -23,10 +23,10 @@ export const getEmergencyContacts = async (req: Request, res: Response) => {
     return res.status(200).json(
       successResponse(contacts, 'Emergency contacts retrieved', 'تم جلب جهات الاتصال الطارئة')
     );
-  } catch (error: any) {
-    logger.error(`Get emergency contacts error: ${error.message}`);
+  } catch (error: unknown) {
+    logger.error(`Get emergency contacts error: ${getErrorMessage(error)}`);
     return res.status(500).json(
-      errorResponse(error.message, 'فشل في جلب جهات الاتصال')
+      errorResponse(getErrorMessage(error), 'فشل في جلب جهات الاتصال')
     );
   }
 };
@@ -62,22 +62,22 @@ export const addEmergencyContact = async (req: Request, res: Response) => {
     return res.status(201).json(
       successResponse(contacts, 'Emergency contact added', 'تمت إضافة جهة الاتصال الطارئة')
     );
-  } catch (error: any) {
-    logger.error(`Add emergency contact error: ${error.message}`);
+  } catch (error: unknown) {
+    logger.error(`Add emergency contact error: ${getErrorMessage(error)}`);
 
-    if (error.message.includes('Maximum')) {
+    if (getErrorMessage(error).includes('Maximum')) {
       return res.status(400).json(
-        errorResponse(error.message, 'الحد الأقصى 5 جهات اتصال')
+        errorResponse(getErrorMessage(error), 'الحد الأقصى 5 جهات اتصال')
       );
     }
-    if (error.message.includes('duplicate')) {
+    if (getErrorMessage(error).includes('duplicate')) {
       return res.status(400).json(
-        errorResponse(error.message, 'جهة الاتصال موجودة بالفعل')
+        errorResponse(getErrorMessage(error), 'جهة الاتصال موجودة بالفعل')
       );
     }
 
     return res.status(500).json(
-      errorResponse(error.message, 'فشل في إضافة جهة الاتصال')
+      errorResponse(getErrorMessage(error), 'فشل في إضافة جهة الاتصال')
     );
   }
 };
@@ -112,10 +112,10 @@ export const updateEmergencyContact = async (req: Request, res: Response) => {
     return res.status(200).json(
       successResponse(contacts, 'Emergency contact updated', 'تم تحديث جهة الاتصال')
     );
-  } catch (error: any) {
-    logger.error(`Update emergency contact error: ${error.message}`);
+  } catch (error: unknown) {
+    logger.error(`Update emergency contact error: ${getErrorMessage(error)}`);
     return res.status(500).json(
-      errorResponse(error.message, 'فشل في تحديث جهة الاتصال')
+      errorResponse(getErrorMessage(error), 'فشل في تحديث جهة الاتصال')
     );
   }
 };
@@ -143,10 +143,10 @@ export const removeEmergencyContact = async (req: Request, res: Response) => {
     return res.status(200).json(
       successResponse(contacts, 'Emergency contact removed', 'تم حذف جهة الاتصال')
     );
-  } catch (error: any) {
-    logger.error(`Remove emergency contact error: ${error.message}`);
+  } catch (error: unknown) {
+    logger.error(`Remove emergency contact error: ${getErrorMessage(error)}`);
     return res.status(500).json(
-      errorResponse(error.message, 'فشل في حذف جهة الاتصال')
+      errorResponse(getErrorMessage(error), 'فشل في حذف جهة الاتصال')
     );
   }
 };
@@ -169,10 +169,10 @@ export const getSafetyPreferences = async (req: Request, res: Response) => {
     return res.status(200).json(
       successResponse(preferences, 'Safety preferences retrieved', 'تم جلب إعدادات الأمان')
     );
-  } catch (error: any) {
-    logger.error(`Get safety preferences error: ${error.message}`);
+  } catch (error: unknown) {
+    logger.error(`Get safety preferences error: ${getErrorMessage(error)}`);
     return res.status(500).json(
-      errorResponse(error.message, 'فشل في جلب إعدادات الأمان')
+      errorResponse(getErrorMessage(error), 'فشل في جلب إعدادات الأمان')
     );
   }
 };
@@ -200,10 +200,10 @@ export const updateSafetyPreferences = async (req: Request, res: Response) => {
     return res.status(200).json(
       successResponse(preferences, 'Safety preferences updated', 'تم تحديث إعدادات الأمان')
     );
-  } catch (error: any) {
-    logger.error(`Update safety preferences error: ${error.message}`);
+  } catch (error: unknown) {
+    logger.error(`Update safety preferences error: ${getErrorMessage(error)}`);
     return res.status(500).json(
-      errorResponse(error.message, 'فشل في تحديث إعدادات الأمان')
+      errorResponse(getErrorMessage(error), 'فشل في تحديث إعدادات الأمان')
     );
   }
 };
@@ -225,10 +225,10 @@ export const generateTripShareLink = async (req: Request, res: Response) => {
     return res.status(200).json(
       successResponse(shareLink, 'Share link generated', 'تم إنشاء رابط المشاركة')
     );
-  } catch (error: any) {
-    logger.error(`Generate share link error: ${error.message}`);
+  } catch (error: unknown) {
+    logger.error(`Generate share link error: ${getErrorMessage(error)}`);
     return res.status(500).json(
-      errorResponse(error.message, 'فشل في إنشاء رابط المشاركة')
+      errorResponse(getErrorMessage(error), 'فشل في إنشاء رابط المشاركة')
     );
   }
 };
@@ -256,17 +256,17 @@ export const getTripForTracking = async (req: Request, res: Response) => {
     return res.status(200).json(
       successResponse(trip, 'Trip data retrieved', 'تم جلب بيانات الرحلة')
     );
-  } catch (error: any) {
-    logger.error(`Get trip for tracking error: ${error.message}`);
+  } catch (error: unknown) {
+    logger.error(`Get trip for tracking error: ${getErrorMessage(error)}`);
 
-    if (error.message.includes('Invalid') || error.message.includes('expired')) {
+    if (getErrorMessage(error).includes('Invalid') || getErrorMessage(error).includes('expired')) {
       return res.status(401).json(
-        errorResponse(error.message, 'رابط غير صالح أو منتهي الصلاحية')
+        errorResponse(getErrorMessage(error), 'رابط غير صالح أو منتهي الصلاحية')
       );
     }
 
     return res.status(500).json(
-      errorResponse(error.message, 'فشل في جلب بيانات الرحلة')
+      errorResponse(getErrorMessage(error), 'فشل في جلب بيانات الرحلة')
     );
   }
 };
@@ -300,10 +300,10 @@ export const triggerSOS = async (req: Request, res: Response) => {
     return res.status(200).json(
       successResponse(sosEvent, 'SOS triggered - help is on the way', 'تم تفعيل الطوارئ - المساعدة في الطريق')
     );
-  } catch (error: any) {
-    logger.error(`Trigger SOS error: ${error.message}`);
+  } catch (error: unknown) {
+    logger.error(`Trigger SOS error: ${getErrorMessage(error)}`);
     return res.status(500).json(
-      errorResponse(error.message, 'فشل في تفعيل الطوارئ')
+      errorResponse(getErrorMessage(error), 'فشل في تفعيل الطوارئ')
     );
   }
 };
@@ -333,10 +333,10 @@ export const resolveSOS = async (req: Request, res: Response) => {
     return res.status(200).json(
       successResponse(null, 'SOS resolved', 'تم حل حالة الطوارئ')
     );
-  } catch (error: any) {
-    logger.error(`Resolve SOS error: ${error.message}`);
+  } catch (error: unknown) {
+    logger.error(`Resolve SOS error: ${getErrorMessage(error)}`);
     return res.status(500).json(
-      errorResponse(error.message, 'فشل في حل حالة الطوارئ')
+      errorResponse(getErrorMessage(error), 'فشل في حل حالة الطوارئ')
     );
   }
 };
@@ -356,10 +356,10 @@ export const verifyDriver = async (req: Request, res: Response) => {
     return res.status(200).json(
       successResponse(verification, 'Driver verification complete', 'تم التحقق من السائق')
     );
-  } catch (error: any) {
-    logger.error(`Verify driver error: ${error.message}`);
+  } catch (error: unknown) {
+    logger.error(`Verify driver error: ${getErrorMessage(error)}`);
     return res.status(500).json(
-      errorResponse(error.message, 'فشل في التحقق من السائق')
+      errorResponse(getErrorMessage(error), 'فشل في التحقق من السائق')
     );
   }
 };
@@ -381,10 +381,10 @@ export const getSafetyTips = async (req: Request, res: Response) => {
     return res.status(200).json(
       successResponse(tips, 'Safety tips retrieved', 'تم جلب نصائح الأمان')
     );
-  } catch (error: any) {
-    logger.error(`Get safety tips error: ${error.message}`);
+  } catch (error: unknown) {
+    logger.error(`Get safety tips error: ${getErrorMessage(error)}`);
     return res.status(500).json(
-      errorResponse(error.message, 'فشل في جلب نصائح الأمان')
+      errorResponse(getErrorMessage(error), 'فشل في جلب نصائح الأمان')
     );
   }
 };
@@ -412,10 +412,10 @@ export const respondToSafetyCheck = async (req: Request, res: Response) => {
     return res.status(200).json(
       successResponse(null, 'Response recorded', 'تم تسجيل الاستجابة')
     );
-  } catch (error: any) {
-    logger.error(`Respond to safety check error: ${error.message}`);
+  } catch (error: unknown) {
+    logger.error(`Respond to safety check error: ${getErrorMessage(error)}`);
     return res.status(500).json(
-      errorResponse(error.message, 'فشل في تسجيل الاستجابة')
+      errorResponse(getErrorMessage(error), 'فشل في تسجيل الاستجابة')
     );
   }
 };

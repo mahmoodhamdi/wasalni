@@ -8,7 +8,6 @@ import {
   matchingEvents,
   driverAccept,
   driverReject,
-  getDriverPendingTrip,
 } from '../services/matching.service';
 import locationService from '../services/location.service';
 import * as notificationService from '../services/notification.service';
@@ -330,7 +329,7 @@ export const initializeTripSocket = (io: SocketServer): void => {
     // Handle trip completion rating
     socket.on('trip:rate', async (data: { tripId: string; raterId: string; raterType: 'passenger' | 'driver'; score: number; comment?: string }) => {
       try {
-        const { tripId, raterId, raterType, score, comment } = data;
+        const { tripId, raterType, score } = data;
 
         const trip = await Trip.findById(tripId).populate('passengerId', 'userId').lean() as any;
         if (trip) {

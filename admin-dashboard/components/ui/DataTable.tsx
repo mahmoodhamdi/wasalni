@@ -43,6 +43,7 @@ export default function DataTable<T>({
 
   const isServerSide = !!pagination && !!onPageChange;
 
+  // eslint-disable-next-line react-hooks/incompatible-library -- TanStack Table is compatible, this is a false positive
   const table = useReactTable({
     data,
     columns,

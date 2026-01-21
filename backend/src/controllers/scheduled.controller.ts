@@ -10,7 +10,7 @@ import {
   sendNotFound,
   sendUnauthorized,
 } from '../utils/response';
-import { logger } from '../utils/logger';
+import { logger, getErrorMessage } from '../utils/logger';
 
 /**
  * Create a scheduled trip
@@ -75,9 +75,9 @@ export const createScheduledTrip = async (req: Request, res: Response): Promise<
       'Scheduled trip created successfully',
       'تم إنشاء الرحلة المجدولة بنجاح'
     );
-  } catch (error: any) {
-    logger.error(`Create scheduled trip error: ${error.message}`);
-    sendBadRequest(res, error.message, error.message);
+  } catch (error: unknown) {
+    logger.error(`Create scheduled trip error: ${getErrorMessage(error)}`);
+    sendBadRequest(res, getErrorMessage(error), getErrorMessage(error));
   }
 };
 
@@ -101,8 +101,8 @@ export const getUpcomingTrips = async (req: Request, res: Response): Promise<voi
     );
 
     sendSuccess(res, result, 'Upcoming trips retrieved', 'تم استرجاع الرحلات المجدولة');
-  } catch (error: any) {
-    logger.error(`Get upcoming trips error: ${error.message}`);
+  } catch (error: unknown) {
+    logger.error(`Get upcoming trips error: ${getErrorMessage(error)}`);
     sendError(res, 'Failed to get scheduled trips', 'فشل في استرجاع الرحلات المجدولة');
   }
 };
@@ -135,8 +135,8 @@ export const getTripDetails = async (req: Request, res: Response): Promise<void>
     }
 
     sendSuccess(res, { trip }, 'Trip details retrieved', 'تم استرجاع تفاصيل الرحلة');
-  } catch (error: any) {
-    logger.error(`Get trip details error: ${error.message}`);
+  } catch (error: unknown) {
+    logger.error(`Get trip details error: ${getErrorMessage(error)}`);
     sendError(res, 'Failed to get trip details', 'فشل في استرجاع تفاصيل الرحلة');
   }
 };
@@ -184,9 +184,9 @@ export const modifyTripTime = async (req: Request, res: Response): Promise<void>
       'Trip time modified successfully',
       'تم تعديل موعد الرحلة بنجاح'
     );
-  } catch (error: any) {
-    logger.error(`Modify trip time error: ${error.message}`);
-    sendBadRequest(res, error.message, error.message);
+  } catch (error: unknown) {
+    logger.error(`Modify trip time error: ${getErrorMessage(error)}`);
+    sendBadRequest(res, getErrorMessage(error), getErrorMessage(error));
   }
 };
 
@@ -227,9 +227,9 @@ export const cancelTrip = async (req: Request, res: Response): Promise<void> => 
       'Trip cancelled successfully',
       'تم إلغاء الرحلة بنجاح'
     );
-  } catch (error: any) {
-    logger.error(`Cancel trip error: ${error.message}`);
-    sendBadRequest(res, error.message, error.message);
+  } catch (error: unknown) {
+    logger.error(`Cancel trip error: ${getErrorMessage(error)}`);
+    sendBadRequest(res, getErrorMessage(error), getErrorMessage(error));
   }
 };
 
@@ -258,8 +258,8 @@ export const getTripsStats = async (req: Request, res: Response): Promise<void> 
     );
 
     sendSuccess(res, { stats }, 'Stats retrieved', 'تم استرجاع الإحصائيات');
-  } catch (error: any) {
-    logger.error(`Get trips stats error: ${error.message}`);
+  } catch (error: unknown) {
+    logger.error(`Get trips stats error: ${getErrorMessage(error)}`);
     sendError(res, 'Failed to get stats', 'فشل في استرجاع الإحصائيات');
   }
 };
@@ -293,8 +293,8 @@ export const getAvailableSlots = async (req: Request, res: Response): Promise<vo
       'Available slots retrieved',
       'تم استرجاع المواعيد المتاحة'
     );
-  } catch (error: any) {
-    logger.error(`Get available slots error: ${error.message}`);
+  } catch (error: unknown) {
+    logger.error(`Get available slots error: ${getErrorMessage(error)}`);
     sendError(res, 'Failed to get available slots', 'فشل في استرجاع المواعيد المتاحة');
   }
 };

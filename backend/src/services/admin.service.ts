@@ -356,7 +356,7 @@ export const approveDriver = async (driverId: Types.ObjectId, adminId: Types.Obj
 
 export const rejectDriver = async (
   driverId: Types.ObjectId,
-  adminId: Types.ObjectId,
+  _adminId: Types.ObjectId,
   reason: string
 ) => {
   const driver = await Driver.findById(driverId) as any;
@@ -371,8 +371,8 @@ export const rejectDriver = async (
 
 export const suspendDriver = async (
   driverId: Types.ObjectId,
-  adminId: Types.ObjectId,
-  reason: string
+  _adminId: Types.ObjectId,
+  _reason: string
 ) => {
   const driver = await Driver.findById(driverId) as any;
   if (!driver) throw new Error('Driver not found');

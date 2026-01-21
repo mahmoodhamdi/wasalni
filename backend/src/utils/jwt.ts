@@ -47,7 +47,7 @@ export const verifyToken = (token: string): JWTPayload | null => {
   try {
     const decoded = jwt.verify(token, config.jwt.secret) as JWTPayload;
     return decoded;
-  } catch (error) {
+  } catch {
     return null;
   }
 };
@@ -59,7 +59,7 @@ export const decodeToken = (token: string): JWTPayload | null => {
   try {
     const decoded = jwt.decode(token) as JWTPayload;
     return decoded;
-  } catch (error) {
+  } catch {
     return null;
   }
 };
@@ -72,7 +72,7 @@ export const isTokenExpired = (token: string): boolean => {
     const decoded = jwt.decode(token) as jwt.JwtPayload;
     if (!decoded || !decoded.exp) return true;
     return Date.now() >= decoded.exp * 1000;
-  } catch (error) {
+  } catch {
     return true;
   }
 };

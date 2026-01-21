@@ -1,7 +1,7 @@
 import { Types } from 'mongoose';
 import Notification from '../models/Notification';
 import User from '../models/User';
-import { sendPushNotification, sendMultiplePushNotifications } from '../config/firebase';
+import { sendMultiplePushNotifications } from '../config/firebase';
 import { logger } from '../utils/logger';
 
 // Notification types

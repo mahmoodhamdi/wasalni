@@ -1,7 +1,6 @@
 import { Types } from 'mongoose';
 import { EventEmitter } from 'events';
-import Trip, { ITrip } from '../models/Trip';
-import Driver from '../models/Driver';
+import { ITrip } from '../models/Trip';
 import { config } from '../config';
 import { logger } from '../utils/logger';
 import locationService from './location.service';

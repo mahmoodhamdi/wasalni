@@ -7,7 +7,6 @@ import {
   rateTripValidator,
   shareTripValidator,
   tripListValidator,
-  driverTripActionValidator,
 } from '../validators/trip.validator';
 import { authenticate, authorize } from '../middleware/auth.middleware';
 

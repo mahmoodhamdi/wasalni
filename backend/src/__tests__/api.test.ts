@@ -10,20 +10,21 @@ const createTestApp = () => {
   app.use(express.json());
 
   // Health check endpoint
-  app.get('/health', (req, res) => {
+  app.get('/health', (_req, res) => {
     res.json({ status: 'ok' });
   });
 
   // Mock auth endpoints for testing (email-based)
-  app.post('/api/v1/auth/send-otp', async (req, res) => {
+  app.post('/api/v1/auth/send-otp', async (req, res): Promise<void> => {
     const { email } = req.body;
 
     if (!email) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         message: 'Email is required',
         messageAr: 'البريد الإلكتروني مطلوب',
       });
+      return;
     }
 
     // Create OTP
@@ -42,15 +43,16 @@ const createTestApp = () => {
     });
   });
 
-  app.post('/api/v1/auth/verify-otp', async (req, res) => {
+  app.post('/api/v1/auth/verify-otp', async (req, res): Promise<void> => {
     const { email, code } = req.body;
 
     if (!email || !code) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         message: 'Email and code are required',
         messageAr: 'البريد الإلكتروني والرمز مطلوبان',
       });
+      return;
     }
 
     const otp = await OTP.findOne({
@@ -61,11 +63,12 @@ const createTestApp = () => {
     });
 
     if (!otp) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         message: 'Invalid or expired OTP',
         messageAr: 'رمز التحقق غير صالح أو منتهي الصلاحية',
       });
+      return;
     }
 
     otp.isUsed = true;
@@ -82,7 +85,7 @@ const createTestApp = () => {
         email: user!.email || email,
       };
       const token = generateAccessToken(payload);
-      return res.json({
+      res.json({
         success: true,
         data: {
           isNewUser: false,
@@ -90,6 +93,7 @@ const createTestApp = () => {
           tokens: { accessToken: token, refreshToken: 'refresh-token' },
         },
       });
+      return;
     }
 
     res.json({
@@ -98,15 +102,16 @@ const createTestApp = () => {
     });
   });
 
-  app.post('/api/v1/auth/register', async (req, res) => {
+  app.post('/api/v1/auth/register', async (req, res): Promise<void> => {
     const { email, name, role } = req.body;
 
     if (!email || !name) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         message: 'Email and name are required',
         messageAr: 'البريد الإلكتروني والاسم مطلوبان',
       });
+      return;
     }
 
     const user = await User.create({

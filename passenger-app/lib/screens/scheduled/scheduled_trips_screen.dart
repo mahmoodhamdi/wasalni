@@ -102,10 +102,11 @@ class _ScheduledTripsScreenState extends ConsumerState<ScheduledTripsScreen> {
           ),
           TextButton(
             onPressed: () async {
+              final messenger = ScaffoldMessenger.of(context);
               Navigator.pop(context);
               await ref.read(scheduledProvider.notifier).cancelTrip(trip.id);
               if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
+                messenger.showSnackBar(
                   const SnackBar(content: Text('تم إلغاء الرحلة')),
                 );
               }
@@ -256,7 +257,7 @@ class _ScheduledTripCard extends StatelessWidget {
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                   decoration: BoxDecoration(
-                    color: _getStatusColor().withOpacity(0.1),
+                    color: _getStatusColor().withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(4.r),
                   ),
                   child: Text(
@@ -371,7 +372,7 @@ class _ScheduledTripCard extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     radius: 20.r,
-                    backgroundColor: AppColors.primary.withOpacity(0.1),
+                    backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                     child: Icon(Icons.person, color: AppColors.primary),
                   ),
                   SizedBox(width: 12.w),

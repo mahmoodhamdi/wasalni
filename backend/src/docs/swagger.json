@@ -73,6 +73,10 @@
       "description": "Payment & wallet"
     },
     {
+      "name": "Chat",
+      "description": "In-app chat between passenger and driver"
+    },
+    {
       "name": "Promo (Admin)",
       "description": "Admin promo code management endpoints"
     }
@@ -364,7 +368,8 @@
         "type": "object",
         "properties": {
           "_id": {
-            "type": "string"
+            "type": "string",
+            "example": "507f1f77bcf86cd799439011"
           },
           "name": {
             "type": "string",
@@ -372,10 +377,27 @@
           },
           "address": {
             "type": "string",
-            "example": "شارع الهرم، الجيزة"
+            "example": "شارع الجمهورية، الباجور"
           },
           "location": {
-            "$ref": "#/components/schemas/GeoPoint"
+            "$ref": "#/components/schemas/GeoPoint",
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "Point"
+              },
+              "coordinates": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "example": [
+                  30.9785,
+                  30.4285
+                ]
+              }
+            }
           },
           "type": {
             "type": "string",
@@ -384,6 +406,15 @@
               "work",
               "other"
             ]
+          },
+          "icon": {
+            "type": "string",
+            "enum": [
+              "home",
+              "work",
+              "favorite"
+            ],
+            "example": "home"
           }
         }
       },
@@ -4216,8 +4247,8 @@
     },
     "/auth/send-otp": {
       "post": {
-        "summary": "Send OTP to phone number",
-        "description": "Sends a 6-digit OTP code to the provided phone number for verification",
+        "summary": "Send OTP to email",
+        "description": "Sends a 6-digit OTP code to the provided email for verification",
         "tags": [
           "Auth"
         ],
@@ -4229,13 +4260,22 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "phone"
+                  "email"
                 ],
                 "properties": {
-                  "phone": {
+                  "email": {
                     "type": "string",
-                    "example": "+201111111111",
-                    "description": "Phone number with country code"
+                    "format": "email",
+                    "example": "user@example.com"
+                  },
+                  "purpose": {
+                    "type": "string",
+                    "enum": [
+                      "registration",
+                      "login",
+                      "password_reset"
+                    ],
+                    "default": "login"
                   }
                 }
               }
@@ -4244,28 +4284,7 @@
         },
         "responses": {
           "200": {
-            "description": "OTP sent successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "example": true
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "OTP sent successfully"
-                    },
-                    "messageAr": {
-                      "type": "string",
-                      "example": "تم إرسال رمز التحقق بنجاح"
-                    }
-                  }
-                }
-              }
-            }
+            "description": "OTP sent successfully"
           },
           "400": {
             "$ref": "#/components/responses/BadRequest"
@@ -4278,8 +4297,8 @@
     },
     "/auth/verify-otp": {
       "post": {
-        "summary": "Verify OTP and authenticate user",
-        "description": "Verifies the OTP code and returns authentication tokens if successful",
+        "summary": "Verify OTP for login",
+        "description": "Verifies the OTP code and returns authentication tokens",
         "tags": [
           "Auth"
         ],
@@ -4291,18 +4310,17 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "phone",
-                  "code"
+                  "email",
+                  "otp"
                 ],
                 "properties": {
-                  "phone": {
+                  "email": {
                     "type": "string",
-                    "example": "+201111111111"
+                    "format": "email"
                   },
-                  "code": {
+                  "otp": {
                     "type": "string",
-                    "example": "123456",
-                    "description": "6-digit OTP code"
+                    "example": "123456"
                   }
                 }
               }
@@ -4311,62 +4329,18 @@
         },
         "responses": {
           "200": {
-            "description": "OTP verified successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "example": true
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "OTP verified successfully"
-                    },
-                    "messageAr": {
-                      "type": "string",
-                      "example": "تم التحقق من رمز التحقق بنجاح"
-                    },
-                    "data": {
-                      "type": "object",
-                      "properties": {
-                        "isNewUser": {
-                          "type": "boolean",
-                          "example": false
-                        },
-                        "accessToken": {
-                          "type": "string",
-                          "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                        },
-                        "refreshToken": {
-                          "type": "string",
-                          "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                        },
-                        "user": {
-                          "$ref": "#/components/schemas/User"
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
+            "description": "Login successful"
           },
           "400": {
             "$ref": "#/components/responses/BadRequest"
-          },
-          "429": {
-            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
     },
-    "/auth/register/passenger": {
+    "/auth/verify-registration-otp": {
       "post": {
-        "summary": "Register a new passenger",
-        "description": "Creates a new passenger account after phone verification",
+        "summary": "Verify OTP for registration",
+        "description": "Verifies the OTP code before completing registration",
         "tags": [
           "Auth"
         ],
@@ -4378,29 +4352,160 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "phone",
+                  "email",
+                  "otp"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "otp": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OTP verified"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "summary": "Login with email and password",
+        "description": "Authenticates user with email and password",
+        "tags": [
+          "Auth"
+        ],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "password"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/auth/google": {
+      "post": {
+        "summary": "Google Sign-In",
+        "description": "Authenticate or register with Google",
+        "tags": [
+          "Auth"
+        ],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "idToken"
+                ],
+                "properties": {
+                  "idToken": {
+                    "type": "string",
+                    "description": "Firebase ID token from Google Sign-In"
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "passenger",
+                      "driver"
+                    ],
+                    "default": "passenger"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authentication successful"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
+        }
+      }
+    },
+    "/auth/register/passenger": {
+      "post": {
+        "summary": "Register a new passenger",
+        "description": "Creates a new passenger account (requires email OTP verification first)",
+        "tags": [
+          "Auth"
+        ],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "password",
                   "name"
                 ],
                 "properties": {
-                  "phone": {
+                  "email": {
                     "type": "string",
-                    "example": "+201111111111"
+                    "format": "email"
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 6
                   },
                   "name": {
                     "type": "string",
-                    "example": "أحمد محمد"
+                    "example": "Ahmed Mohamed"
                   },
-                  "email": {
-                    "type": "string",
-                    "example": "ahmed@example.com"
+                  "phone": {
+                    "type": "string"
                   },
                   "gender": {
                     "type": "string",
                     "enum": [
                       "male",
                       "female"
-                    ],
-                    "example": "male"
+                    ]
                   }
                 }
               }
@@ -4409,48 +4514,10 @@
         },
         "responses": {
           "201": {
-            "description": "Passenger registered successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "example": true
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "Registration successful"
-                    },
-                    "messageAr": {
-                      "type": "string",
-                      "example": "تم التسجيل بنجاح"
-                    },
-                    "data": {
-                      "type": "object",
-                      "properties": {
-                        "accessToken": {
-                          "type": "string"
-                        },
-                        "refreshToken": {
-                          "type": "string"
-                        },
-                        "user": {
-                          "$ref": "#/components/schemas/Passenger"
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
+            "description": "Passenger registered successfully"
           },
           "400": {
             "$ref": "#/components/responses/BadRequest"
-          },
-          "409": {
-            "description": "User already exists"
           }
         }
       }
@@ -4470,54 +4537,66 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "phone",
+                  "email",
+                  "password",
                   "name",
+                  "nationalId",
                   "vehicleType",
-                  "vehicleMake",
-                  "vehicleModel",
-                  "vehicleYear",
-                  "vehicleColor",
-                  "vehiclePlate"
+                  "vehicleCategory",
+                  "vehicle"
                 ],
                 "properties": {
-                  "phone": {
+                  "email": {
                     "type": "string",
-                    "example": "+201222222222"
+                    "format": "email"
+                  },
+                  "password": {
+                    "type": "string"
                   },
                   "name": {
-                    "type": "string",
-                    "example": "محمد علي"
+                    "type": "string"
+                  },
+                  "phone": {
+                    "type": "string"
+                  },
+                  "nationalId": {
+                    "type": "string"
                   },
                   "vehicleType": {
                     "type": "string",
                     "enum": [
-                      "economy",
-                      "comfort",
-                      "family",
+                      "car",
                       "tuktuk",
                       "motorcycle"
-                    ],
-                    "example": "economy"
+                    ]
                   },
-                  "vehicleMake": {
+                  "vehicleCategory": {
                     "type": "string",
-                    "example": "Toyota"
+                    "enum": [
+                      "economy",
+                      "comfort",
+                      "family"
+                    ]
                   },
-                  "vehicleModel": {
-                    "type": "string",
-                    "example": "Corolla"
-                  },
-                  "vehicleYear": {
-                    "type": "integer",
-                    "example": 2020
-                  },
-                  "vehicleColor": {
-                    "type": "string",
-                    "example": "أبيض"
-                  },
-                  "vehiclePlate": {
-                    "type": "string",
-                    "example": "أ ب ج 1234"
+                  "vehicle": {
+                    "type": "object",
+                    "properties": {
+                      "make": {
+                        "type": "string"
+                      },
+                      "model": {
+                        "type": "string"
+                      },
+                      "year": {
+                        "type": "integer"
+                      },
+                      "color": {
+                        "type": "string"
+                      },
+                      "plateNumber": {
+                        "type": "string"
+                      }
+                    }
                   }
                 }
               }
@@ -4526,36 +4605,7 @@
         },
         "responses": {
           "201": {
-            "description": "Driver registration submitted for approval",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "example": true
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "Registration submitted for approval"
-                    },
-                    "messageAr": {
-                      "type": "string",
-                      "example": "تم تقديم طلب التسجيل للمراجعة"
-                    },
-                    "data": {
-                      "type": "object",
-                      "properties": {
-                        "driver": {
-                          "$ref": "#/components/schemas/Driver"
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
+            "description": "Driver registration submitted"
           },
           "400": {
             "$ref": "#/components/responses/BadRequest"
@@ -4565,8 +4615,8 @@
     },
     "/auth/admin/login": {
       "post": {
-        "summary": "Admin login with email and password",
-        "description": "Authenticates admin users with email/password credentials",
+        "summary": "Admin login",
+        "description": "Authenticates admin users with email/password",
         "tags": [
           "Auth"
         ],
@@ -4584,13 +4634,10 @@
                 "properties": {
                   "email": {
                     "type": "string",
-                    "format": "email",
-                    "example": "admin@wasalni.com"
+                    "format": "email"
                   },
                   "password": {
-                    "type": "string",
-                    "format": "password",
-                    "example": "admin123"
+                    "type": "string"
                   }
                 }
               }
@@ -4599,48 +4646,101 @@
         },
         "responses": {
           "200": {
-            "description": "Admin login successful",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "example": true
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "Login successful"
-                    },
-                    "messageAr": {
-                      "type": "string",
-                      "example": "تم تسجيل الدخول بنجاح"
-                    },
-                    "data": {
-                      "type": "object",
-                      "properties": {
-                        "accessToken": {
-                          "type": "string"
-                        },
-                        "refreshToken": {
-                          "type": "string"
-                        },
-                        "user": {
-                          "$ref": "#/components/schemas/User"
-                        }
-                      }
-                    }
+            "description": "Login successful"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/auth/reset-password": {
+      "post": {
+        "summary": "Reset password with OTP",
+        "description": "Resets the user password using OTP verification",
+        "tags": [
+          "Auth"
+        ],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "otp",
+                  "newPassword"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "otp": {
+                    "type": "string"
+                  },
+                  "newPassword": {
+                    "type": "string",
+                    "minLength": 6
                   }
                 }
               }
             }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset successfully"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
+        }
+      }
+    },
+    "/auth/change-password": {
+      "put": {
+        "summary": "Change password",
+        "description": "Changes password for authenticated user",
+        "tags": [
+          "Auth"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "currentPassword",
+                  "newPassword"
+                ],
+                "properties": {
+                  "currentPassword": {
+                    "type": "string"
+                  },
+                  "newPassword": {
+                    "type": "string",
+                    "minLength": 6
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password changed successfully"
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
-          },
-          "429": {
-            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
@@ -4648,7 +4748,6 @@
     "/auth/refresh": {
       "post": {
         "summary": "Refresh access token",
-        "description": "Get a new access token using a valid refresh token",
         "tags": [
           "Auth"
         ],
@@ -4664,8 +4763,7 @@
                 ],
                 "properties": {
                   "refreshToken": {
-                    "type": "string",
-                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    "type": "string"
                   }
                 }
               }
@@ -4674,31 +4772,7 @@
         },
         "responses": {
           "200": {
-            "description": "Token refreshed successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "example": true
-                    },
-                    "data": {
-                      "type": "object",
-                      "properties": {
-                        "accessToken": {
-                          "type": "string"
-                        },
-                        "refreshToken": {
-                          "type": "string"
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
+            "description": "Token refreshed"
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
@@ -4709,7 +4783,6 @@
     "/auth/profile": {
       "get": {
         "summary": "Get current user profile",
-        "description": "Returns the authenticated user's profile information",
         "tags": [
           "Auth"
         ],
@@ -4720,23 +4793,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Profile retrieved successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "example": true
-                    },
-                    "data": {
-                      "$ref": "#/components/schemas/User"
-                    }
-                  }
-                }
-              }
-            }
+            "description": "Profile retrieved"
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
@@ -4745,7 +4802,6 @@
       },
       "put": {
         "summary": "Update user profile",
-        "description": "Updates the authenticated user's profile information",
         "tags": [
           "Auth"
         ],
@@ -4762,13 +4818,13 @@
                 "type": "object",
                 "properties": {
                   "name": {
-                    "type": "string",
-                    "example": "أحمد محمد"
+                    "type": "string"
                   },
-                  "email": {
-                    "type": "string",
-                    "format": "email",
-                    "example": "ahmed@example.com"
+                  "phone": {
+                    "type": "string"
+                  },
+                  "avatar": {
+                    "type": "string"
                   },
                   "gender": {
                     "type": "string",
@@ -4784,34 +4840,7 @@
         },
         "responses": {
           "200": {
-            "description": "Profile updated successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "example": true
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "Profile updated successfully"
-                    },
-                    "messageAr": {
-                      "type": "string",
-                      "example": "تم تحديث الملف الشخصي بنجاح"
-                    },
-                    "data": {
-                      "$ref": "#/components/schemas/User"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/BadRequest"
+            "description": "Profile updated"
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
@@ -4822,7 +4851,6 @@
     "/auth/fcm-token": {
       "put": {
         "summary": "Update FCM token",
-        "description": "Updates the Firebase Cloud Messaging token for push notifications",
         "tags": [
           "Auth"
         ],
@@ -4838,12 +4866,11 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "fcmToken"
+                  "token"
                 ],
                 "properties": {
-                  "fcmToken": {
-                    "type": "string",
-                    "example": "dGVzdF9mY21fdG9rZW4..."
+                  "token": {
+                    "type": "string"
                   }
                 }
               }
@@ -4852,28 +4879,7 @@
         },
         "responses": {
           "200": {
-            "description": "FCM token updated successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "example": true
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "FCM token updated"
-                    },
-                    "messageAr": {
-                      "type": "string",
-                      "example": "تم تحديث رمز الإشعارات"
-                    }
-                  }
-                }
-              }
-            }
+            "description": "FCM token updated"
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
@@ -4884,7 +4890,6 @@
     "/auth/logout": {
       "post": {
         "summary": "Logout user",
-        "description": "Invalidates the current session and clears FCM token",
         "tags": [
           "Auth"
         ],
@@ -4893,9 +4898,316 @@
             "bearerAuth": []
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "fcmToken": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Logged out successfully",
+            "description": "Logged out successfully"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/chat": {
+      "get": {
+        "summary": "Get user's chats",
+        "description": "Returns list of all chats for the authenticated user",
+        "tags": [
+          "Chat"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Chats retrieved successfully"
+          }
+        }
+      }
+    },
+    "/chat/unread-count": {
+      "get": {
+        "summary": "Get total unread messages count",
+        "description": "Returns total count of unread messages across all chats",
+        "tags": [
+          "Chat"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Unread count retrieved"
+          }
+        }
+      }
+    },
+    "/chat/trip/{tripId}": {
+      "get": {
+        "summary": "Get or create chat for a trip",
+        "description": "Gets existing chat or creates new one for the specified trip",
+        "tags": [
+          "Chat"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tripId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Chat retrieved successfully"
+          },
+          "404": {
+            "description": "Trip not found"
+          }
+        }
+      }
+    },
+    "/chat/{chatId}": {
+      "get": {
+        "summary": "Get chat by ID",
+        "description": "Returns chat details including participants",
+        "tags": [
+          "Chat"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "chatId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Chat retrieved successfully"
+          },
+          "404": {
+            "description": "Chat not found"
+          }
+        }
+      }
+    },
+    "/chat/{chatId}/messages": {
+      "get": {
+        "summary": "Get messages for a chat",
+        "description": "Returns paginated list of messages in reverse chronological order",
+        "tags": [
+          "Chat"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "chatId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Messages retrieved successfully"
+          }
+        }
+      },
+      "post": {
+        "summary": "Send a message",
+        "description": "Sends a new message in the specified chat",
+        "tags": [
+          "Chat"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "chatId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "content"
+                ],
+                "properties": {
+                  "content": {
+                    "type": "string",
+                    "description": "Message content"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "text",
+                      "image",
+                      "location",
+                      "voice"
+                    ],
+                    "default": "text"
+                  },
+                  "location": {
+                    "type": "object",
+                    "properties": {
+                      "latitude": {
+                        "type": "number"
+                      },
+                      "longitude": {
+                        "type": "number"
+                      },
+                      "address": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "mediaUrl": {
+                    "type": "string",
+                    "description": "URL for image or voice message"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Message sent successfully"
+          },
+          "400": {
+            "description": "Chat is closed or invalid message"
+          }
+        }
+      }
+    },
+    "/chat/{chatId}/read": {
+      "put": {
+        "summary": "Mark messages as read",
+        "description": "Marks all unread messages in the chat as read",
+        "tags": [
+          "Chat"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "chatId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Messages marked as read"
+          }
+        }
+      }
+    },
+    "/driver/status": {
+      "get": {
+        "summary": "Get driver status",
+        "description": "Returns the driver's current status including approval, online status, earnings, and capabilities",
+        "tags": [
+          "Driver"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Driver status retrieved successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -4907,16 +5219,150 @@
                     },
                     "message": {
                       "type": "string",
-                      "example": "Logged out successfully"
+                      "example": "Driver status retrieved successfully"
                     },
                     "messageAr": {
                       "type": "string",
-                      "example": "تم تسجيل الخروج بنجاح"
+                      "example": "تم استرجاع حالة السائق بنجاح"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "approvalStatus": {
+                          "type": "string",
+                          "enum": [
+                            "pending",
+                            "approved",
+                            "rejected",
+                            "suspended"
+                          ],
+                          "example": "approved"
+                        },
+                        "onlineStatus": {
+                          "type": "string",
+                          "enum": [
+                            "offline",
+                            "online",
+                            "busy"
+                          ],
+                          "example": "online"
+                        },
+                        "totalEarnings": {
+                          "type": "number",
+                          "example": 5000
+                        },
+                        "totalTrips": {
+                          "type": "number",
+                          "example": 150
+                        },
+                        "rating": {
+                          "type": "number",
+                          "example": 4.8
+                        },
+                        "documentsVerified": {
+                          "type": "boolean",
+                          "example": true
+                        },
+                        "vehicleType": {
+                          "type": "string",
+                          "example": "economy"
+                        },
+                        "isApproved": {
+                          "type": "boolean",
+                          "example": true
+                        },
+                        "canGoOnline": {
+                          "type": "boolean",
+                          "example": true
+                        }
+                      }
                     }
                   }
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "description": "Driver profile not found"
+          }
+        }
+      }
+    },
+    "/driver/documents/batch": {
+      "post": {
+        "summary": "Upload driver documents (batch)",
+        "description": "Upload multiple driver documents at once",
+        "tags": [
+          "Driver"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nationalIdFront": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "nationalIdBack": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "driverLicense": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "vehicleLicense": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "vehiclePhoto": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Documents uploaded successfully"
+          },
+          "400": {
+            "description": "No files uploaded"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/driver/documents": {
+      "get": {
+        "summary": "Get driver documents status",
+        "description": "Get the current status of uploaded driver documents",
+        "tags": [
+          "Driver"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Documents retrieved successfully"
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
@@ -7009,6 +7455,675 @@
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/passenger/saved-places": {
+      "get": {
+        "summary": "Get saved places",
+        "description": "Returns all saved places for the authenticated passenger",
+        "tags": [
+          "Passenger"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Saved places retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Saved places retrieved successfully"
+                    },
+                    "messageAr": {
+                      "type": "string",
+                      "example": "تم استرجاع الأماكن المحفوظة بنجاح"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "savedPlaces": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/SavedPlace"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      },
+      "post": {
+        "summary": "Add a saved place",
+        "description": "Adds a new saved place for the authenticated passenger (max 10 places)",
+        "tags": [
+          "Passenger"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "address",
+                  "latitude",
+                  "longitude"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "المنزل",
+                    "description": "Name for the saved place"
+                  },
+                  "address": {
+                    "type": "string",
+                    "example": "شارع الجمهورية، الباجور",
+                    "description": "Address of the place"
+                  },
+                  "latitude": {
+                    "type": "number",
+                    "example": 30.4285,
+                    "description": "Latitude coordinate"
+                  },
+                  "longitude": {
+                    "type": "number",
+                    "example": 30.9785,
+                    "description": "Longitude coordinate"
+                  },
+                  "icon": {
+                    "type": "string",
+                    "enum": [
+                      "home",
+                      "work",
+                      "favorite"
+                    ],
+                    "default": "favorite",
+                    "description": "Icon type for the place"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Saved place added successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Saved place added successfully"
+                    },
+                    "messageAr": {
+                      "type": "string",
+                      "example": "تم إضافة المكان المحفوظ بنجاح"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "savedPlace": {
+                          "$ref": "#/components/schemas/SavedPlace"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error or max places reached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Maximum saved places limit reached (10)"
+                    },
+                    "messageAr": {
+                      "type": "string",
+                      "example": "تم الوصول للحد الأقصى من الأماكن المحفوظة (10)"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/passenger/saved-places/{placeId}": {
+      "put": {
+        "summary": "Update a saved place",
+        "description": "Updates an existing saved place",
+        "tags": [
+          "Passenger"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "placeId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectId of the saved place"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "المنزل الجديد"
+                  },
+                  "address": {
+                    "type": "string",
+                    "example": "شارع النيل، الباجور"
+                  },
+                  "latitude": {
+                    "type": "number",
+                    "example": 30.429
+                  },
+                  "longitude": {
+                    "type": "number",
+                    "example": 30.979
+                  },
+                  "icon": {
+                    "type": "string",
+                    "enum": [
+                      "home",
+                      "work",
+                      "favorite"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Saved place updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Saved place updated successfully"
+                    },
+                    "messageAr": {
+                      "type": "string",
+                      "example": "تم تحديث المكان المحفوظ بنجاح"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid place ID"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "description": "Saved place not found"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a saved place",
+        "description": "Deletes a saved place",
+        "tags": [
+          "Passenger"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "placeId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectId of the saved place"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Saved place deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Saved place deleted successfully"
+                    },
+                    "messageAr": {
+                      "type": "string",
+                      "example": "تم حذف المكان المحفوظ بنجاح"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid place ID"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "description": "Saved place not found"
+          }
+        }
+      }
+    },
+    "/payment/webhook/paymob": {
+      "post": {
+        "summary": "Paymob webhook callback",
+        "description": "Receives payment status updates from Paymob",
+        "tags": [
+          "Payment"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook processed"
+          }
+        }
+      }
+    },
+    "/payment/callback": {
+      "get": {
+        "summary": "Paymob payment callback",
+        "description": "Redirect endpoint after payment completion",
+        "tags": [
+          "Payment"
+        ],
+        "responses": {
+          "302": {
+            "description": "Redirect to app/frontend"
+          }
+        }
+      }
+    },
+    "/payment/wallet/balance": {
+      "get": {
+        "summary": "Get wallet balance",
+        "description": "Returns the user's wallet balance",
+        "tags": [
+          "Payment"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Wallet balance retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "balance": {
+                          "type": "number"
+                        },
+                        "currency": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/payment/wallet/topup": {
+      "post": {
+        "summary": "Top up wallet",
+        "description": "Generate payment URL to top up wallet",
+        "tags": [
+          "Payment"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "amount"
+                ],
+                "properties": {
+                  "amount": {
+                    "type": "number",
+                    "minimum": 10,
+                    "maximum": 5000,
+                    "description": "Amount to top up (EGP)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Payment URL generated"
+          }
+        }
+      }
+    },
+    "/payment/history": {
+      "get": {
+        "summary": "Get payment history",
+        "description": "Returns paginated payment history for the user",
+        "tags": [
+          "Payment"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payment history retrieved"
+          }
+        }
+      }
+    },
+    "/payment/{paymentId}": {
+      "get": {
+        "summary": "Get payment details",
+        "description": "Returns details of a specific payment",
+        "tags": [
+          "Payment"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "paymentId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payment details retrieved"
+          },
+          "404": {
+            "description": "Payment not found"
+          }
+        }
+      }
+    },
+    "/payment/trip/{tripId}/pay": {
+      "post": {
+        "summary": "Pay for trip with card",
+        "description": "Generate payment URL to pay for a trip",
+        "tags": [
+          "Payment"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tripId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payment URL generated"
+          }
+        }
+      }
+    },
+    "/payment/trip/{tripId}/pay-wallet": {
+      "post": {
+        "summary": "Pay for trip with wallet",
+        "description": "Pay for a trip using wallet balance",
+        "tags": [
+          "Payment"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tripId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payment successful"
+          },
+          "400": {
+            "description": "Insufficient balance"
+          }
+        }
+      }
+    },
+    "/payment/admin/driver/{driverId}/payout": {
+      "post": {
+        "summary": "Process driver payout",
+        "description": "Admin endpoint to process driver earnings payout",
+        "tags": [
+          "Payment"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "driverId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "amount"
+                ],
+                "properties": {
+                  "amount": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Payout processed"
+          }
+        }
+      }
+    },
+    "/payment/admin/{paymentId}/refund": {
+      "post": {
+        "summary": "Refund payment",
+        "description": "Admin endpoint to refund a payment",
+        "tags": [
+          "Payment"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "paymentId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reason": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Payment refunded"
           }
         }
       }
@@ -10932,6 +12047,46 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/trips/history": {
+      "get": {
+        "summary": "Get trip history",
+        "description": "Returns paginated list of completed/cancelled trips",
+        "tags": [
+          "Trip"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Trip history retrieved"
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"

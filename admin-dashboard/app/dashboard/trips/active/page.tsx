@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { GoogleMap, useJsApiLoader, Marker, Polyline, InfoWindow } from '@react-google-maps/api';
 import { RefreshCw, MapPin, User, Car, Clock, Loader2, AlertTriangle, Wifi, WifiOff } from 'lucide-react';
 import { tripsApi } from '@/lib/api';
-import { io, Socket } from 'socket.io-client';
+import { io } from 'socket.io-client';
 
 interface ActiveTrip {
   _id: string;
@@ -55,7 +55,6 @@ export default function ActiveTripsPage() {
   const [trips, setTrips] = useState<ActiveTrip[]>([]);
   const [selectedTrip, setSelectedTrip] = useState<ActiveTrip | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [_socket, setSocket] = useState<Socket | null>(null);
   const [socketError, setSocketError] = useState<string | null>(null);
   const [isSocketConnected, setIsSocketConnected] = useState(false);
 
@@ -159,8 +158,6 @@ export default function ActiveTripsPage() {
         })
       );
     });
-
-    setSocket(newSocket);
 
     return () => {
       newSocket.disconnect();

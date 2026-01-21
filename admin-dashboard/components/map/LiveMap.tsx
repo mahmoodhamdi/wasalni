@@ -59,14 +59,18 @@ export default function LiveMap({
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
 
-  // Initialize map
+  // Initialize map - only runs once on mount
   useEffect(() => {
     if (!containerRef.current || mapInstanceRef.current) return;
 
+    // Capture initial center and zoom values for map creation
+    const initialCenter = center;
+    const initialZoom = zoom;
+
     // Create map instance
     const map = L.map(containerRef.current, {
-      center: center,
-      zoom: zoom,
+      center: initialCenter,
+      zoom: initialZoom,
     });
 
     // Add tile layer
@@ -76,14 +80,18 @@ export default function LiveMap({
 
     mapInstanceRef.current = map;
 
+    // Capture markers ref for cleanup
+    const markers = markersRef.current;
+
     // Cleanup
     return () => {
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
       }
-      markersRef.current.clear();
+      markers.clear();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Initial values only, map should not re-init on prop changes
   }, []);
 
   // Update markers when drivers change

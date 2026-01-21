@@ -8,6 +8,7 @@ import { logger } from '../utils/logger';
 
 // Extend Express Request type to include user
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
       user?: {
@@ -26,7 +27,7 @@ declare global {
  */
 export const authenticate = async (
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {
@@ -94,7 +95,7 @@ export const authenticate = async (
  */
 export const optionalAuth = async (
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {
@@ -117,7 +118,7 @@ export const optionalAuth = async (
     }
 
     next();
-  } catch (error) {
+  } catch {
     // Don't fail on optional auth errors
     next();
   }
@@ -127,7 +128,7 @@ export const optionalAuth = async (
  * Role-based authorization middleware
  */
 export const authorize = (...allowedRoles: Array<'passenger' | 'driver' | 'admin'>) => {
-  return (req: Request, res: Response, next: NextFunction): void => {
+  return (req: Request, _res: Response, next: NextFunction): void => {
     logger.debug(`[Authorize] Checking roles: ${allowedRoles.join(', ')}, User role: ${req.user?.role || 'none'}`);
     if (!req.user) {
       logger.debug(`[Authorize] FAILED: No user on request`);

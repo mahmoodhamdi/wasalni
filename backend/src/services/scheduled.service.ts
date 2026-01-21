@@ -1,10 +1,7 @@
 import { Types, FilterQuery } from 'mongoose';
 import Trip, { ITrip } from '../models/Trip';
-import Driver from '../models/Driver';
-import Passenger from '../models/Passenger';
 import { logger } from '../utils/logger';
-import { config } from '../config';
-import { TripStatus, TripType, PaymentMethod } from '../types';
+import { TripStatus, PaymentMethod } from '../types';
 import tripService, { TripLocation, CreateTripRequest } from './trip.service';
 import { RideType } from './fare.service';
 

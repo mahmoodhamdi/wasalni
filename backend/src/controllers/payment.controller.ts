@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { Types } from 'mongoose';
 import { paymentService } from '../services/payment.service';
-import { logger } from '../utils/logger';
+import { logger, getErrorMessage } from '../utils/logger';
 
 /**
  * Get payment URL for trip
@@ -23,7 +23,7 @@ export const payForTrip = async (
       messageAr: 'تم إنشاء رابط الدفع',
       data: result,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     next(error);
   }
 };
@@ -48,7 +48,7 @@ export const payWithWallet = async (
       messageAr: 'تم الدفع بنجاح',
       data: { payment },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     next(error);
   }
 };
@@ -82,7 +82,7 @@ export const topUpWallet = async (
       messageAr: 'تم إنشاء رابط شحن المحفظة',
       data: result,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     next(error);
   }
 };
@@ -105,7 +105,7 @@ export const getWalletBalance = async (
       messageAr: 'تم جلب رصيد المحفظة',
       data: { balance, currency: 'EGP' },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     next(error);
   }
 };
@@ -137,7 +137,7 @@ export const getPaymentHistory = async (
         pages: result.pages,
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     next(error);
   }
 };
@@ -179,7 +179,7 @@ export const getPayment = async (
       messageAr: 'تم جلب بيانات الدفعة',
       data: { payment },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     next(error);
   }
 };
@@ -220,10 +220,10 @@ export const paymobWebhook = async (
     }
 
     res.json({ success: true });
-  } catch (error: any) {
-    logger.error(`Paymob webhook error: ${error.message}`);
+  } catch (error: unknown) {
+    logger.error(`Paymob webhook error: ${getErrorMessage(error)}`);
     // Return 200 to acknowledge receipt even on error
-    res.json({ success: false, message: error.message });
+    res.json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -252,7 +252,7 @@ export const paymobCallback = async (
       // Redirect to frontend
       res.redirect(`${frontendUrl}/payment-result?success=${success}&order=${order}`);
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     next(error);
   }
 };
@@ -291,7 +291,7 @@ export const processDriverPayout = async (
       messageAr: 'تم تحويل الأرباح بنجاح',
       data: { payment },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     next(error);
   }
 };
@@ -319,7 +319,7 @@ export const refundPayment = async (
       messageAr: 'تم استرداد الدفعة بنجاح',
       data: { payment },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     next(error);
   }
 };
