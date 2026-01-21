@@ -397,7 +397,7 @@ export const getFareEstimate = async (req: Request, res: Response) => {
  * Get online drivers count (admin)
  * GET /api/v1/location/stats
  */
-export const getLocationStats = async (req: Request, res: Response) => {
+export const getLocationStats = async (_req: Request, res: Response) => {
   try {
     const onlineCount = await locationService.getOnlineDriversCount();
 
@@ -420,7 +420,7 @@ export const getLocationStats = async (req: Request, res: Response) => {
  * Get all online drivers (admin)
  * GET /api/v1/location/drivers/online
  */
-export const getAllOnlineDrivers = async (req: Request, res: Response) => {
+export const getAllOnlineDrivers = async (_req: Request, res: Response) => {
   try {
     const drivers = await locationService.getAllOnlineDrivers();
 

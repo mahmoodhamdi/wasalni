@@ -7,6 +7,7 @@
  */
 
 import axios from 'axios';
+import { setTimeout } from 'timers/promises';
 import { logger } from '../utils/logger';
 
 // API endpoints (FREE)
@@ -22,6 +23,75 @@ const EGYPT_BOUNDS = {
   countrycodes: 'eg',
 };
 
+// OSRM API response interfaces
+interface OSRMStep {
+  name?: string;
+  distance?: number;
+  duration?: number;
+  maneuver?: {
+    type?: string;
+    location?: [number, number];
+  };
+}
+
+interface OSRMLeg {
+  distance?: number;
+  duration?: number;
+  steps?: OSRMStep[];
+}
+
+interface OSRMRoute {
+  distance?: number;
+  duration?: number;
+  geometry?: string;
+  legs: OSRMLeg[];
+}
+
+interface OSRMResponse {
+  code: string;
+  routes?: OSRMRoute[];
+  durations?: (number | null)[][];
+  distances?: (number | null)[][];
+}
+
+// Nominatim API response interfaces
+interface NominatimPlace {
+  place_id?: number;
+  display_name?: string;
+  name?: string;
+  lat: string;
+  lon: string;
+  type?: string;
+  address?: NominatimAddress;
+}
+
+interface NominatimAddress {
+  road?: string;
+  neighbourhood?: string;
+  suburb?: string;
+  city?: string;
+  town?: string;
+  village?: string;
+  state?: string;
+  governorate?: string;
+  country?: string;
+  postcode?: string;
+  [key: string]: string | undefined;
+}
+
+// Distance matrix result interface
+interface DistanceMatrixResult {
+  origin_addresses: string[];
+  destination_addresses: string[];
+  rows: Array<{
+    elements: Array<{
+      distance: { value: number; text: string };
+      duration: { value: number; text: string };
+      status: string;
+    }>;
+  }>;
+}
+
 // Rate limiting for Nominatim (1 request per second)
 let lastNominatimRequest = 0;
 
@@ -29,7 +99,7 @@ const respectRateLimit = async (): Promise<void> => {
   const now = Date.now();
   const elapsed = now - lastNominatimRequest;
   if (elapsed < 1000) {
-    await new Promise(resolve => setTimeout(resolve, 1000 - elapsed));
+    await setTimeout(1000 - elapsed);
   }
   lastNominatimRequest = Date.now();
 };
@@ -101,7 +171,7 @@ export const getDirections = async (
 
     const url = `${OSRM_BASE_URL}/route/v1/driving/${coordinates}?overview=full&geometries=polyline&steps=true`;
 
-    const response = await axios.get(url);
+    const response = await axios.get<OSRMResponse>(url);
 
     if (response.data.code !== 'Ok' || !response.data.routes?.[0]) {
       return null;
@@ -111,7 +181,7 @@ export const getDirections = async (
     const leg = route.legs[0];
 
     // Convert OSRM format to compatible format
-    const steps = leg.steps?.map((step: any) => ({
+    const steps = leg.steps?.map((step: OSRMStep) => ({
       html_instructions: step.name || step.maneuver?.type || '',
       distance: { value: step.distance || 0 },
       duration: { value: step.duration || 0 },
@@ -176,7 +246,7 @@ export const getPlaceAutocomplete = async (
       url += `&viewbox=${EGYPT_BOUNDS.viewbox}&bounded=1`;
     }
 
-    const response = await axios.get(url, {
+    const response = await axios.get<NominatimPlace[]>(url, {
       headers: { 'User-Agent': USER_AGENT },
     });
 
@@ -184,13 +254,14 @@ export const getPlaceAutocomplete = async (
       return { predictions: [] };
     }
 
-    const predictions = response.data.map((place: any) => {
-      const mainText = place.name || place.display_name.split(',')[0];
-      const secondaryText = place.display_name.split(',').slice(1, 3).join(',').trim();
+    const predictions = response.data.map((place: NominatimPlace) => {
+      const displayName = place.display_name || '';
+      const mainText = place.name || displayName.split(',')[0];
+      const secondaryText = displayName.split(',').slice(1, 3).join(',').trim();
 
       return {
         place_id: place.place_id?.toString() || '',
-        description: place.display_name || '',
+        description: displayName,
         structured_formatting: {
           main_text: mainText,
           secondary_text: secondaryText,
@@ -290,7 +361,7 @@ export const reverseGeocode = async (
 export const getDistanceMatrix = async (
   origins: { lat: number; lng: number }[],
   destinations: { lat: number; lng: number }[]
-): Promise<any | null> => {
+): Promise<DistanceMatrixResult | null> => {
   try {
     // OSRM table service for distance matrix
     const allPoints = [...origins, ...destinations];
@@ -301,19 +372,19 @@ export const getDistanceMatrix = async (
 
     const url = `${OSRM_BASE_URL}/table/v1/driving/${coordinates}?sources=${sourceIndices}&destinations=${destIndices}`;
 
-    const response = await axios.get(url);
+    const response = await axios.get<OSRMResponse>(url);
 
-    if (response.data.code !== 'Ok') {
+    if (response.data.code !== 'Ok' || !response.data.durations) {
       return null;
     }
 
     // Convert to compatible format
-    const rows = response.data.durations.map((durations: number[], rowIndex: number) => ({
-      elements: durations.map((duration: number, colIndex: number) => {
+    const rows = response.data.durations.map((durations, rowIndex) => ({
+      elements: durations.map((duration, colIndex) => {
         const distance = response.data.distances?.[rowIndex]?.[colIndex] || 0;
         return {
           distance: { value: distance, text: formatDistance(distance) },
-          duration: { value: duration, text: formatDuration(duration) },
+          duration: { value: duration || 0, text: formatDuration(duration || 0) },
           status: duration !== null ? 'OK' : 'ZERO_RESULTS',
         };
       }),
@@ -358,7 +429,7 @@ export const calculateETA = async (
 };
 
 // Helper: Parse Nominatim address components to compatible format
-function parseAddressComponents(address: any): Array<{ long_name: string; short_name: string; types: string[] }> {
+function parseAddressComponents(address: NominatimAddress | undefined): Array<{ long_name: string; short_name: string; types: string[] }> {
   if (!address) return [];
 
   const components: Array<{ long_name: string; short_name: string; types: string[] }> = [];

@@ -56,7 +56,7 @@ class _SafetySettingsScreenState extends ConsumerState<SafetySettingsScreen> {
                 Card(
                   child: ListTile(
                     leading: CircleAvatar(
-                      backgroundColor: AppColors.primary.withOpacity(0.1),
+                      backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                       child: Icon(
                         Icons.person_add_outlined,
                         color: AppColors.primary,
@@ -201,7 +201,7 @@ class _SafetySettingsScreenState extends ConsumerState<SafetySettingsScreen> {
 
                 // Safety Tips
                 Card(
-                  color: AppColors.primary.withOpacity(0.05),
+                  color: AppColors.primary.withValues(alpha: 0.05),
                   child: Padding(
                     padding: EdgeInsets.all(16.w),
                     child: Column(

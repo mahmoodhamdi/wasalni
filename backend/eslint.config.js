@@ -23,6 +23,12 @@ export default [
         module: 'readonly',
         require: 'readonly',
         exports: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
+        NodeJS: 'readonly',
+        URLSearchParams: 'readonly',
       },
     },
     plugins: {
@@ -42,6 +48,6 @@ export default [
   },
   prettier,
   {
-    ignores: ['dist/**', 'node_modules/**', 'tests/**'],
+    ignores: ['dist/**', 'node_modules/**', 'tests/**', 'src/__tests__/**'],
   },
 ];

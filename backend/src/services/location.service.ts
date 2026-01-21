@@ -1,7 +1,7 @@
 import { Types } from 'mongoose';
 import { getRedisClient } from '../config/redis';
 import { calculateETA, getDistanceMatrix } from '../config/maps';
-import DriverLocation, { IDriverLocation } from '../models/DriverLocation';
+import DriverLocation from '../models/DriverLocation';
 import Driver from '../models/Driver';
 import { logger } from '../utils/logger';
 import { config } from '../config';
@@ -64,18 +64,6 @@ export const updateDriverLocation = async (
   try {
     // Update Redis for real-time access
     if (redis) {
-      const locationData: DriverLocationData = {
-        driverId: driverIdStr,
-        lat,
-        lng,
-        heading,
-        speed,
-        accuracy,
-        isOnline: true,
-        isAvailable: true,
-        updatedAt: now,
-      };
-
       // Store location data
       await redis.hset(
         `${DRIVER_LOCATION_KEY}${driverIdStr}`,
@@ -145,7 +133,7 @@ export const findNearbyDrivers = async (
       );
 
       if (results && results.length > 0) {
-        nearbyDriverIds = results.map((result: [string, string]) => ({
+        nearbyDriverIds = (results as [string, string][]).map((result) => ({
           driverId: result[0],
           distance: parseFloat(result[1]),
         }));
@@ -443,7 +431,7 @@ export const estimateArrivalTime = async (
  * Get route/path for a trip
  */
 export const getTripPath = async (
-  tripId: string | Types.ObjectId
+  _tripId: string | Types.ObjectId
 ): Promise<{ lat: number; lng: number; timestamp: Date }[]> => {
   // This would typically store path points during the trip
   // For now, return empty array - will be implemented with trip tracking

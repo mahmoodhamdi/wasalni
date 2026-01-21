@@ -1,6 +1,9 @@
 import 'package:socket_io_client/socket_io_client.dart' as io;
 
 import '../config/app_config.dart';
+import '../utils/app_logger.dart';
+
+const String _tag = 'SocketService';
 
 typedef SocketEventHandler = void Function(dynamic data);
 
@@ -41,20 +44,20 @@ class SocketService {
     );
 
     _socket!.onConnect((_) {
-      print('Socket connected');
+      AppLogger.info('Socket connected', tag: _tag);
       _joinUserRoom();
     });
 
     _socket!.onDisconnect((_) {
-      print('Socket disconnected');
+      AppLogger.warning('Socket disconnected', tag: _tag);
     });
 
     _socket!.onConnectError((error) {
-      print('Socket connection error: $error');
+      AppLogger.error('Socket connection error', tag: _tag, error: error);
     });
 
     _socket!.onError((error) {
-      print('Socket error: $error');
+      AppLogger.error('Socket error', tag: _tag, error: error);
     });
 
     // Listen to events
@@ -156,8 +159,8 @@ class SocketService {
       for (final handler in handlers) {
         try {
           handler(eventData);
-        } catch (e) {
-          print('Error in socket event handler for $event: $e');
+        } catch (e, stackTrace) {
+          AppLogger.error('Error in socket event handler for $event', tag: _tag, error: e, stackTrace: stackTrace);
         }
       }
     }
@@ -183,7 +186,7 @@ class SocketService {
     if (_socket != null && _socket!.connected) {
       _socket!.emit(event, data);
     } else {
-      print('Socket not connected, cannot emit $event');
+      AppLogger.warning('Socket not connected, cannot emit $event', tag: _tag);
     }
   }
 

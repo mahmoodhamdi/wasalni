@@ -10,7 +10,7 @@ import {
   sendNotFound,
   sendUnauthorized,
 } from '../utils/response';
-import { logger } from '../utils/logger';
+import { logger, getErrorMessage } from '../utils/logger';
 
 /**
  * Validate promo code
@@ -53,8 +53,8 @@ export const validatePromo = async (req: Request, res: Response): Promise<void> 
     } else {
       sendBadRequest(res, result.message, result.messageAr);
     }
-  } catch (error: any) {
-    logger.error(`Validate promo error: ${error.message}`);
+  } catch (error: unknown) {
+    logger.error(`Validate promo error: ${getErrorMessage(error)}`);
     sendError(res, 'Failed to validate promo code', 'فشل التحقق من كود الخصم');
   }
 };
@@ -81,8 +81,8 @@ export const getAvailablePromos = async (req: Request, res: Response): Promise<v
     );
 
     sendSuccess(res, { promos, count: promos.length }, 'Promos retrieved', 'تم استرجاع العروض');
-  } catch (error: any) {
-    logger.error(`Get available promos error: ${error.message}`);
+  } catch (error: unknown) {
+    logger.error(`Get available promos error: ${getErrorMessage(error)}`);
     sendError(res, 'Failed to get promos', 'فشل استرجاع العروض');
   }
 };
@@ -107,8 +107,8 @@ export const getPromoHistory = async (req: Request, res: Response): Promise<void
     );
 
     sendSuccess(res, result, 'Usage history retrieved', 'تم استرجاع سجل الاستخدام');
-  } catch (error: any) {
-    logger.error(`Get promo history error: ${error.message}`);
+  } catch (error: unknown) {
+    logger.error(`Get promo history error: ${getErrorMessage(error)}`);
     sendError(res, 'Failed to get usage history', 'فشل استرجاع سجل الاستخدام');
   }
 };
@@ -164,9 +164,9 @@ export const createPromo = async (req: Request, res: Response): Promise<void> =>
     });
 
     sendCreated(res, { promo }, 'Promo code created', 'تم إنشاء كود الخصم');
-  } catch (error: any) {
-    logger.error(`Create promo error: ${error.message}`);
-    sendBadRequest(res, error.message, error.message);
+  } catch (error: unknown) {
+    logger.error(`Create promo error: ${getErrorMessage(error)}`);
+    sendBadRequest(res, getErrorMessage(error), getErrorMessage(error));
   }
 };
 
@@ -200,9 +200,9 @@ export const updatePromo = async (req: Request, res: Response): Promise<void> =>
     );
 
     sendSuccess(res, { promo }, 'Promo code updated', 'تم تحديث كود الخصم');
-  } catch (error: any) {
-    logger.error(`Update promo error: ${error.message}`);
-    sendBadRequest(res, error.message, error.message);
+  } catch (error: unknown) {
+    logger.error(`Update promo error: ${getErrorMessage(error)}`);
+    sendBadRequest(res, getErrorMessage(error), getErrorMessage(error));
   }
 };
 
@@ -220,9 +220,9 @@ export const deactivatePromo = async (req: Request, res: Response): Promise<void
     const promo = await promoService.deactivatePromoCode(new Types.ObjectId(promoId));
 
     sendSuccess(res, { promo }, 'Promo code deactivated', 'تم إلغاء تفعيل كود الخصم');
-  } catch (error: any) {
-    logger.error(`Deactivate promo error: ${error.message}`);
-    sendBadRequest(res, error.message, error.message);
+  } catch (error: unknown) {
+    logger.error(`Deactivate promo error: ${getErrorMessage(error)}`);
+    sendBadRequest(res, getErrorMessage(error), getErrorMessage(error));
   }
 };
 
@@ -240,8 +240,8 @@ export const getAllPromos = async (req: Request, res: Response): Promise<void> =
     const result = await promoService.getAllPromoCodes({ page, limit, active });
 
     sendSuccess(res, result, 'Promo codes retrieved', 'تم استرجاع أكواد الخصم');
-  } catch (error: any) {
-    logger.error(`Get all promos error: ${error.message}`);
+  } catch (error: unknown) {
+    logger.error(`Get all promos error: ${getErrorMessage(error)}`);
     sendError(res, 'Failed to get promo codes', 'فشل استرجاع أكواد الخصم');
   }
 };
@@ -265,8 +265,8 @@ export const getPromoById = async (req: Request, res: Response): Promise<void> =
     }
 
     sendSuccess(res, { promo }, 'Promo code retrieved', 'تم استرجاع كود الخصم');
-  } catch (error: any) {
-    logger.error(`Get promo error: ${error.message}`);
+  } catch (error: unknown) {
+    logger.error(`Get promo error: ${getErrorMessage(error)}`);
     sendError(res, 'Failed to get promo code', 'فشل استرجاع كود الخصم');
   }
 };
@@ -285,8 +285,8 @@ export const getPromoStats = async (req: Request, res: Response): Promise<void> 
     const stats = await promoService.getPromoStats(new Types.ObjectId(promoId));
 
     sendSuccess(res, { stats }, 'Stats retrieved', 'تم استرجاع الإحصائيات');
-  } catch (error: any) {
-    logger.error(`Get promo stats error: ${error.message}`);
+  } catch (error: unknown) {
+    logger.error(`Get promo stats error: ${getErrorMessage(error)}`);
     sendError(res, 'Failed to get stats', 'فشل استرجاع الإحصائيات');
   }
 };

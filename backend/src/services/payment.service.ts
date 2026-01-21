@@ -7,7 +7,6 @@ import Trip from '../models/Trip';
 import Transaction from '../models/Transaction';
 import Driver from '../models/Driver';
 import { logger } from '../utils/logger';
-import { config } from '../config';
 
 // Paymob API base URL
 const PAYMOB_API_URL = 'https://accept.paymob.com/api';

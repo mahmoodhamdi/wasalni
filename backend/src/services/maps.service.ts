@@ -89,7 +89,7 @@ export interface FareEstimate {
 export const searchPlaces = async (
   query: string,
   location?: Coordinates,
-  sessionToken?: string
+  _sessionToken?: string
 ): Promise<PlacePrediction[]> => {
   try {
     const result = await getPlaceAutocomplete(query, location, 50000);
@@ -115,7 +115,7 @@ export const searchPlaces = async (
  * Get place details by place ID
  * Uses Nominatim reverse geocode as alternative
  */
-export const getPlaceDetails = async (placeId: string): Promise<PlaceDetails | null> => {
+export const getPlaceDetails = async (_placeId: string): Promise<PlaceDetails | null> => {
   // Nominatim doesn't support getting details by place_id in the same way
   // This would need the coordinates to be passed in for reverse geocoding
   logger.warn('getPlaceDetails requires coordinates with Nominatim - use searchPlaces instead');
@@ -384,8 +384,8 @@ export const isInServiceArea = (lat: number, lng: number): boolean => {
  * Get popular places near a location
  */
 export const getNearbyPopularPlaces = async (
-  location: Coordinates,
-  type?: string
+  _location: Coordinates,
+  _type?: string
 ): Promise<PlaceDetails[]> => {
   // This would use the Places API nearby search
   // For now, return empty array - can be implemented if needed

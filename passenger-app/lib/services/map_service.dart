@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
+import '../utils/app_logger.dart';
 
 /// FREE Maps Service using OpenStreetMap APIs
 /// - Nominatim for geocoding and place search
@@ -63,7 +64,7 @@ class MapService {
       }
       return null;
     } catch (e) {
-      print('Reverse geocode error: $e');
+      AppLogger.error('Reverse geocode error', error: e, tag: 'MapService');
       return null;
     }
   }
@@ -94,7 +95,7 @@ class MapService {
       }
       return [];
     } catch (e) {
-      print('Geocode error: $e');
+      AppLogger.error('Geocode error', error: e, tag: 'MapService');
       return [];
     }
   }
@@ -138,7 +139,7 @@ class MapService {
       }
       return [];
     } catch (e) {
-      print('Search places error: $e');
+      AppLogger.error('Search places error', error: e, tag: 'MapService');
       return [];
     }
   }
@@ -196,7 +197,7 @@ class MapService {
       }
       return null;
     } catch (e) {
-      print('Route error: $e');
+      AppLogger.error('Route error', error: e, tag: 'MapService');
       return null;
     }
   }
@@ -228,7 +229,7 @@ class MapService {
       }
       return null;
     } catch (e) {
-      print('Distance error: $e');
+      AppLogger.error('Distance error', error: e, tag: 'MapService');
       return null;
     }
   }

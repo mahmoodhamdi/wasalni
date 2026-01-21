@@ -30,7 +30,7 @@ export const getChats = async (
         pages: Math.ceil(result.total / limit),
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     next(error);
   }
 };
@@ -64,7 +64,7 @@ export const getChat = async (
       messageAr: 'تم جلب المحادثة بنجاح',
       data: { chat },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     next(error);
   }
 };
@@ -128,7 +128,7 @@ export const getTripChat = async (
       messageAr: 'تم جلب المحادثة بنجاح',
       data: { chat },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     next(error);
   }
 };
@@ -172,7 +172,7 @@ export const getMessages = async (
         pages: result.pages,
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     next(error);
   }
 };
@@ -234,7 +234,7 @@ export const sendMessage = async (
       messageAr: 'تم إرسال الرسالة بنجاح',
       data: { message },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     next(error);
   }
 };
@@ -269,7 +269,7 @@ export const markAsRead = async (
       message: `${count} messages marked as read`,
       messageAr: `تم تحديد ${count} رسالة كمقروءة`,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     next(error);
   }
 };
@@ -292,7 +292,7 @@ export const getUnreadCount = async (
       messageAr: 'تم جلب عدد الرسائل غير المقروءة',
       data: { count },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     next(error);
   }
 };

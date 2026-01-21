@@ -224,9 +224,9 @@ passengerSchema.methods.addFavoriteDriver = async function (
 ): Promise<IPassenger> {
   if (!this.favoriteDrivers.includes(driverId)) {
     this.favoriteDrivers.push(driverId);
-    return this.save();
+    return this.save() as unknown as IPassenger;
   }
-  return this;
+  return this as unknown as IPassenger;
 };
 
 // Method to remove favorite driver
@@ -236,7 +236,7 @@ passengerSchema.methods.removeFavoriteDriver = async function (
   this.favoriteDrivers = this.favoriteDrivers.filter(
     (id: Types.ObjectId) => id.toString() !== driverId.toString()
   );
-  return this.save();
+  return this.save() as unknown as IPassenger;
 };
 
 // Method to update rating
@@ -246,7 +246,7 @@ passengerSchema.methods.updateRating = async function (
   const totalScore = this.rating * this.totalRatings + newRating;
   this.totalRatings += 1;
   this.rating = totalScore / this.totalRatings;
-  return this.save();
+  return this.save() as unknown as IPassenger;
 };
 
 // Interface for Passenger model with statics

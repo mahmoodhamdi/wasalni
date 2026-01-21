@@ -1,7 +1,6 @@
 import { Types } from 'mongoose';
 import Chat, { IChat } from '../models/Chat';
 import Message, { IMessage, MessageType } from '../models/Message';
-import Trip from '../models/Trip';
 import { logger } from '../utils/logger';
 import { sendNotification } from './notification.service';
 import { emitToUser } from '../config/socket';

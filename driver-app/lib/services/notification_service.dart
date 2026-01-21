@@ -1,16 +1,16 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'storage_service.dart';
 import 'api_service.dart';
+import '../utils/app_logger.dart';
+
+const String _tag = 'NotificationService';
 
 // Background message handler (must be top-level)
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  if (kDebugMode) {
-    print('Background message: ${message.messageId}');
-    print('Data: ${message.data}');
-  }
+  AppLogger.info('Background message: ${message.messageId}', tag: 'FCM');
+  AppLogger.debug('Data: ${message.data}', tag: 'FCM');
 }
 
 class NotificationService {
@@ -36,9 +36,7 @@ class NotificationService {
       sound: true,
     );
 
-    if (kDebugMode) {
-      print('Notification permission: ${settings.authorizationStatus}');
-    }
+    AppLogger.info('Notification permission: ${settings.authorizationStatus}', tag: _tag);
 
     if (settings.authorizationStatus == AuthorizationStatus.authorized ||
         settings.authorizationStatus == AuthorizationStatus.provisional) {
@@ -52,18 +50,14 @@ class NotificationService {
       // Get FCM token
       final token = await _messaging.getToken();
       if (token != null) {
-        if (kDebugMode) {
-          print('FCM Token: $token');
-        }
+        AppLogger.debug('FCM Token: $token', tag: _tag);
         await _saveAndSendToken(token);
       }
 
       // Listen for token refresh
       _messaging.onTokenRefresh.listen(_saveAndSendToken);
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error getting FCM token: $e');
-      }
+    } catch (e, stackTrace) {
+      AppLogger.error('Error getting FCM token', tag: _tag, error: e, stackTrace: stackTrace);
     }
   }
 
@@ -76,10 +70,8 @@ class NotificationService {
     if (authToken != null) {
       try {
         await _apiService.updateFCMToken(token);
-      } catch (e) {
-        if (kDebugMode) {
-          print('Error sending FCM token to server: $e');
-        }
+      } catch (e, stackTrace) {
+        AppLogger.error('Error sending FCM token to server', tag: _tag, error: e, stackTrace: stackTrace);
       }
     }
   }
@@ -87,10 +79,8 @@ class NotificationService {
   void _setupMessageHandlers() {
     // Foreground messages
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      if (kDebugMode) {
-        print('Foreground message: ${message.notification?.title}');
-        print('Data: ${message.data}');
-      }
+      AppLogger.debug('Foreground message: ${message.notification?.title}', tag: _tag);
+      AppLogger.debug('Data: ${message.data}', tag: _tag);
 
       // Check if this is a trip request
       if (message.data['type'] == 'new_trip_request') {
@@ -115,9 +105,7 @@ class NotificationService {
   }
 
   void _handleNotificationTap(RemoteMessage message) {
-    if (kDebugMode) {
-      print('Notification tapped: ${message.data}');
-    }
+    AppLogger.debug('Notification tapped: ${message.data}', tag: _tag);
 
     onNotificationTap?.call(message.data);
   }

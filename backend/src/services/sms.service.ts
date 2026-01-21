@@ -57,16 +57,22 @@ class SMSService {
 
     // Initialize Twilio client if configured
     if (this.config.provider === 'twilio' && this.config.twilioAccountSid) {
-      try {
-        const twilio = require('twilio');
-        this.twilioClient = twilio(
-          this.config.twilioAccountSid,
-          this.config.twilioAuthToken
-        );
-      } catch (error) {
-        logger.warn('Twilio package not installed, SMS will use mock provider');
-        this.config.provider = 'mock';
-      }
+      this.initTwilioClient();
+    }
+  }
+
+  private initTwilioClient(): void {
+    try {
+      // Dynamic import for optional dependency
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const twilio = require('twilio');
+      this.twilioClient = twilio(
+        this.config.twilioAccountSid,
+        this.config.twilioAuthToken
+      );
+    } catch {
+      logger.warn('Twilio package not installed, SMS will use mock provider');
+      this.config.provider = 'mock';
     }
   }
 
@@ -170,7 +176,7 @@ class SMSService {
    */
   private normalizePhoneNumber(phone: string): string {
     // Remove spaces and dashes
-    let normalized = phone.replace(/[\s\-]/g, '');
+    let normalized = phone.replace(/[\s-]/g, '');
 
     // Handle Egyptian numbers
     if (normalized.startsWith('0')) {

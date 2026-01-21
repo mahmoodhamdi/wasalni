@@ -300,7 +300,7 @@ export const updateFareSettings = async (
  * GET /api/v1/fare/surge
  */
 export const getSurgeInfo = async (
-  req: Request,
+  _req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> => {

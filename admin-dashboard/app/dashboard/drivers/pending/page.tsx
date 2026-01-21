@@ -400,6 +400,7 @@ export default function PendingDriversPage() {
             >
               <X size={32} />
             </button>
+            {/* eslint-disable-next-line @next/next/no-img-element -- Dynamic external image in lightbox */}
             <img
               src={viewingImage}
               alt="Document"

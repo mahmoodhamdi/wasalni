@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { Types } from 'mongoose';
 import * as notificationService from '../services/notification.service';
 import { sendSuccess, sendBadRequest, sendError } from '../utils/response';
+import { getErrorMessage } from '../utils/logger';
 
 // Get user notifications
 export const getNotifications = async (req: Request, res: Response): Promise<void> => {
@@ -18,8 +19,8 @@ export const getNotifications = async (req: Request, res: Response): Promise<voi
       'Notifications retrieved',
       'تم جلب الإشعارات'
     );
-  } catch (error: any) {
-    sendError(res, error.message);
+  } catch (error: unknown) {
+    sendError(res, getErrorMessage(error));
   }
 };
 
@@ -35,8 +36,8 @@ export const getUnreadCount = async (req: Request, res: Response): Promise<void>
       'Unread count retrieved',
       'تم جلب عدد الإشعارات غير المقروءة'
     );
-  } catch (error: any) {
-    sendError(res, error.message);
+  } catch (error: unknown) {
+    sendError(res, getErrorMessage(error));
   }
 };
 
@@ -59,8 +60,8 @@ export const markAsRead = async (req: Request, res: Response): Promise<void> => 
       'Notification marked as read',
       'تم تحديد الإشعار كمقروء'
     );
-  } catch (error: any) {
-    sendError(res, error.message);
+  } catch (error: unknown) {
+    sendError(res, getErrorMessage(error));
   }
 };
 
@@ -77,8 +78,8 @@ export const markAllAsRead = async (req: Request, res: Response): Promise<void> 
       'All notifications marked as read',
       'تم تحديد جميع الإشعارات كمقروءة'
     );
-  } catch (error: any) {
-    sendError(res, error.message);
+  } catch (error: unknown) {
+    sendError(res, getErrorMessage(error));
   }
 };
 
@@ -101,8 +102,8 @@ export const updateFCMToken = async (req: Request, res: Response): Promise<void>
       'FCM token updated',
       'تم تحديث رمز الإشعارات'
     );
-  } catch (error: any) {
-    sendError(res, error.message);
+  } catch (error: unknown) {
+    sendError(res, getErrorMessage(error));
   }
 };
 
@@ -120,8 +121,8 @@ export const removeFCMToken = async (req: Request, res: Response): Promise<void>
       'FCM token removed',
       'تم إزالة رمز الإشعارات'
     );
-  } catch (error: any) {
-    sendError(res, error.message);
+  } catch (error: unknown) {
+    sendError(res, getErrorMessage(error));
   }
 };
 
@@ -146,8 +147,8 @@ export const sendTestNotification = async (req: Request, res: Response): Promise
       'Test notification sent',
       'تم إرسال الإشعار التجريبي'
     );
-  } catch (error: any) {
-    sendError(res, error.message);
+  } catch (error: unknown) {
+    sendError(res, getErrorMessage(error));
   }
 };
 
