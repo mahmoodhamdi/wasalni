@@ -3,4 +3,4 @@ packages:
   - 'packages/*'
   - 'admin-dashboard'
   - 'backend'
-  # 'shared' joins the workspace in PR 2 once it gets a package.json
+  - 'shared'
