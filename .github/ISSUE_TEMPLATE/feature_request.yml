@@ -1,0 +1,44 @@
+name: ✨ Feature request
+description: Propose a new capability or improvement
+labels: [enhancement]
+body:
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Which surface?
+      multiple: false
+      options:
+        - passenger-web (PWA)
+        - driver-web (PWA)
+        - admin-dashboard
+        - backend / API
+        - infrastructure / deploy
+        - cross-cutting
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      placeholder: 'What user pain are we solving? Quote the user if you can.'
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+
+  - type: textarea
+    id: success
+    attributes:
+      label: How will we know it worked?
+      placeholder: 'Measurable success criteria.'

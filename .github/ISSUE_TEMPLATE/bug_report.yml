@@ -1,0 +1,64 @@
+name: 🐛 Bug report
+description: Something is broken or behaving unexpectedly
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Please fill in as much as you can — the
+        more concrete, the faster we can fix.
+
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Which surface?
+      multiple: false
+      options:
+        - passenger-web (PWA)
+        - driver-web (PWA)
+        - admin-dashboard
+        - backend / API
+        - passenger-app (legacy Flutter)
+        - driver-app (legacy Flutter)
+        - infrastructure / deploy
+        - docs / plan
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      placeholder: |
+        Describe the actual behaviour.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      placeholder: 'Chrome 132 on Pixel 7 / Safari iOS 18 / etc.'
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Logs, screenshots, anything else

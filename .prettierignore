@@ -1,0 +1,43 @@
+# Build artefacts
+node_modules
+.next
+.turbo
+dist
+build
+coverage
+out
+
+# Lockfiles & generated files
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# Legacy areas — not formatted by this tooling
+# (they pre-date the web migration; touched only by their own pipelines)
+admin-dashboard
+backend
+driver-app
+passenger-app
+shared/types
+shared/constants
+sales
+config
+scripts
+
+# Flutter generated
+**/.dart_tool
+**/build
+
+# Legacy root files (predate web migration; touched in their own PRs)
+README.md
+docs/API.md
+docs/DEPLOYMENT.md
+docs/RATE_LIMITING.md
+docs/REALTIME_EVENTS.md
+docker-compose.yml
+docker-compose.dev.yml
+
+# IDE / OS
+.vscode
+.idea
+.DS_Store
