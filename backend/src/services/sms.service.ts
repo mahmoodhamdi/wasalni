@@ -1,18 +1,22 @@
 import axios from 'axios';
 import { logger } from '../utils/logger';
 
-// SMS Provider Types
-type SMSProvider = 'twilio' | 'unifonic' | 'mock';
+// SMS Provider Types — Egyptian + international support
+type SMSProvider = 'twilio' | 'unifonic' | 'victorylink' | 'mock';
 
 interface SMSConfig {
   provider: SMSProvider;
-  // Twilio
+  // Twilio (international)
   twilioAccountSid?: string;
   twilioAuthToken?: string;
   twilioPhoneNumber?: string;
-  // Unifonic (Egyptian provider)
+  // Unifonic (Egyptian / MENA)
   unifonicAppSid?: string;
   unifonicSenderId?: string;
+  // VictoryLink (Egyptian local; widely used in MENA secondary cities)
+  victorylinkUserName?: string;
+  victorylinkPassword?: string;
+  victorylinkSender?: string;
 }
 
 interface SOSAlertParams {
@@ -53,6 +57,9 @@ class SMSService {
       twilioPhoneNumber: process.env.TWILIO_PHONE_NUMBER,
       unifonicAppSid: process.env.UNIFONIC_APP_SID,
       unifonicSenderId: process.env.UNIFONIC_SENDER_ID || 'WASALNI',
+      victorylinkUserName: process.env.VICTORYLINK_USERNAME,
+      victorylinkPassword: process.env.VICTORYLINK_PASSWORD,
+      victorylinkSender: process.env.VICTORYLINK_SENDER || 'WASALNI',
     };
 
     // Initialize Twilio client if configured
@@ -90,6 +97,9 @@ class SMSService {
 
         case 'unifonic':
           return await this.sendViaUnifonic(normalizedPhone, message);
+
+        case 'victorylink':
+          return await this.sendViaVictoryLink(normalizedPhone, message);
 
         case 'mock':
         default:
@@ -154,6 +164,41 @@ class SMSService {
       return false;
     } catch (error: any) {
       logger.error(`Unifonic SMS error: ${error.message}`);
+      return false;
+    }
+  }
+
+  /**
+   * Send via VictoryLink (Egyptian SMS gateway, popular for SMBs)
+   */
+  private async sendViaVictoryLink(to: string, message: string): Promise<boolean> {
+    try {
+      const response = await axios.post(
+        'https://smsmisr.com/api/SMS/',
+        null,
+        {
+          params: {
+            username: this.config.victorylinkUserName,
+            password: this.config.victorylinkPassword,
+            sender: this.config.victorylinkSender,
+            mobile: to.replace(/^\+/, ''),
+            language: '2',
+            message,
+          },
+          timeout: 10000,
+        }
+      );
+
+      const code = (response.data?.code || response.data?.Code || '').toString();
+      if (code === '1901' || code === '4901') {
+        logger.info(`SMS sent via VictoryLink to ${to}`);
+        return true;
+      }
+      logger.error(`VictoryLink SMS error code: ${code}`);
+      return false;
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      logger.error(`VictoryLink SMS error: ${msg}`);
       return false;
     }
   }
@@ -352,6 +397,8 @@ ${description}
     if (this.config.provider === 'mock') return true;
     if (this.config.provider === 'twilio') return !!this.twilioClient;
     if (this.config.provider === 'unifonic') return !!this.config.unifonicAppSid;
+    if (this.config.provider === 'victorylink')
+      return !!(this.config.victorylinkUserName && this.config.victorylinkPassword);
     return false;
   }
 

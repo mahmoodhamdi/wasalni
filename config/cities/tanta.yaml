@@ -1,0 +1,136 @@
+# Wasalni — Tanta deployment template (~500K residents, Gharbia governorate)
+# Use this as a starting point for tier "City Pro" deployments.
+
+schema_version: 1
+
+city:
+  slug: tanta
+  name_en: Tanta
+  name_ar: طنطا
+  governorate_en: Gharbia
+  governorate_ar: الغربية
+  country: EG
+  timezone: Africa/Cairo
+  service_area:
+    center: { lat: 30.7867, lng: 31.0004 }
+    radius_km: 30
+    polygon:
+      - [30.72, 30.94]
+      - [30.72, 31.06]
+      - [30.86, 31.06]
+      - [30.86, 30.94]
+      - [30.72, 30.94]
+
+branding:
+  brand_name_en: Wasalni Tanta
+  brand_name_ar: وصّلني طنطا
+  tagline_en: Tanta on the move.
+  tagline_ar: طنطا أقرب لك.
+  primary_color: '#1565C0'
+  accent_color: '#FF6F00'
+  logo_url: assets/branding/wasalni-tanta-logo.svg
+  splash_url: assets/branding/wasalni-tanta-splash.png
+  app_name_passenger: Wasalni Tanta
+  app_name_driver: Wasalni Tanta Driver
+  support_phone: '+20-100-000-0001'
+  support_whatsapp: '+20-100-000-0001'
+  support_email: tanta@wasalni.app
+
+locale:
+  default: ar-EG
+  supported: [ar-EG, en-US]
+  currency: EGP
+  currency_symbol_ar: ج.م.
+  currency_symbol_en: EGP
+
+ride_types:
+  - id: economy
+    label_en: Economy
+    label_ar: اقتصادي
+    icon: car
+    base_fare: 10
+    per_km: 3
+    per_minute: 0.6
+    min_fare: 15
+    max_passengers: 4
+    allows_highways: true
+  - id: comfort
+    label_en: Comfort
+    label_ar: مريح
+    icon: car-comfort
+    base_fare: 15
+    per_km: 4
+    per_minute: 0.8
+    min_fare: 22
+    max_passengers: 4
+    allows_highways: true
+  - id: family
+    label_en: Family
+    label_ar: عائلي
+    icon: van
+    base_fare: 18
+    per_km: 5
+    per_minute: 1.0
+    min_fare: 30
+    max_passengers: 7
+    allows_highways: true
+  - id: tuktuk
+    label_en: TukTuk
+    label_ar: توكتوك
+    icon: tuktuk
+    base_fare: 6
+    per_km: 2
+    per_minute: 0.4
+    min_fare: 10
+    max_passengers: 3
+    allows_highways: false
+    max_radius_km: 10
+  - id: motorcycle
+    label_en: Motorcycle
+    label_ar: موتوسيكل
+    icon: motorcycle
+    base_fare: 7
+    per_km: 2.5
+    per_minute: 0.5
+    min_fare: 12
+    max_passengers: 1
+    allows_highways: true
+    helmet_required: true
+
+policies:
+  commission_rate: 0.18
+  booking_fee: 5
+  cancellation_grace_period_min: 3
+  cancellation_fee_after_grace: 7
+  driver_acceptance_window_sec: 12
+  driver_min_rating: 4.0
+  driver_min_completion_rate: 0.75
+  surge_enabled: true
+  surge_min_multiplier: 1.0
+  surge_max_multiplier: 2.5
+  female_only_mode_enabled: true
+  intercity_premium_pct: 0.25
+  ramadan_mode_enabled: true
+  scheduled_rides_enabled: true
+  corporate_accounts_enabled: true
+  in_app_voice_enabled: true
+  trip_sharing_enabled: true
+
+providers:
+  sms: unifonic
+  payments: [cash, paymob, vodafone_cash, orange_cash, etisalat_cash, instapay, fawry]
+  maps: google
+
+regulatory:
+  driver_required_documents:
+    - national_id_front
+    - national_id_back
+    - driving_license
+    - vehicle_registration
+    - vehicle_insurance
+    - vehicle_inspection
+    - personal_photo
+    - bank_account_or_wallet
+  ntc_compliance: true
+  e_invoicing_enabled: true
+  data_residency: EG
