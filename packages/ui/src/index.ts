@@ -18,3 +18,4 @@ export { Spinner, type SpinnerProps } from './components/spinner';
 export { FormField, type FormFieldProps } from './components/form-field';
 export { OtpInput, type OtpInputProps } from './components/otp-input';
 export { EmptyState, type EmptyStateProps } from './components/empty-state';
+export { ChatPanel, type ChatPanelProps, type ChatPanelMessage } from './components/chat-panel';
