@@ -102,6 +102,24 @@ service-account.json
 firebase-adminsdk*.json
 firebase-service-account.json
 
+# Turborepo
+.turbo/
+.cache/
+
+# pnpm
+.pnpm-store/
+
+# Playwright
+playwright-report/
+test-results/
+playwright/.cache/
+
+# Lighthouse CI
+.lighthouseci/
+
+# Sentry
+.sentryclirc
+
 # Misc
 *.bak
 *.tmp
