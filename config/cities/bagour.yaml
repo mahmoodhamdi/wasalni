@@ -1,0 +1,177 @@
+# Wasalni — Bagour deployment (reference / pilot city)
+#
+# This is the canonical white-label config example. Copy and adjust per city.
+# Loaded by backend at startup via WASALNI_CITY env var (e.g. WASALNI_CITY=bagour).
+
+schema_version: 1
+
+city:
+  slug: bagour
+  name_en: Bagour
+  name_ar: الباجور
+  governorate_en: Menofia
+  governorate_ar: المنوفية
+  country: EG
+  timezone: Africa/Cairo
+  service_area:
+    center: { lat: 30.5167, lng: 30.7167 }
+    radius_km: 25
+    # GeoJSON polygon describing the service area boundary.
+    # Out-of-area requests are rejected with a helpful message.
+    polygon:
+      - [30.45, 30.65]
+      - [30.45, 30.78]
+      - [30.58, 30.78]
+      - [30.58, 30.65]
+      - [30.45, 30.65]
+  villages:
+    # 47 villages around Bagour — passengers can pick from this list, drivers
+    # opt into which villages they serve.
+    - { slug: kafr-elbagour, name_ar: كفر الباجور }
+    - { slug: tamlay, name_ar: طملاي }
+    - { slug: shanwan, name_ar: شنوان }
+    - { slug: el-batanoun, name_ar: البتانون }
+    - { slug: mit-abu-elkom, name_ar: ميت أبو الكوم }
+    - { slug: mit-khaqan, name_ar: ميت خاقان }
+    - { slug: ashma, name_ar: عشما }
+    - { slug: serbay, name_ar: سرباي }
+    - { slug: damalig, name_ar: دملاج }
+    - { slug: ezbet-elsheikh, name_ar: عزبة الشيخ }
+
+branding:
+  brand_name_en: Wasalni
+  brand_name_ar: وصّلني
+  tagline_en: Your city. Your ride.
+  tagline_ar: مدينتك، رحلتك.
+  primary_color: '#0E8C5A'
+  accent_color: '#FBB040'
+  logo_url: assets/branding/wasalni-logo.svg
+  splash_url: assets/branding/wasalni-splash.png
+  app_name_passenger: Wasalni
+  app_name_driver: Wasalni Driver
+  support_phone: '+20-100-000-0000'
+  support_whatsapp: '+20-100-000-0000'
+  support_email: support@wasalni.app
+
+locale:
+  default: ar-EG
+  supported: [ar-EG, en-US]
+  currency: EGP
+  currency_symbol_ar: ج.م.
+  currency_symbol_en: EGP
+
+ride_types:
+  # Order = display priority in the app
+  - id: economy
+    label_en: Economy
+    label_ar: اقتصادي
+    icon: car
+    base_fare: 8
+    per_km: 2.5
+    per_minute: 0.5
+    min_fare: 12
+    max_passengers: 4
+    allows_highways: true
+  - id: comfort
+    label_en: Comfort
+    label_ar: مريح
+    icon: car-comfort
+    base_fare: 12
+    per_km: 3.5
+    per_minute: 0.7
+    min_fare: 18
+    max_passengers: 4
+    allows_highways: true
+  - id: family
+    label_en: Family
+    label_ar: عائلي
+    icon: van
+    base_fare: 15
+    per_km: 4
+    per_minute: 0.8
+    min_fare: 25
+    max_passengers: 7
+    allows_highways: true
+  - id: tuktuk
+    label_en: TukTuk
+    label_ar: توكتوك
+    icon: tuktuk
+    base_fare: 5
+    per_km: 1.5
+    per_minute: 0.3
+    min_fare: 8
+    max_passengers: 3
+    allows_highways: false  # Regulatory: no tuktuks on main highways
+    max_radius_km: 8
+  - id: motorcycle
+    label_en: Motorcycle
+    label_ar: موتوسيكل
+    icon: motorcycle
+    base_fare: 6
+    per_km: 2
+    per_minute: 0.4
+    min_fare: 10
+    max_passengers: 1
+    allows_highways: true
+    helmet_required: true
+
+policies:
+  commission_rate: 0.20  # 20% platform commission
+  booking_fee: 4         # flat EGP
+  cancellation_grace_period_min: 3
+  cancellation_fee_after_grace: 5
+  driver_acceptance_window_sec: 10
+  driver_min_rating: 3.5
+  driver_min_completion_rate: 0.7
+  surge_enabled: true
+  surge_min_multiplier: 1.0
+  surge_max_multiplier: 3.0
+  female_only_mode_enabled: true
+  intercity_premium_pct: 0.25
+  ramadan_mode_enabled: true
+  scheduled_rides_enabled: true
+  corporate_accounts_enabled: true
+  in_app_voice_enabled: true
+  trip_sharing_enabled: true
+
+surge_zones:
+  - id: market-square
+    label_ar: ميدان السوق
+    polygon:
+      - [30.515, 30.715]
+      - [30.515, 30.720]
+      - [30.520, 30.720]
+      - [30.520, 30.715]
+      - [30.515, 30.715]
+    schedule:
+      - { days: [thu, fri], from: '15:00', to: '21:00', multiplier: 1.5 }
+  - id: friday-prayer-mosque
+    label_ar: مسجد الجمعة
+    polygon:
+      - [30.519, 30.717]
+      - [30.519, 30.720]
+      - [30.523, 30.720]
+      - [30.523, 30.717]
+      - [30.519, 30.717]
+    schedule:
+      - { days: [fri], from: '12:00', to: '14:00', multiplier: 1.3 }
+
+providers:
+  sms: victorylink  # twilio | unifonic | victorylink | mock
+  payments: [cash, paymob, vodafone_cash, orange_cash, instapay, fawry]
+  maps: osm         # osm | google | mapbox | mock
+
+regulatory:
+  driver_required_documents:
+    - national_id_front
+    - national_id_back
+    - driving_license
+    - vehicle_registration
+    - vehicle_insurance
+    - vehicle_inspection
+    - personal_photo
+    - bank_account_or_wallet
+  insurance_provider: misr-insurance
+  ntc_compliance: true
+  e_invoicing_enabled: false  # turn on once integrated with Egyptian Tax Authority
+  data_residency: EG
