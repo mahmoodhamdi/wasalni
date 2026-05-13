@@ -14,7 +14,9 @@
   "scripts": {
     "lint": "echo 'lint runs at app boundary' && exit 0",
     "typecheck": "tsc --noEmit",
-    "test": "echo 'tests added in PR 21' && exit 0"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@wasalni/api-client": "workspace:*",
@@ -38,10 +40,13 @@
   },
   "devDependencies": {
     "@types/react": "^19.0.0",
+    "@vitest/coverage-v8": "^2.1.8",
     "@wasalni/config-tsconfig": "workspace:*",
+    "@wasalni/config-vitest": "workspace:*",
     "next": "16.1.1",
     "react": "^19.0.0",
     "typescript": "^5.7.3",
+    "vitest": "^2.1.8",
     "zustand": "^5.0.9"
   }
 }
