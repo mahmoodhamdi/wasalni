@@ -1,0 +1,45 @@
+{
+  "name": "@wasalni/driver-web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Wasalni driver PWA — go online, accept rides, earn.",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev --port 3200",
+    "build": "next build",
+    "start": "next start --port 3200",
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "tsc --noEmit",
+    "test": "echo 'tests added in PR 15' && exit 0",
+    "clean": "rm -rf .next .turbo"
+  },
+  "dependencies": {
+    "@wasalni/api-client": "workspace:*",
+    "@wasalni/auth": "workspace:*",
+    "@wasalni/config-tailwind": "workspace:*",
+    "@wasalni/i18n": "workspace:*",
+    "@wasalni/schemas": "workspace:*",
+    "@wasalni/shared-types": "workspace:*",
+    "@wasalni/socket-client": "workspace:*",
+    "@wasalni/ui": "workspace:*",
+    "@wasalni/utils": "workspace:*",
+    "lucide-react": "^0.469.0",
+    "next": "16.1.1",
+    "next-intl": "^4.0.0",
+    "next-themes": "^0.4.4",
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@wasalni/config-eslint": "workspace:*",
+    "@wasalni/config-tsconfig": "workspace:*",
+    "eslint": "^9.18.0",
+    "eslint-config-next": "16.1.1",
+    "tailwindcss": "^4",
+    "typescript": "^5.7.3"
+  }
+}
