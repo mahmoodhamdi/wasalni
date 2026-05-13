@@ -10,7 +10,8 @@
     ".": "./src/index.ts",
     "./hooks/use-install-prompt": "./src/hooks/use-install-prompt.ts",
     "./hooks/use-wake-lock": "./src/hooks/use-wake-lock.ts",
-    "./hooks/use-sw-update": "./src/hooks/use-sw-update.ts"
+    "./hooks/use-sw-update": "./src/hooks/use-sw-update.ts",
+    "./firebase": "./src/firebase/use-fcm.ts"
   },
   "scripts": {
     "lint": "echo 'lint runs at app boundary' && exit 0",
@@ -18,11 +19,18 @@
     "test": "echo 'tests added in PR 15' && exit 0"
   },
   "peerDependencies": {
+    "firebase": "^10.0.0",
     "react": "^19.0.0"
+  },
+  "peerDependenciesMeta": {
+    "firebase": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@types/react": "^19.0.0",
     "@wasalni/config-tsconfig": "workspace:*",
+    "firebase": "^10.14.1",
     "react": "^19.0.0",
     "typescript": "^5.7.3"
   }
