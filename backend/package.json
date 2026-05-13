@@ -13,6 +13,8 @@
     "test": "jest",
     "seed": "ts-node src/seeds/index.ts",
     "seed:fresh": "ts-node src/seeds/index.ts --fresh",
+    "seed:bagour": "ts-node src/seeds/bagour-demo.seed.ts",
+    "seed:bagour:fresh": "ts-node src/seeds/bagour-demo.seed.ts --fresh",
     "docs:generate": "ts-node -e \"import { swaggerSpec } from './src/config/swagger'; require('fs').writeFileSync('./src/docs/swagger.json', JSON.stringify(swaggerSpec, null, 2)); console.log('Swagger JSON generated');\""
   },
   "keywords": [
@@ -42,6 +44,7 @@
     "helmet": "^8.1.0",
     "http-status-codes": "^2.3.0",
     "ioredis": "^5.8.2",
+    "js-yaml": "^4.1.1",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^8.21.0",
     "morgan": "^1.10.1",
@@ -59,6 +62,7 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/jest": "^29.5.12",
+    "@types/js-yaml": "^4.0.9",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/morgan": "^1.9.10",
     "@types/multer": "^2.0.0",
