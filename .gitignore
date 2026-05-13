@@ -106,6 +106,14 @@ firebase-service-account.json
 .turbo/
 .cache/
 
+# Serwist-generated service worker (built per-app from app/sw.ts)
+apps/*/public/sw.js
+apps/*/public/sw.js.map
+apps/*/public/swe-worker-*.js
+apps/*/public/swe-worker-*.js.map
+apps/*/public/workbox-*.js
+apps/*/public/workbox-*.js.map
+
 # pnpm
 .pnpm-store/
 
