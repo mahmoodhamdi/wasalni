@@ -1,0 +1,19 @@
+@import 'tailwindcss';
+@import '@wasalni/config-tailwind/preset.css';
+
+/* App-specific tweaks layered on top of the shared preset. */
+@layer base {
+  html {
+    /* `dir` is set per-locale in the layout. Default to ltr just in case. */
+    direction: ltr;
+  }
+
+  html[lang='ar'] {
+    direction: rtl;
+  }
+
+  /* Smooth scroll anchors; respects reduced-motion via the preset. */
+  html {
+    scroll-behavior: smooth;
+  }
+}

@@ -5,8 +5,8 @@ import {
   UnauthorizedError,
   ValidationError,
   type ApiErrorPayload,
-} from './errors.js';
-import type { ApiEnvelope, RequestOptions } from './types.js';
+} from './errors';
+import type { ApiEnvelope, RequestOptions } from './types';
 
 export interface ApiClientOptions {
   /** Backend base URL, e.g. https://api.wasalni.com/api/v1 */

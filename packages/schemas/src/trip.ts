@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { locationSchema } from './location.js';
+import { locationSchema } from './location';
 
 export const vehicleTypeSchema = z.enum(['economy', 'comfort', 'family', 'tuktuk', 'motorcycle']);
 export type VehicleType = z.infer<typeof vehicleTypeSchema>;

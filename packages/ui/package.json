@@ -2,20 +2,37 @@
   "name": "@wasalni/ui",
   "version": "0.1.0",
   "private": true,
-  "description": "Shared React UI components — shadcn/ui primitives + Wasalni-specific compositions. Fills in alongside PR 4 (passenger scaffold) once the consumer app exists.",
+  "description": "Shared shadcn/ui primitives + Wasalni-specific compositions. Consumed by passenger-web and driver-web; React Server Component compatible.",
   "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./lib/cn": "./src/lib/cn.ts",
+    "./components/*": "./src/components/*.tsx"
   },
   "scripts": {
     "lint": "echo 'lint runs at app boundary' && exit 0",
     "typecheck": "tsc --noEmit",
     "test": "echo 'tests added in PR 21' && exit 0"
   },
+  "dependencies": {
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.469.0",
+    "tailwind-merge": "^2.6.0"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tailwindcss": "^4.0.0"
+  },
   "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
     "@wasalni/config-tsconfig": "workspace:*",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "typescript": "^5.7.3"
   }
 }
