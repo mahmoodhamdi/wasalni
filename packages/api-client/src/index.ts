@@ -7,3 +7,4 @@ export * from './endpoints/fare';
 export * from './endpoints/trips';
 export * from './endpoints/driver';
 export * from './endpoints/wallet';
+export * from './endpoints/safety';
