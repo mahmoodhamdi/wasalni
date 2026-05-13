@@ -15,3 +15,6 @@ export { Skeleton } from './components/skeleton';
 export { Separator, type SeparatorProps } from './components/separator';
 export { Badge, type BadgeProps } from './components/badge';
 export { Spinner, type SpinnerProps } from './components/spinner';
+export { FormField, type FormFieldProps } from './components/form-field';
+export { OtpInput, type OtpInputProps } from './components/otp-input';
+export { EmptyState, type EmptyStateProps } from './components/empty-state';
