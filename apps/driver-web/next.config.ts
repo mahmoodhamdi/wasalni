@@ -20,6 +20,7 @@ const config: NextConfig = {
     '@wasalni/api-client',
     '@wasalni/auth',
     '@wasalni/i18n',
+    '@wasalni/map',
     '@wasalni/pwa',
     '@wasalni/schemas',
     '@wasalni/shared-types',
