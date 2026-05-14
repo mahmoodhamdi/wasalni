@@ -50,4 +50,17 @@ export class AuthEndpoints {
   logout(): Promise<void> {
     return this.client.post('/auth/logout');
   }
+
+  updateProfile(input: {
+    name?: string;
+    email?: string;
+    gender?: 'male' | 'female';
+    avatar?: string;
+  }): Promise<IPassenger | IDriver> {
+    return this.client.patch('/auth/profile', input);
+  }
+
+  registerFcmToken(token: string, platform: 'web' | 'android' | 'ios' = 'web'): Promise<void> {
+    return this.client.post('/auth/fcm-token', { token, platform });
+  }
 }
