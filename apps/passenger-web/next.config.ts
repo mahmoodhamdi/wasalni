@@ -43,6 +43,11 @@ const cspDirectives = [
 const config: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  // Standalone output (Next 12+) trims node_modules to only what's needed
+  // at runtime. The Dockerfile in deploy/ copies the .next/standalone tree
+  // for a small final image (~150 MB vs 600+).
+  output: 'standalone',
+  outputFileTracingRoot: process.env.NEXT_OUTPUT_FILE_TRACING_ROOT,
 
   transpilePackages: [
     '@wasalni/api-client',
