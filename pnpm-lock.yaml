@@ -499,12 +499,21 @@ importers:
         specifier: workspace:*
         version: link:../../shared
     devDependencies:
+      '@vitest/coverage-v8':
+        specifier: ^2.1.8
+        version: 2.1.9(vitest@2.1.9(@types/node@25.7.0)(jsdom@26.1.0)(lightningcss@1.32.0))
       '@wasalni/config-tsconfig':
         specifier: workspace:*
         version: link:../config-tsconfig
+      '@wasalni/config-vitest':
+        specifier: workspace:*
+        version: link:../config-vitest
       typescript:
         specifier: ^5.7.3
         version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@25.7.0)(jsdom@26.1.0)(lightningcss@1.32.0)
 
   packages/auth:
     dependencies:
@@ -694,15 +703,24 @@ importers:
       '@types/react':
         specifier: ^19.0.0
         version: 19.2.14
+      '@vitest/coverage-v8':
+        specifier: ^2.1.8
+        version: 2.1.9(vitest@2.1.9(@types/node@25.7.0)(jsdom@26.1.0)(lightningcss@1.32.0))
       '@wasalni/config-tsconfig':
         specifier: workspace:*
         version: link:../config-tsconfig
+      '@wasalni/config-vitest':
+        specifier: workspace:*
+        version: link:../config-vitest
       react:
         specifier: ^19.0.0
         version: 19.2.3
       typescript:
         specifier: ^5.7.3
         version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@25.7.0)(jsdom@26.1.0)(lightningcss@1.32.0)
 
   packages/ui:
     dependencies:
