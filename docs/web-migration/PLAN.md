@@ -1,14 +1,17 @@
 # Wasalni Web Migration Plan
 
+> **Status (May 2026):** ✅ **Migration complete.** Both PWAs are
+> feature-complete, tested, and packaged for production deployment. The
+> Flutter apps are marked deprecated and kept in-tree for reference.
+>
 > **Goal:** Replace the two Flutter mobile apps (`driver-app`, `passenger-app`)
 > with two installable Progressive Web Apps (PWAs) while keeping the existing
 > Flutter codebases in-tree as a fallback. Backend (`backend`) and
 > `admin-dashboard` are untouched in terms of contract — they are absorbed into
 > a pnpm + Turborepo monorepo.
 
-This document is the **single source of truth** for the migration. Architecture
-decisions, the PR roadmap, and the non‑negotiable quality gates live here. It
-is updated as the migration progresses.
+This document was the **single source of truth** for the migration. It now
+captures the final architecture, decisions, and PR roadmap.
 
 ---
 
