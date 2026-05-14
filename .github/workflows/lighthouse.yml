@@ -1,0 +1,88 @@
+name: Lighthouse
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+concurrency:
+  group: lighthouse-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  NEXT_TELEMETRY_DISABLED: '1'
+
+jobs:
+  passenger:
+    name: Lighthouse · passenger-web
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false || github.event_name != 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build passenger-web
+        run: pnpm --filter=@wasalni/passenger-web build
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:3000/api
+          NEXT_PUBLIC_SOCKET_URL: http://localhost:3000
+
+      - name: Install lighthouse-ci
+        run: npm install -g @lhci/cli@0.14.x
+
+      - name: Run Lighthouse CI
+        working-directory: apps/passenger-web
+        run: lhci autorun
+
+      - name: Upload Lighthouse report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-passenger
+          path: apps/passenger-web/.lighthouseci
+          retention-days: 14
+
+  driver:
+    name: Lighthouse · driver-web
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false || github.event_name != 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build driver-web
+        run: pnpm --filter=@wasalni/driver-web build
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:3000/api
+          NEXT_PUBLIC_SOCKET_URL: http://localhost:3000
+
+      - name: Install lighthouse-ci
+        run: npm install -g @lhci/cli@0.14.x
+
+      - name: Run Lighthouse CI
+        working-directory: apps/driver-web
+        run: lhci autorun
+
+      - name: Upload Lighthouse report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-driver
+          path: apps/driver-web/.lighthouseci
+          retention-days: 14
