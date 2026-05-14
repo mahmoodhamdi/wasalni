@@ -18,7 +18,17 @@
     "home": "Home",
     "earnings": "Earnings",
     "trips": "Trips",
-    "profile": "Profile"
+    "profile": "Profile",
+    "login": "Sign in",
+    "logout": "Sign out"
+  },
+  "register": {
+    "heading": "Create account",
+    "name": "Your name",
+    "namePlaceholder": "Mohamed Ali",
+    "email": "Email (optional)",
+    "emailHelp": "We'll send trip receipts here.",
+    "welcome": "Welcome to Wasalni!"
   },
   "theme": {
     "toggle": "Switch theme",

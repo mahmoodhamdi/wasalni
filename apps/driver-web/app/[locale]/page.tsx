@@ -1,15 +1,8 @@
 import * as React from 'react';
+import Link from 'next/link';
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { ArrowRight, Wallet, Sun, Users, AlertTriangle } from 'lucide-react';
-import {
-  Badge,
-  Button,
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@wasalni/ui';
+import { Badge, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@wasalni/ui';
 import type { Locale } from '@wasalni/i18n';
 
 export default async function HomePage({
@@ -35,23 +28,19 @@ export default async function HomePage({
         </h1>
         <p className="mx-auto mt-4 max-w-2xl text-base text-white/85 sm:text-lg">{t('subtitle')}</p>
         <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-          <Button
-            size="lg"
-            variant="primary"
-            aria-label={t('cta')}
-            className="bg-white !text-[var(--color-brand-800)] hover:bg-white/90"
+          <Link
+            href={`/${locale}/auth/login`}
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-white px-6 text-base font-medium text-[var(--color-brand-800)] hover:bg-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-brand-800)]"
           >
             {t('cta')}
             <ArrowRight className="h-5 w-5 rtl:rotate-180" aria-hidden="true" />
-          </Button>
-          <Button
-            size="lg"
-            variant="ghost"
-            aria-label={t('loginCta')}
-            className="!text-white hover:bg-white/10"
+          </Link>
+          <Link
+            href={`/${locale}/auth/login`}
+            className="inline-flex h-12 items-center justify-center rounded-md px-6 text-base font-medium text-white hover:bg-white/10"
           >
             {t('loginCta')}
-          </Button>
+          </Link>
         </div>
       </section>
 

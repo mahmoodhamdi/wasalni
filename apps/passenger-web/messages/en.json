@@ -9,13 +9,17 @@
     "feature2Body": "We quote the exact fare before you confirm. No surprises.",
     "feature3Title": "Wallet, cash, or card",
     "feature3Body": "Pay whichever way you like. Convenience without the friction.",
-    "demoUserBadge": "Preview build"
+    "demoUserBadge": "Preview build",
+    "loggedInHello": "Hello, {name}",
+    "loggedInSubtitle": "Book a ride now or review your account"
   },
   "nav": {
     "home": "Home",
     "book": "Book",
     "trips": "Trips",
-    "profile": "Profile"
+    "profile": "Profile",
+    "login": "Sign in",
+    "logout": "Sign out"
   },
   "theme": {
     "toggle": "Switch theme",
@@ -25,5 +29,13 @@
   },
   "locale": {
     "switchTo": "Switch language to {label}"
+  },
+  "register": {
+    "heading": "Create account",
+    "name": "Your name",
+    "namePlaceholder": "Mohamed Ali",
+    "email": "Email (optional)",
+    "emailHelp": "We'll send trip receipts here.",
+    "welcome": "Welcome to Wasalni!"
   }
 }
