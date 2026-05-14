@@ -126,6 +126,9 @@ importers:
       '@wasalni/i18n':
         specifier: workspace:*
         version: link:../../packages/i18n
+      '@wasalni/map':
+        specifier: workspace:*
+        version: link:../../packages/map
       '@wasalni/pwa':
         specifier: workspace:*
         version: link:../../packages/pwa
@@ -232,6 +235,9 @@ importers:
       '@wasalni/i18n':
         specifier: workspace:*
         version: link:../../packages/i18n
+      '@wasalni/map':
+        specifier: workspace:*
+        version: link:../../packages/map
       '@wasalni/pwa':
         specifier: workspace:*
         version: link:../../packages/pwa
