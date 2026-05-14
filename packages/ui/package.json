@@ -14,7 +14,9 @@
   "scripts": {
     "lint": "echo 'lint runs at app boundary' && exit 0",
     "typecheck": "tsc --noEmit",
-    "test": "echo 'tests added in PR 21' && exit 0"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",
@@ -28,11 +30,19 @@
     "tailwindcss": "^4.0.0"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.4",
+    "@testing-library/react": "^16.1.0",
+    "@testing-library/user-event": "^14.5.2",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "@vitest/coverage-v8": "^2.1.8",
     "@wasalni/config-tsconfig": "workspace:*",
+    "@wasalni/config-vitest": "workspace:*",
+    "jsdom": "^26.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8"
   }
 }
