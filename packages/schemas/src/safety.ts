@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { coordsSchema } from './location.js';
+import { coordsSchema } from './location';
 
 export const sosTriggerSchema = z.object({
   tripId: z.string().optional(),

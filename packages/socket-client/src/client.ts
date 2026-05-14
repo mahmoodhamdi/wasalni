@@ -1,5 +1,5 @@
 import { io, type Socket } from 'socket.io-client';
-import type { ClientToServerEvents, ServerToClientEvents } from './events.js';
+import type { ClientToServerEvents, ServerToClientEvents } from './events';
 
 export type WasalniSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 

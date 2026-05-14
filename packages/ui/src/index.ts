@@ -1,7 +1,17 @@
-/**
- * Placeholder. shadcn/ui primitives + Wasalni components land in PR 4 alongside
- * the passenger-web scaffold (the first real consumer). The package boundary
- * exists today so other packages and apps can already declare a workspace
- * dependency on @wasalni/ui without churn.
- */
-export {};
+export { cn } from './lib/cn';
+
+export { Button, buttonVariants, type ButtonProps } from './components/button';
+export { Input, type InputProps } from './components/input';
+export { Label, type LabelProps } from './components/label';
+export {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from './components/card';
+export { Skeleton } from './components/skeleton';
+export { Separator, type SeparatorProps } from './components/separator';
+export { Badge, type BadgeProps } from './components/badge';
+export { Spinner, type SpinnerProps } from './components/spinner';

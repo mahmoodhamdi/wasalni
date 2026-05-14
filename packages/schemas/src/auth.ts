@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { phoneSchema, otpSchema } from './common.js';
+import { phoneSchema, otpSchema } from './common';
 
 export const requestOtpSchema = z.object({
   phone: phoneSchema,

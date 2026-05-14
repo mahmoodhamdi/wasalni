@@ -4,3 +4,12 @@ packages:
   - 'admin-dashboard'
   - 'backend'
   - 'shared'
+
+# Allow native build scripts for dev tooling. SWC powers Next.js; parcel/watcher
+# is a transitive dep of various dev tools. Trusted upstream maintainers.
+allowBuilds:
+  '@parcel/watcher': true
+  '@swc/core': true
+  '@tailwindcss/oxide': true
+  unrs-resolver: true
+  sharp: true

@@ -5,7 +5,7 @@ import type {
   DriverRegisterInput,
 } from '@wasalni/schemas';
 import type { IPassenger, IDriver } from '@wasalni/shared-types';
-import type { ApiClient } from '../client.js';
+import type { ApiClient } from '../client';
 
 export interface AuthSession {
   token: string;
