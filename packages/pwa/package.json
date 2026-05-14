@@ -2,20 +2,28 @@
   "name": "@wasalni/pwa",
   "version": "0.1.0",
   "private": true,
-  "description": "PWA primitives — service-worker registration helpers, install prompt, FCM push hook, Wake Lock hook. Real content lands in PR 6 (passenger) and PR 16 (driver).",
+  "description": "PWA primitives — install prompt, Wake Lock, service-worker update detection. Consumed by both web apps.",
   "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./hooks/use-install-prompt": "./src/hooks/use-install-prompt.ts",
+    "./hooks/use-wake-lock": "./src/hooks/use-wake-lock.ts",
+    "./hooks/use-sw-update": "./src/hooks/use-sw-update.ts"
   },
   "scripts": {
     "lint": "echo 'lint runs at app boundary' && exit 0",
     "typecheck": "tsc --noEmit",
-    "test": "echo 'tests added in PR 21' && exit 0"
+    "test": "echo 'tests added in PR 15' && exit 0"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
   },
   "devDependencies": {
+    "@types/react": "^19.0.0",
     "@wasalni/config-tsconfig": "workspace:*",
+    "react": "^19.0.0",
     "typescript": "^5.7.3"
   }
 }

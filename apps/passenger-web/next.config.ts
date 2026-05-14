@@ -1,17 +1,26 @@
 import type { NextConfig } from 'next';
 import createNextIntlPlugin from 'next-intl/plugin';
+import withSerwistInit from '@serwist/next';
 
 const withNextIntl = createNextIntlPlugin('./i18n/request.ts');
+
+const withSerwist = withSerwistInit({
+  swSrc: 'app/sw.ts',
+  swDest: 'public/sw.js',
+  disable: process.env.NODE_ENV === 'development',
+  cacheOnNavigation: true,
+  reloadOnOnline: true,
+});
 
 const config: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
 
-  // Transpile our workspace packages — they ship as TS source, not compiled.
   transpilePackages: [
     '@wasalni/api-client',
     '@wasalni/auth',
     '@wasalni/i18n',
+    '@wasalni/pwa',
     '@wasalni/schemas',
     '@wasalni/shared-types',
     '@wasalni/socket-client',
@@ -19,8 +28,15 @@ const config: NextConfig = {
     '@wasalni/utils',
   ],
 
-  // Security headers applied to every response. CSP gets tightened per route
-  // when external scripts (FCM SW, Paymob iframe) come online in later PRs.
+  async rewrites() {
+    return [
+      // Serve the Serwist-built /sw.js via a Route Handler because Next 16
+      // doesn't reliably serve runtime-generated .js files from public/
+      // alongside the catch-all [locale] segment.
+      { source: '/sw.js', destination: '/api/sw' },
+    ];
+  },
+
   async headers() {
     return [
       {
@@ -41,10 +57,6 @@ const config: NextConfig = {
       },
     ];
   },
-
-  experimental: {
-    // Enable PPR + typedRoutes when we're ready in PR 6/8.
-  },
 };
 
-export default withNextIntl(config);
+export default withSerwist(withNextIntl(config));
