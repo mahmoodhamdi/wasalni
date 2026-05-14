@@ -13,13 +13,15 @@ import {
 } from '@wasalni/map';
 import { useAuth } from '@wasalni/auth/react';
 import type { Locale } from '@wasalni/i18n';
-import type { VehicleType } from '@wasalni/schemas';
+import type { PaymentMethod, VehicleType } from '@wasalni/schemas';
 import { formatMoney } from '@wasalni/utils/currency';
 import { formatDistance } from '@wasalni/utils/distance';
 import { formatEta } from '@wasalni/utils/date';
 import { RideTypePicker } from './ride-type-picker';
 import { FareSummary } from './fare-summary';
 import { LocationPicker } from './location-picker';
+import { PromoInput, type AppliedPromo } from './promo-input';
+import { PaymentMethodPicker } from './payment-method-picker';
 
 interface FareOption {
   rideType: VehicleType;
@@ -57,6 +59,9 @@ export function BookingScreen({ locale }: BookingScreenProps): React.ReactElemen
   const [pickup, setPickup] = React.useState<PlaceResult | null>(null);
   const [dropoff, setDropoff] = React.useState<PlaceResult | null>(null);
   const [rideType, setRideType] = React.useState<VehicleType>('economy');
+  const [paymentMethod, setPaymentMethod] = React.useState<PaymentMethod>('cash');
+  const [promoCode, setPromoCode] = React.useState('');
+  const [appliedPromo, setAppliedPromo] = React.useState<AppliedPromo | null>(null);
   const [options, setOptions] = React.useState<FareOption[]>([]);
   const [route, setRoute] = React.useState<RouteCoord[]>([]);
   const [estimating, setEstimating] = React.useState(false);
@@ -99,6 +104,7 @@ export function BookingScreen({ locale }: BookingScreenProps): React.ReactElemen
           address: dropoff.name,
         },
         rideType,
+        promoCode: appliedPromo?.code,
       }),
     })
       .then((res) => (res.ok ? res.json() : null))
@@ -123,7 +129,7 @@ export function BookingScreen({ locale }: BookingScreenProps): React.ReactElemen
       })
       .finally(() => setEstimating(false));
     return () => controller.abort();
-  }, [pickup, dropoff, rideType, fetcher]);
+  }, [pickup, dropoff, rideType, appliedPromo, fetcher]);
 
   const selectedOption = options.find((o) => o.rideType === rideType);
 
@@ -146,7 +152,8 @@ export function BookingScreen({ locale }: BookingScreenProps): React.ReactElemen
             address: dropoff.name,
           },
           rideType,
-          paymentMethod: 'cash',
+          paymentMethod,
+          promoCode: appliedPromo?.code,
         }),
       });
       if (!res.ok) {
@@ -235,6 +242,17 @@ export function BookingScreen({ locale }: BookingScreenProps): React.ReactElemen
                   locale={locale}
                 />
               ) : null}
+              <PaymentMethodPicker
+                value={paymentMethod}
+                onChange={setPaymentMethod}
+                locale={locale}
+              />
+              <PromoInput
+                value={promoCode}
+                onChange={setPromoCode}
+                onApplied={setAppliedPromo}
+                locale={locale}
+              />
               <button
                 type="button"
                 disabled={booking || estimating || !selectedOption}

@@ -6,3 +6,4 @@ export * from './endpoints/places';
 export * from './endpoints/fare';
 export * from './endpoints/trips';
 export * from './endpoints/driver';
+export * from './endpoints/wallet';
