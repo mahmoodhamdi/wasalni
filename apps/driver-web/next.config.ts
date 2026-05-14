@@ -36,6 +36,8 @@ const cspDirectives = [
 const config: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  output: 'standalone',
+  outputFileTracingRoot: process.env.NEXT_OUTPUT_FILE_TRACING_ROOT,
 
   transpilePackages: [
     '@wasalni/api-client',

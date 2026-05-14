@@ -1,0 +1,119 @@
+# Wasalni — web migration production compose
+#
+# Brings up MongoDB, Redis, the backend API, the admin dashboard, and the
+# two new PWAs behind an nginx reverse proxy. Configure secrets via a
+# top-level .env (see .env.example).
+#
+# Run:   docker compose -f docker-compose.web.yml up -d --build
+# Tail:  docker compose -f docker-compose.web.yml logs -f passenger-web
+# Stop:  docker compose -f docker-compose.web.yml down
+
+services:
+  mongodb:
+    image: mongo:7-jammy
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-wasalni}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-wasalni}
+    healthcheck:
+      test: ['CMD', 'mongosh', '--quiet', '--eval', "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: '3000'
+      MONGODB_URI: ${MONGODB_URI}
+      REDIS_URL: ${REDIS_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      PAYMOB_API_KEY: ${PAYMOB_API_KEY:-}
+      FIREBASE_SERVICE_ACCOUNT: ${FIREBASE_SERVICE_ACCOUNT:-}
+      CORS_ORIGIN: ${CORS_ORIGIN:-}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  passenger-web:
+    build:
+      context: .
+      dockerfile: apps/passenger-web/Dockerfile
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: ${PASSENGER_API_URL:-http://backend:3000/api/v1}
+      NEXT_PUBLIC_SOCKET_URL: ${PASSENGER_SOCKET_URL:-http://backend:3000}
+      NEXT_PUBLIC_APP_URL: ${PASSENGER_APP_URL:-}
+      BACKEND_URL: ${BACKEND_INTERNAL_URL:-http://backend:3000/api/v1}
+      SESSION_SECRET: ${SESSION_SECRET}
+    depends_on:
+      backend:
+        condition: service_started
+
+  driver-web:
+    build:
+      context: .
+      dockerfile: apps/driver-web/Dockerfile
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: ${DRIVER_API_URL:-http://backend:3000/api/v1}
+      NEXT_PUBLIC_SOCKET_URL: ${DRIVER_SOCKET_URL:-http://backend:3000}
+      NEXT_PUBLIC_APP_URL: ${DRIVER_APP_URL:-}
+      BACKEND_URL: ${BACKEND_INTERNAL_URL:-http://backend:3000/api/v1}
+      SESSION_SECRET: ${SESSION_SECRET}
+    depends_on:
+      backend:
+        condition: service_started
+
+  admin-dashboard:
+    build:
+      context: ./admin-dashboard
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: ${ADMIN_API_URL:-http://backend:3000/api/v1}
+    depends_on:
+      backend:
+        condition: service_started
+
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./deploy/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./deploy/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./deploy/nginx/certs:/etc/nginx/certs:ro
+    depends_on:
+      - passenger-web
+      - driver-web
+      - admin-dashboard
+      - backend
+
+volumes:
+  mongo-data:
+  redis-data:
