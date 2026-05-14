@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from '@wasalni/auth/react';
 import { ThemeProvider } from '../components/theme-provider';
+import { InstallPrompt } from '../components/install-prompt';
+import { SwUpdateBanner } from '../components/sw-update-banner';
 
 /**
  * Single root client-side provider tree. Wraps everything in the locale
@@ -29,7 +31,9 @@ export function AppProviders({ children }: { children: React.ReactNode }): React
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <ThemeProvider>
+          <SwUpdateBanner />
           {children}
+          <InstallPrompt />
           <Toaster
             position="top-center"
             toastOptions={{
