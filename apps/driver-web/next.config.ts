@@ -12,6 +12,27 @@ const withSerwist = withSerwistInit({
   reloadOnOnline: true,
 });
 
+/**
+ * Driver CSP. Same as passenger plus Wake Lock notes — Wake Lock is
+ * powered by the Permissions-Policy below, not CSP.
+ */
+const cspDirectives = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' https://www.gstatic.com",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob: https://tiles.openfreemap.org https://*.tile.openstreetmap.org https://res.cloudinary.com",
+  "font-src 'self' data:",
+  "connect-src 'self' https://tiles.openfreemap.org https://*.tile.openstreetmap.org https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com",
+  "worker-src 'self' blob:",
+  "manifest-src 'self'",
+  "frame-src 'self'",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+  'upgrade-insecure-requests',
+].join('; ');
+
 const config: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
@@ -30,12 +51,7 @@ const config: NextConfig = {
   ],
 
   async rewrites() {
-    return [
-      // Serve the Serwist-built /sw.js via a Route Handler because Next 16
-      // doesn't reliably serve runtime-generated .js files from public/
-      // alongside the catch-all [locale] segment.
-      { source: '/sw.js', destination: '/api/sw' },
-    ];
+    return [{ source: '/sw.js', destination: '/api/sw' }];
   },
 
   async headers() {
@@ -48,7 +64,6 @@ const config: NextConfig = {
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           {
             key: 'Permissions-Policy',
-            // Driver app needs geolocation + screen-wake-lock + notifications.
             value:
               'geolocation=(self), microphone=(), camera=(self), payment=(), display-capture=()',
           },
@@ -56,6 +71,10 @@ const config: NextConfig = {
             key: 'Strict-Transport-Security',
             value: 'max-age=63072000; includeSubDomains; preload',
           },
+          { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
+          { key: 'Cross-Origin-Resource-Policy', value: 'same-origin' },
+          { key: 'Content-Security-Policy', value: cspDirectives },
+          { key: 'X-DNS-Prefetch-Control', value: 'on' },
         ],
       },
     ];
