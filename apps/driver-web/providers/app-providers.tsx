@@ -8,6 +8,7 @@ import { SocketProvider } from '@wasalni/socket-client/react';
 import { ThemeProvider } from '../components/theme-provider';
 import { InstallPrompt } from '../components/install-prompt';
 import { SwUpdateBanner } from '../components/sw-update-banner';
+import { ObservabilityMount } from '../components/observability-mount';
 import { env } from '../lib/env';
 
 export function AppProviders({ children }: { children: React.ReactNode }): React.ReactNode {
@@ -29,6 +30,7 @@ export function AppProviders({ children }: { children: React.ReactNode }): React
       <AuthProvider>
         <SocketProvider url={env.socketUrl}>
           <ThemeProvider>
+            <ObservabilityMount />
             <SwUpdateBanner />
             {children}
             <InstallPrompt />

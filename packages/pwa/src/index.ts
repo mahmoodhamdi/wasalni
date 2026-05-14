@@ -6,3 +6,4 @@ export {
 export { useWakeLock, type UseWakeLock } from './hooks/use-wake-lock';
 export { useServiceWorkerUpdate, type UseSwUpdate } from './hooks/use-sw-update';
 export { useFcm, type UseFcm, type FirebaseConfig } from './firebase/use-fcm';
+export { reportWebVitals, type WebVitalsEvent } from './web-vitals';
