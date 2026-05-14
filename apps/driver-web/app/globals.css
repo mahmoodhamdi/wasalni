@@ -1,0 +1,14 @@
+@import 'tailwindcss';
+@import '@wasalni/config-tailwind/preset.css';
+
+@layer base {
+  html {
+    direction: ltr;
+  }
+  html[lang='ar'] {
+    direction: rtl;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+}

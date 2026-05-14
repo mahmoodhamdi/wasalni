@@ -1,0 +1,37 @@
+{
+  "home": {
+    "title": "Wasalni for Drivers",
+    "subtitle": "Work on your own time, earn from your hometown.",
+    "cta": "Sign up as a driver",
+    "loginCta": "I already have an account",
+    "feature1Title": "Fair commission",
+    "feature1Body": "Just 20% — the rest is yours. Full transparency on every trip.",
+    "feature2Title": "Same-day payouts",
+    "feature2Body": "Your wallet updates the moment a trip finishes. Withdraw on demand.",
+    "feature3Title": "Riders from your town",
+    "feature3Body": "We match you with people from the same district. Safer rides, deeper trust.",
+    "demoUserBadge": "Preview build",
+    "important": "Important",
+    "wakeLockNote": "You'll need to keep the app open and your screen awake while driving. The web doesn't allow true background work the way a native app does."
+  },
+  "nav": {
+    "home": "Home",
+    "earnings": "Earnings",
+    "trips": "Trips",
+    "profile": "Profile"
+  },
+  "theme": {
+    "toggle": "Switch theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "locale": {
+    "switchTo": "Switch language to {label}"
+  },
+  "status": {
+    "online": "Online",
+    "offline": "Offline",
+    "busy": "On a trip"
+  }
+}
