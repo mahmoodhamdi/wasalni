@@ -21,6 +21,7 @@
     "@wasalni/auth": "workspace:*",
     "@wasalni/config-tailwind": "workspace:*",
     "@wasalni/i18n": "workspace:*",
+    "@wasalni/map": "workspace:*",
     "@wasalni/pwa": "workspace:*",
     "@wasalni/schemas": "workspace:*",
     "@wasalni/shared-types": "workspace:*",

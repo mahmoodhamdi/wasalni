@@ -2,3 +2,7 @@ export * from './client';
 export * from './errors';
 export * from './types';
 export * from './endpoints/auth';
+export * from './endpoints/places';
+export * from './endpoints/fare';
+export * from './endpoints/trips';
+export * from './endpoints/driver';
