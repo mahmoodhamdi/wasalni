@@ -202,7 +202,7 @@ export const getFareSettings = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { rideType } = req.query;
+    const { rideType } = req.query as Record<string, string | undefined>;
 
     if (rideType) {
       const settings = await fareService.getFareSettings(rideType as RideType);
@@ -253,7 +253,7 @@ export const updateFareSettings = async (
       return;
     }
 
-    const { rideType } = req.params;
+    const { rideType } = req.params as Record<string, string>;
     const adminId = req.user?.userId;
 
     if (!adminId) {

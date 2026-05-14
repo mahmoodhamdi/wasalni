@@ -56,6 +56,7 @@ export default async function LocaleLayout({
   setRequestLocale(locale);
 
   const messages = await getMessages();
+  const t = await getTranslations({ locale, namespace: 'a11y' });
   const dir = getDirection(locale as Locale);
 
   return (
@@ -66,7 +67,9 @@ export default async function LocaleLayout({
             <a
               href="#main"
               className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:start-2 focus:z-50 focus:rounded-md focus:bg-[var(--color-brand-600)] focus:px-3 focus:py-1.5 focus:text-white"
-            />
+            >
+              {t('skipToContent')}
+            </a>
             <SiteHeader />
             <main id="main" className="mx-auto max-w-screen-xl px-4 py-8 sm:px-6">
               {children}

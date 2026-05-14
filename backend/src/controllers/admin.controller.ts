@@ -26,7 +26,7 @@ export const getDashboardStats = async (_req: Request, res: Response): Promise<v
 
 export const getPassengers = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { page, limit, search, isActive, sortBy, sortOrder } = req.query;
+    const { page, limit, search, isActive, sortBy, sortOrder } = req.query as Record<string, string | undefined>;
 
     const result = await adminService.getPassengers({
       page: page ? parseInt(page as string) : undefined,
@@ -46,7 +46,7 @@ export const getPassengers = async (req: Request, res: Response): Promise<void> 
 
 export const getPassengerById = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { passengerId } = req.params;
+    const { passengerId } = req.params as Record<string, string>;
 
     if (!Types.ObjectId.isValid(passengerId)) {
       sendBadRequest(res, 'Invalid passenger ID', 'معرف الراكب غير صالح');
@@ -69,7 +69,7 @@ export const getPassengerById = async (req: Request, res: Response): Promise<voi
 
 export const updatePassenger = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { passengerId } = req.params;
+    const { passengerId } = req.params as Record<string, string>;
 
     if (!Types.ObjectId.isValid(passengerId)) {
       sendBadRequest(res, 'Invalid passenger ID', 'معرف الراكب غير صالح');
@@ -95,7 +95,7 @@ export const updatePassenger = async (req: Request, res: Response): Promise<void
 
 export const togglePassengerActive = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { passengerId } = req.params;
+    const { passengerId } = req.params as Record<string, string>;
 
     if (!Types.ObjectId.isValid(passengerId)) {
       sendBadRequest(res, 'Invalid passenger ID', 'معرف الراكب غير صالح');
@@ -123,7 +123,7 @@ export const togglePassengerActive = async (req: Request, res: Response): Promis
 
 export const getDrivers = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { page, limit, search, status, vehicleType, isOnline, sortBy, sortOrder } = req.query;
+    const { page, limit, search, status, vehicleType, isOnline, sortBy, sortOrder } = req.query as Record<string, string | undefined>;
 
     const result = await adminService.getDrivers({
       page: page ? parseInt(page as string) : undefined,
@@ -145,7 +145,7 @@ export const getDrivers = async (req: Request, res: Response): Promise<void> => 
 
 export const getDriverById = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { driverId } = req.params;
+    const { driverId } = req.params as Record<string, string>;
 
     if (!Types.ObjectId.isValid(driverId)) {
       sendBadRequest(res, 'Invalid driver ID', 'معرف السائق غير صالح');
@@ -178,7 +178,7 @@ export const getPendingDrivers = async (_req: Request, res: Response): Promise<v
 
 export const approveDriver = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { driverId } = req.params;
+    const { driverId } = req.params as Record<string, string>;
     const adminId = req.user?.userId;
 
     if (!adminId) {
@@ -205,7 +205,7 @@ export const approveDriver = async (req: Request, res: Response): Promise<void> 
 
 export const rejectDriver = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { driverId } = req.params;
+    const { driverId } = req.params as Record<string, string>;
     const { reason } = req.body;
     const adminId = req.user?.userId;
 
@@ -239,7 +239,7 @@ export const rejectDriver = async (req: Request, res: Response): Promise<void> =
 
 export const suspendDriver = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { driverId } = req.params;
+    const { driverId } = req.params as Record<string, string>;
     const { reason } = req.body;
     const adminId = req.user?.userId;
 
@@ -273,7 +273,7 @@ export const suspendDriver = async (req: Request, res: Response): Promise<void> 
 
 export const activateDriver = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { driverId } = req.params;
+    const { driverId } = req.params as Record<string, string>;
 
     if (!Types.ObjectId.isValid(driverId)) {
       sendBadRequest(res, 'Invalid driver ID', 'معرف السائق غير صالح');
@@ -293,7 +293,7 @@ export const activateDriver = async (req: Request, res: Response): Promise<void>
 
 export const getTrips = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { page, limit, status, from, to, passengerId, driverId, sortBy, sortOrder } = req.query;
+    const { page, limit, status, from, to, passengerId, driverId, sortBy, sortOrder } = req.query as Record<string, string | undefined>;
 
     const result = await adminService.getTrips({
       page: page ? parseInt(page as string) : undefined,
@@ -316,7 +316,7 @@ export const getTrips = async (req: Request, res: Response): Promise<void> => {
 
 export const getTripById = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { tripId } = req.params;
+    const { tripId } = req.params as Record<string, string>;
 
     if (!Types.ObjectId.isValid(tripId)) {
       sendBadRequest(res, 'Invalid trip ID', 'معرف الرحلة غير صالح');
@@ -339,7 +339,7 @@ export const getTripById = async (req: Request, res: Response): Promise<void> =>
 
 export const getTripStats = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { from, to } = req.query;
+    const { from, to } = req.query as Record<string, string | undefined>;
 
     const stats = await adminService.getTripStats(
       from ? new Date(from as string) : undefined,
@@ -403,7 +403,7 @@ export const getFareSettings = async (_req: Request, res: Response): Promise<voi
 
 export const updateFareSetting = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { fareId } = req.params;
+    const { fareId } = req.params as Record<string, string>;
 
     if (!Types.ObjectId.isValid(fareId)) {
       sendBadRequest(res, 'Invalid fare ID', 'معرف السعر غير صالح');
@@ -446,7 +446,7 @@ export const getZones = async (_req: Request, res: Response): Promise<void> => {
 
 export const updateZone = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { zoneId } = req.params;
+    const { zoneId } = req.params as Record<string, string>;
 
     if (!Types.ObjectId.isValid(zoneId)) {
       sendBadRequest(res, 'Invalid zone ID', 'معرف المنطقة غير صالح');
@@ -479,7 +479,7 @@ export const createZone = async (req: Request, res: Response): Promise<void> => 
 
 export const deleteZone = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { zoneId } = req.params;
+    const { zoneId } = req.params as Record<string, string>;
 
     if (!Types.ObjectId.isValid(zoneId)) {
       sendBadRequest(res, 'Invalid zone ID', 'معرف المنطقة غير صالح');

@@ -12,23 +12,28 @@ import {
 import { buildClient } from './helpers';
 
 describe('endpoint groups call the right URLs', () => {
-  it('Auth.requestOtp POSTs /auth/otp/request', async () => {
+  it('Auth.requestOtp POSTs /auth/send-otp (phone→synthetic email adapter)', async () => {
     const { client, calls } = buildClient({
-      '/v1/auth/otp/request': {
+      '/v1/auth/send-otp': {
         status: 200,
-        body: { success: true, data: { retryAfter: 30 } },
+        body: { success: true, data: { expiresIn: 300 } },
       },
     });
     const auth = new AuthEndpoints(client);
     const r = await auth.requestOtp({ phone: '+201012345678' });
-    expect(r.retryAfter).toBe(30);
+    expect(r.retryAfter).toBe(300);
     expect(calls[0]!.method).toBe('POST');
-    expect(calls[0]!.url).toContain('/auth/otp/request');
+    expect(calls[0]!.url).toContain('/auth/send-otp');
+    // Adapter rewrites phone to a synthesised email so the backend's
+    // email-based OTP flow accepts the request.
+    const body = JSON.parse(calls[0]!.body ?? '{}') as { email: string; purpose: string };
+    expect(body.email).toBe('201012345678@phone.wasalni.local');
+    expect(body.purpose).toBe('login');
   });
 
-  it('Auth.me GETs /auth/me', async () => {
+  it('Auth.me GETs /auth/profile (the backend route)', async () => {
     const { client, calls } = buildClient({
-      '/v1/auth/me': {
+      '/v1/auth/profile': {
         status: 200,
         body: { success: true, data: { _id: 'u1', name: 'A', phone: '+20', role: 'passenger' } },
       },
@@ -36,7 +41,7 @@ describe('endpoint groups call the right URLs', () => {
     const auth = new AuthEndpoints(client);
     await auth.me();
     expect(calls[0]!.method).toBe('GET');
-    expect(calls[0]!.url).toContain('/auth/me');
+    expect(calls[0]!.url).toContain('/auth/profile');
   });
 
   it('Places.search builds query string', async () => {

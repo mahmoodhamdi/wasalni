@@ -120,7 +120,7 @@ export const getTrip = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { tripId } = req.params;
+    const { tripId } = req.params as Record<string, string>;
     const userId = req.user?.userId;
 
     const trip = await tripService.getTripById(tripId);
@@ -174,7 +174,7 @@ export const getPassengerTrips = async (
       return;
     }
 
-    const { page = 1, limit = 10, status, dateFrom, dateTo } = req.query;
+    const { page = 1, limit = 10, status, dateFrom, dateTo } = req.query as Record<string, string | undefined>;
 
     const { trips, total } = await tripService.getPassengerTrips(
       passenger._id,
@@ -258,7 +258,7 @@ export const cancelTrip = async (
       return;
     }
 
-    const { tripId } = req.params;
+    const { tripId } = req.params as Record<string, string>;
     const { reason } = req.body;
     const userId = req.user?.userId;
 
@@ -325,7 +325,7 @@ export const rateTrip = async (
       return;
     }
 
-    const { tripId } = req.params;
+    const { tripId } = req.params as Record<string, string>;
     const { score, comment, badges } = req.body;
     const userId = req.user?.userId;
 
@@ -389,7 +389,7 @@ export const shareTrip = async (
       return;
     }
 
-    const { tripId } = req.params;
+    const { tripId } = req.params as Record<string, string>;
     const { contacts } = req.body;
     const userId = req.user?.userId;
 
@@ -437,7 +437,7 @@ export const triggerSOS = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { tripId } = req.params;
+    const { tripId } = req.params as Record<string, string>;
     const userId = req.user?.userId;
 
     const trip = await tripService.getTripById(tripId, false);
@@ -533,7 +533,7 @@ export const acceptTrip = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { tripId } = req.params;
+    const { tripId } = req.params as Record<string, string>;
     const userId = req.user?.userId;
 
     const driver = await Driver.findOne({ userId: new Types.ObjectId(userId) });
@@ -590,7 +590,7 @@ export const rejectTrip = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { tripId } = req.params;
+    const { tripId } = req.params as Record<string, string>;
     const userId = req.user?.userId;
 
     const driver = await Driver.findOne({ userId: new Types.ObjectId(userId) });
@@ -621,7 +621,7 @@ export const updateTripStatus = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { tripId } = req.params;
+    const { tripId } = req.params as Record<string, string>;
     const { status } = req.body;
     const userId = req.user?.userId;
 
@@ -686,7 +686,7 @@ export const completeTrip = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { tripId } = req.params;
+    const { tripId } = req.params as Record<string, string>;
     const { actualDistance, actualDuration } = req.body;
     const userId = req.user?.userId;
 
@@ -750,7 +750,7 @@ export const getDriverTrips = async (
       return;
     }
 
-    const { page = 1, limit = 10, status, dateFrom, dateTo } = req.query;
+    const { page = 1, limit = 10, status, dateFrom, dateTo } = req.query as Record<string, string | undefined>;
 
     const { trips, total } = await tripService.getDriverTrips(
       driver._id,
@@ -826,7 +826,7 @@ export const driverCancelTrip = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { tripId } = req.params;
+    const { tripId } = req.params as Record<string, string>;
     const { reason } = req.body;
     const userId = req.user?.userId;
 
@@ -888,7 +888,7 @@ export const ratePassenger = async (
       return;
     }
 
-    const { tripId } = req.params;
+    const { tripId } = req.params as Record<string, string>;
     const { score, comment, badges } = req.body;
     const userId = req.user?.userId;
 

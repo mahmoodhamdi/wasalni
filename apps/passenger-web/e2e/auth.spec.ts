@@ -30,6 +30,6 @@ test.describe('auth flow (UI-only, no backend)', () => {
 test.describe('offline route', () => {
   test('renders the offline message', async ({ page }) => {
     await page.goto('/en/offline');
-    await expect(page.getByText(/offline|no internet/i)).toBeVisible();
+    await expect(page.getByText(/offline|no internet/i).first()).toBeVisible();
   });
 });

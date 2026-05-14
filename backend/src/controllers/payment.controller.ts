@@ -12,7 +12,7 @@ export const payForTrip = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { tripId } = req.params;
+    const { tripId } = req.params as Record<string, string>;
     const userId = new Types.ObjectId(req.user!.userId);
 
     const result = await paymentService.payForTrip(new Types.ObjectId(tripId), userId);
@@ -37,7 +37,7 @@ export const payWithWallet = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { tripId } = req.params;
+    const { tripId } = req.params as Record<string, string>;
     const userId = new Types.ObjectId(req.user!.userId);
 
     const payment = await paymentService.payWithWallet(new Types.ObjectId(tripId), userId);
@@ -151,7 +151,7 @@ export const getPayment = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { paymentId } = req.params;
+    const { paymentId } = req.params as Record<string, string>;
     const payment = await paymentService.getPayment(new Types.ObjectId(paymentId));
 
     if (!payment) {
@@ -236,7 +236,7 @@ export const paymobCallback = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { success, order } = req.query;
+    const { success, order } = req.query as Record<string, string | undefined>;
 
     // Redirect to mobile app or frontend with status
     const appScheme = process.env.APP_SCHEME || 'wasalni';
@@ -266,7 +266,7 @@ export const processDriverPayout = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { driverId } = req.params;
+    const { driverId } = req.params as Record<string, string>;
     const { amount } = req.body;
     const adminUserId = new Types.ObjectId(req.user!.userId);
 
@@ -305,7 +305,7 @@ export const refundPayment = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { paymentId } = req.params;
+    const { paymentId } = req.params as Record<string, string>;
     const { reason } = req.body;
 
     const payment = await paymentService.refundPayment(

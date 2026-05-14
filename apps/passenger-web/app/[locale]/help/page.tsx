@@ -111,7 +111,7 @@ export default async function HelpPage({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <dl className="divide-y divide-[var(--color-border)]">
+          <div className="divide-y divide-[var(--color-border)]">
             {faq.map(({ q, a }) => (
               <details key={q} className="group py-3">
                 <summary className="cursor-pointer font-medium text-[var(--color-fg)] marker:hidden">
@@ -120,7 +120,7 @@ export default async function HelpPage({
                 <p className="mt-2 text-sm text-[var(--color-fg-muted)]">{a}</p>
               </details>
             ))}
-          </dl>
+          </div>
         </CardContent>
       </Card>
     </div>

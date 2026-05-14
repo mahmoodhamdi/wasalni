@@ -16,13 +16,16 @@ const withSerwist = withSerwistInit({
  * Driver CSP. Same as passenger plus Wake Lock notes — Wake Lock is
  * powered by the Permissions-Policy below, not CSP.
  */
+const isDev = process.env.NODE_ENV !== 'production';
+const devConnect = isDev ? ' http://localhost:* ws://localhost:* http://127.0.0.1:* ws://127.0.0.1:*' : '';
+
 const cspDirectives = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' https://www.gstatic.com",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://tiles.openfreemap.org https://*.tile.openstreetmap.org https://res.cloudinary.com",
   "font-src 'self' data:",
-  "connect-src 'self' https://tiles.openfreemap.org https://*.tile.openstreetmap.org https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com",
+  `connect-src 'self' https://tiles.openfreemap.org https://*.tile.openstreetmap.org https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com${devConnect}`,
   "worker-src 'self' blob:",
   "manifest-src 'self'",
   "frame-src 'self'",
@@ -30,7 +33,7 @@ const cspDirectives = [
   "base-uri 'self'",
   "form-action 'self'",
   "frame-ancestors 'none'",
-  'upgrade-insecure-requests',
+  ...(isDev ? [] : ['upgrade-insecure-requests']),
 ].join('; ');
 
 const config: NextConfig = {

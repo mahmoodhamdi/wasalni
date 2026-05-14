@@ -100,7 +100,7 @@ export const updateEmergencyContact = async (req: Request, res: Response) => {
       );
     }
 
-    const { contactId } = req.params;
+    const { contactId } = req.params as Record<string, string>;
     const updates = req.body;
 
     const contacts = await safetyService.updateEmergencyContact(
@@ -133,7 +133,7 @@ export const removeEmergencyContact = async (req: Request, res: Response) => {
       );
     }
 
-    const { contactId } = req.params;
+    const { contactId } = req.params as Record<string, string>;
 
     const contacts = await safetyService.removeEmergencyContact(
       new Types.ObjectId(passengerId),
@@ -214,7 +214,7 @@ export const updateSafetyPreferences = async (req: Request, res: Response) => {
  */
 export const generateTripShareLink = async (req: Request, res: Response) => {
   try {
-    const { tripId } = req.params;
+    const { tripId } = req.params as Record<string, string>;
     const { expirationHours } = req.body;
 
     const shareLink = await safetyService.generateTripShareLink(
@@ -239,8 +239,8 @@ export const generateTripShareLink = async (req: Request, res: Response) => {
  */
 export const getTripForTracking = async (req: Request, res: Response) => {
   try {
-    const { tripId } = req.params;
-    const { token } = req.query;
+    const { tripId } = req.params as Record<string, string>;
+    const { token } = req.query as Record<string, string | undefined>;
 
     if (!token || typeof token !== 'string') {
       return res.status(400).json(
@@ -277,7 +277,7 @@ export const getTripForTracking = async (req: Request, res: Response) => {
  */
 export const triggerSOS = async (req: Request, res: Response) => {
   try {
-    const { tripId } = req.params;
+    const { tripId } = req.params as Record<string, string>;
     const { latitude, longitude } = req.body;
     const userId = req.user?.userId;
     const userRole = req.user?.role;
@@ -314,7 +314,7 @@ export const triggerSOS = async (req: Request, res: Response) => {
  */
 export const resolveSOS = async (req: Request, res: Response) => {
   try {
-    const { tripId } = req.params;
+    const { tripId } = req.params as Record<string, string>;
     const { notes } = req.body;
     const adminId = req.user?.userId;
 
@@ -347,7 +347,7 @@ export const resolveSOS = async (req: Request, res: Response) => {
  */
 export const verifyDriver = async (req: Request, res: Response) => {
   try {
-    const { driverId } = req.params;
+    const { driverId } = req.params as Record<string, string>;
 
     const verification = await safetyService.verifyDriverForTrip(
       new Types.ObjectId(driverId)
@@ -370,7 +370,7 @@ export const verifyDriver = async (req: Request, res: Response) => {
  */
 export const getSafetyTips = async (req: Request, res: Response) => {
   try {
-    const { isNewDriver, isLongTrip } = req.query;
+    const { isNewDriver, isLongTrip } = req.query as Record<string, string | undefined>;
 
     const tips = safetyService.getSafetyTips({
       isNight: safetyService.isNightMode(),
@@ -395,7 +395,7 @@ export const getSafetyTips = async (req: Request, res: Response) => {
  */
 export const respondToSafetyCheck = async (req: Request, res: Response) => {
   try {
-    const { tripId } = req.params;
+    const { tripId } = req.params as Record<string, string>;
     const { response } = req.body;
 
     if (!['safe', 'need_help'].includes(response)) {

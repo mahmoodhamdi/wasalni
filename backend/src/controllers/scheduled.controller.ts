@@ -118,7 +118,7 @@ export const getTripDetails = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    const { tripId } = req.params;
+    const { tripId } = req.params as Record<string, string>;
     if (!Types.ObjectId.isValid(tripId)) {
       sendBadRequest(res, 'Invalid trip ID', 'معرف الرحلة غير صالح');
       return;
@@ -158,7 +158,7 @@ export const modifyTripTime = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    const { tripId } = req.params;
+    const { tripId } = req.params as Record<string, string>;
     const { scheduledTime } = req.body;
 
     if (!Types.ObjectId.isValid(tripId)) {
@@ -201,7 +201,7 @@ export const cancelTrip = async (req: Request, res: Response): Promise<void> => 
       return;
     }
 
-    const { tripId } = req.params;
+    const { tripId } = req.params as Record<string, string>;
     const { reason } = req.body;
 
     if (!Types.ObjectId.isValid(tripId)) {
@@ -269,7 +269,7 @@ export const getTripsStats = async (req: Request, res: Response): Promise<void> 
  */
 export const getAvailableSlots = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { date } = req.query;
+    const { date } = req.query as Record<string, string | undefined>;
     if (!date) {
       sendBadRequest(res, 'Date is required', 'التاريخ مطلوب');
       return;

@@ -56,7 +56,7 @@ export const updateLocation = async (req: Request, res: Response) => {
  */
 export const getNearbyDrivers = async (req: Request, res: Response) => {
   try {
-    const { lat, lng, radius, vehicleType, category } = req.query;
+    const { lat, lng, radius, vehicleType, category } = req.query as Record<string, string | undefined>;
 
     if (!lat || !lng) {
       return res.status(400).json({
@@ -135,7 +135,7 @@ export const setOnlineStatus = async (req: Request, res: Response) => {
  */
 export const getDriverLocation = async (req: Request, res: Response) => {
   try {
-    const { driverId } = req.params;
+    const { driverId } = req.params as Record<string, string>;
 
     if (!Types.ObjectId.isValid(driverId)) {
       return res.status(400).json({
@@ -172,7 +172,7 @@ export const getDriverLocation = async (req: Request, res: Response) => {
  */
 export const getETA = async (req: Request, res: Response) => {
   try {
-    const { originLat, originLng, destLat, destLng } = req.query;
+    const { originLat, originLng, destLat, destLng } = req.query as Record<string, string | undefined>;
 
     if (!originLat || !originLng || !destLat || !destLng) {
       return res.status(400).json({
@@ -212,7 +212,7 @@ export const getETA = async (req: Request, res: Response) => {
  */
 export const searchPlaces = async (req: Request, res: Response) => {
   try {
-    const { query, lat, lng } = req.query;
+    const { query, lat, lng } = req.query as Record<string, string | undefined>;
 
     if (!query) {
       return res.status(400).json({
@@ -244,7 +244,7 @@ export const searchPlaces = async (req: Request, res: Response) => {
  */
 export const getPlaceDetails = async (req: Request, res: Response) => {
   try {
-    const { placeId } = req.params;
+    const { placeId } = req.params as Record<string, string>;
 
     if (!placeId) {
       return res.status(400).json({
@@ -281,7 +281,7 @@ export const getPlaceDetails = async (req: Request, res: Response) => {
  */
 export const getAddress = async (req: Request, res: Response) => {
   try {
-    const { lat, lng } = req.query;
+    const { lat, lng } = req.query as Record<string, string | undefined>;
 
     if (!lat || !lng) {
       return res.status(400).json({
