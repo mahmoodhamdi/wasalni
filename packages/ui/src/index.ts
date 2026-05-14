@@ -20,3 +20,4 @@ export { OtpInput, type OtpInputProps } from './components/otp-input';
 export { EmptyState, type EmptyStateProps } from './components/empty-state';
 export { ChatPanel, type ChatPanelProps, type ChatPanelMessage } from './components/chat-panel';
 export { RatingStars, type RatingStarsProps } from './components/rating-stars';
+export { SosButton, type SosButtonProps } from './components/sos-button';

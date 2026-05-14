@@ -4,11 +4,11 @@ import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { Phone, MessageCircle, MapPin, Navigation } from 'lucide-react';
+import { Phone, MessageCircle, MapPin, Navigation, ShieldAlert } from 'lucide-react';
 import { WasalniMap, PinMarker, RouteLayer, useGeolocation, type RouteCoord } from '@wasalni/map';
 import { useAuth } from '@wasalni/auth/react';
 import { useSocket, useTripRoom } from '@wasalni/socket-client/react';
-import { Spinner, ChatPanel, type ChatPanelMessage } from '@wasalni/ui';
+import { Spinner, ChatPanel, SosButton, type ChatPanelMessage } from '@wasalni/ui';
 import type { Locale } from '@wasalni/i18n';
 import type { ITrip, IPassenger, TripStatus } from '@wasalni/shared-types';
 
@@ -40,6 +40,7 @@ export function DriverActiveTrip({ tripId, locale }: Props): React.ReactElement 
   const geo = useGeolocation({ watch: true, enableHighAccuracy: true });
   const [advancing, setAdvancing] = React.useState(false);
   const [chatOpen, setChatOpen] = React.useState(false);
+  const [sosOpen, setSosOpen] = React.useState(false);
 
   const { data: trip } = useQuery<ITrip>({
     queryKey: ['driver-trip', tripId],
@@ -99,6 +100,28 @@ export function DriverActiveTrip({ tripId, locale }: Props): React.ReactElement 
     }
   };
 
+  const triggerSos = async () => {
+    const coords = geo.coords ?? {
+      latitude: trip?.pickup.latitude ?? 0,
+      longitude: trip?.pickup.longitude ?? 0,
+    };
+    const res = await fetcher('/api/safety/sos', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        tripId,
+        coords: { latitude: coords.latitude, longitude: coords.longitude },
+        reason: 'feeling_unsafe',
+      }),
+    });
+    if (!res.ok) {
+      toast.error(ar ? 'تعذّر إرسال SOS' : 'Could not send SOS');
+      return;
+    }
+    toast.success(ar ? 'تم تنبيه فريق الأمان' : 'Safety team alerted');
+    setSosOpen(false);
+  };
+
   if (!trip) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center" role="status">
@@ -132,6 +155,48 @@ export function DriverActiveTrip({ tripId, locale }: Props): React.ReactElement 
 
   return (
     <div className="-mx-4 -my-8 sm:-mx-6 relative h-[calc(100vh-3.5rem)] overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setSosOpen(true)}
+        aria-label="SOS"
+        className="absolute end-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-[var(--color-danger-500)] px-3 py-1.5 text-xs font-bold text-white shadow-[var(--shadow-elevated)]"
+      >
+        <ShieldAlert className="h-4 w-4" aria-hidden="true" />
+        SOS
+      </button>
+      {sosOpen ? (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setSosOpen(false);
+          }}
+        >
+          <div className="w-full max-w-sm rounded-2xl bg-[var(--color-bg)] p-6 text-center shadow-[var(--shadow-overlay)]">
+            <h2 className="text-lg font-bold">{ar ? 'تنبيه طوارئ' : 'Emergency'}</h2>
+            <p className="mt-2 text-sm text-[var(--color-fg-muted)]">
+              {ar
+                ? 'اضغط مطوّل لإرسال موقعك لفريق الأمان فوراً.'
+                : 'Hold to alert our safety team with your location.'}
+            </p>
+            <div className="mt-5 flex justify-center">
+              <SosButton
+                onTrigger={triggerSos}
+                label={ar ? 'تنبيه طوارئ' : 'Emergency alert'}
+                hint={ar ? 'اضغط مطوّل' : 'Hold to confirm'}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => setSosOpen(false)}
+              className="mt-4 text-sm text-[var(--color-fg-muted)] hover:underline"
+            >
+              {ar ? 'إلغاء' : 'Cancel'}
+            </button>
+          </div>
+        </div>
+      ) : null}
       <div className="absolute inset-0">
         <WasalniMap
           initialView={
