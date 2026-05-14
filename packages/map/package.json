@@ -2,20 +2,42 @@
   "name": "@wasalni/map",
   "version": "0.1.0",
   "private": true,
-  "description": "MapLibre GL JS wrappers + place autocomplete + route rendering. Real content lands in PR 7.",
+  "description": "MapLibre GL JS wrappers for Wasalni — base map, markers, route rendering, place autocomplete, geolocation tracking.",
   "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./components/*": "./src/components/*.tsx",
+    "./hooks/*": "./src/hooks/*.ts"
   },
+  "files": [
+    "src"
+  ],
   "scripts": {
     "lint": "echo 'lint runs at app boundary' && exit 0",
     "typecheck": "tsc --noEmit",
-    "test": "echo 'tests added in PR 21' && exit 0"
+    "test": "echo 'tests added in PR 15' && exit 0"
+  },
+  "dependencies": {
+    "@types/geojson": "^7946.0.14",
+    "@wasalni/schemas": "workspace:*",
+    "@wasalni/shared-types": "workspace:*",
+    "@wasalni/utils": "workspace:*",
+    "lucide-react": "^0.469.0",
+    "maplibre-gl": "^4.7.1",
+    "react-map-gl": "^7.1.7"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
     "@wasalni/config-tsconfig": "workspace:*",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "typescript": "^5.7.3"
   }
 }
