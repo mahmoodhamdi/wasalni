@@ -177,6 +177,9 @@ importers:
       serwist:
         specifier: ^9.0.10
         version: 9.5.11(browserslist@4.28.2)(typescript@5.9.3)
+      web-vitals:
+        specifier: ^4.2.4
+        version: 4.2.4
       zod:
         specifier: ^4.3.4
         version: 4.4.3
@@ -292,6 +295,9 @@ importers:
       serwist:
         specifier: ^9.0.10
         version: 9.5.11(browserslist@4.28.2)(typescript@5.9.3)
+      web-vitals:
+        specifier: ^4.2.4
+        version: 4.2.4
       zod:
         specifier: ^4.3.4
         version: 4.4.3
@@ -668,6 +674,9 @@ importers:
       typescript:
         specifier: ^5.7.3
         version: 5.9.3
+      web-vitals:
+        specifier: ^4.2.4
+        version: 4.2.4
 
   packages/schemas:
     dependencies:
@@ -6857,6 +6866,9 @@ packages:
   web-streams-polyfill@3.3.3:
     resolution: {integrity: sha512-d2JWLCivmZYTSIoge9MsgFCZrt571BikcWGYkjC1khllbTeDlGqZ2D8vD8E/lJa8WGWbb7Plm8/XJYV7IJHZZw==}
     engines: {node: '>= 8'}
+
+  web-vitals@4.2.4:
+    resolution: {integrity: sha512-r4DIlprAGwJ7YM11VZp4R884m0Vmgr6EAKe3P+kO0PPj3Unqyvv59rczf6UiGcb9Z8QxZVcqKNwv/g0WNdWwsw==}
 
   webidl-conversions@3.0.1:
     resolution: {integrity: sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ==}
@@ -13862,6 +13874,8 @@ snapshots:
       makeerror: 1.0.12
 
   web-streams-polyfill@3.3.3: {}
+
+  web-vitals@4.2.4: {}
 
   webidl-conversions@3.0.1:
     optional: true
