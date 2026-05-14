@@ -1,0 +1,12 @@
+{
+  "name": "@wasalni/config-tsconfig",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Shared tsconfig bases for Wasalni packages and apps.",
+  "files": [
+    "base.json",
+    "nextjs.json",
+    "react-library.json",
+    "node-library.json"
+  ]
+}

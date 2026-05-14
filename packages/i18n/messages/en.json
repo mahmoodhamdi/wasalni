@@ -1,0 +1,82 @@
+{
+  "app": {
+    "brand": "Wasalni",
+    "tagline": "Your ride, by your neighbours"
+  },
+  "common": {
+    "loading": "Loading…",
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "back": "Back",
+    "next": "Next",
+    "skip": "Skip",
+    "submit": "Submit",
+    "close": "Close",
+    "yes": "Yes",
+    "no": "No",
+    "ok": "OK",
+    "search": "Search",
+    "noResults": "No results",
+    "viewAll": "View all"
+  },
+  "auth": {
+    "welcome": "Welcome",
+    "enterPhone": "Enter your phone number",
+    "enterOtp": "Enter the verification code",
+    "otpSent": "Verification code sent to {phone}",
+    "resendOtp": "Resend code",
+    "resendIn": "Resend in {seconds}s",
+    "wrongOtp": "Verification code is incorrect",
+    "phoneInvalid": "Phone number is invalid",
+    "termsAgreement": "By signing in you agree to the Terms of Use and Privacy Policy",
+    "logout": "Log out",
+    "logoutConfirm": "Are you sure you want to log out?"
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "network": "Network issue. Check your connection.",
+    "unauthorized": "Please sign in first.",
+    "forbidden": "You don't have permission.",
+    "notFound": "We couldn't find that.",
+    "validation": "Some of the data is invalid."
+  },
+  "ride": {
+    "types": {
+      "economy": "Economy",
+      "comfort": "Comfort",
+      "family": "Family",
+      "tuktuk": "Tuk-tuk",
+      "motorcycle": "Motorcycle"
+    },
+    "status": {
+      "pending": "Pending",
+      "searching": "Finding a driver",
+      "accepted": "Driver accepted",
+      "arriving": "Driver on the way",
+      "arrived": "Driver arrived",
+      "in_progress": "On the trip",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    }
+  },
+  "payment": {
+    "methods": {
+      "cash": "Cash",
+      "wallet": "Wallet",
+      "card": "Card"
+    },
+    "fare": "Fare",
+    "discount": "Discount",
+    "total": "Total"
+  },
+  "a11y": {
+    "skipToContent": "Skip to content",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "loading": "Loading"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "@wasalni/ui",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Shared React UI components — shadcn/ui primitives + Wasalni-specific compositions. Fills in alongside PR 4 (passenger scaffold) once the consumer app exists.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "echo 'lint runs at app boundary' && exit 0",
+    "typecheck": "tsc --noEmit",
+    "test": "echo 'tests added in PR 21' && exit 0"
+  },
+  "devDependencies": {
+    "@wasalni/config-tsconfig": "workspace:*",
+    "typescript": "^5.7.3"
+  }
+}

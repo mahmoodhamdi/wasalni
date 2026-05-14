@@ -1,0 +1,10 @@
+{
+  "extends": "@wasalni/config-tsconfig/base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "rootDir": ".",
+    "outDir": "./dist"
+  },
+  "include": ["types/**/*.ts", "constants/**/*.ts"],
+  "exclude": ["dist", "node_modules"]
+}

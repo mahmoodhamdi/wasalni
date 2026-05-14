@@ -1,0 +1,27 @@
+{
+  "name": "@wasalni/shared-types",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Shared TypeScript domain types (User, Trip, Driver, Passenger, …) used by backend and all web apps.",
+  "type": "module",
+  "main": "./types/index.ts",
+  "types": "./types/index.ts",
+  "exports": {
+    ".": "./types/index.ts",
+    "./types": "./types/index.ts"
+  },
+  "files": [
+    "types",
+    "constants"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "echo 'no lint configured for @wasalni/shared-types' && exit 0",
+    "test": "echo 'no tests for @wasalni/shared-types' && exit 0",
+    "build": "echo 'source-only package, no build' && exit 0"
+  },
+  "devDependencies": {
+    "@wasalni/config-tsconfig": "workspace:*",
+    "typescript": "^5.7.3"
+  }
+}
