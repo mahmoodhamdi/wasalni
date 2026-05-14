@@ -1,11 +1,10 @@
 {
-  "extends": "@wasalni/config-tsconfig/base.json",
+  "extends": "@wasalni/config-tsconfig/react-library.json",
   "compilerOptions": {
-    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "noEmit": true,
     "rootDir": "./src",
-    "outDir": "./dist",
-    "noEmit": true
+    "outDir": "./dist"
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["dist", "node_modules"]
 }

@@ -5,10 +5,12 @@ import toast from 'react-hot-toast';
 import { Power } from 'lucide-react';
 import { WasalniMap, PinMarker, useGeolocation } from '@wasalni/map';
 import { useAuth } from '@wasalni/auth/react';
+import { useDriverChannel, useSocket } from '@wasalni/socket-client/react';
 import { useWakeLock } from '@wasalni/pwa';
 import type { Locale } from '@wasalni/i18n';
 import { OnlineToggle } from './online-toggle';
 import { EarningsCard } from './earnings-card';
+import { IncomingRideModal } from './incoming-ride-modal';
 
 interface DriverHomeProps {
   locale: Locale;
@@ -19,19 +21,45 @@ type Status = 'online' | 'offline' | 'busy';
 /**
  * Driver dashboard. Top-half map shows current location with a heading
  * pin; bottom sheet has the online/offline toggle, an earnings preview,
- * and (in PR 10) the incoming-ride request modal.
+ * and an incoming-ride request modal that appears when the backend
+ * matches the driver.
  *
  * When the driver goes online:
  *  - Acquires Screen Wake Lock (best-effort)
- *  - Starts emitting `driver:location` over Socket.io (wired in PR 10)
+ *  - Joins the driver socket room and starts streaming `driver:location`
  */
 export function DriverHome({ locale }: DriverHomeProps): React.ReactElement {
-  const { fetcher } = useAuth();
+  const { user, fetcher } = useAuth();
+  const { socket } = useSocket();
   const wakeLock = useWakeLock();
   const geo = useGeolocation({ watch: true, enableHighAccuracy: true });
 
   const [status, setStatus] = React.useState<Status>('offline');
   const [toggling, setToggling] = React.useState(false);
+
+  const driverId = status === 'online' && user ? user._id : null;
+  const { pendingRequest, clearRequest } = useDriverChannel(driverId);
+
+  // Stream geolocation to the server whenever we're online and have a fix.
+  React.useEffect(() => {
+    if (!socket || status === 'offline' || !geo.coords || !user) return;
+    socket.emit('driver:location', {
+      driverId: user._id,
+      latitude: geo.coords.latitude,
+      longitude: geo.coords.longitude,
+      heading: geo.heading ?? undefined,
+      speed: geo.speed ?? undefined,
+    });
+  }, [
+    socket,
+    status,
+    geo.coords?.latitude,
+    geo.coords?.longitude,
+    geo.heading,
+    geo.speed,
+    user,
+    geo.coords,
+  ]);
 
   const setRemoteStatus = React.useCallback(
     async (next: Status) => {
@@ -50,6 +78,9 @@ export function DriverHome({ locale }: DriverHomeProps): React.ReactElement {
           return;
         }
         setStatus(next);
+        if (socket && user) {
+          socket.emit('driver:status', { driverId: user._id, status: next });
+        }
         if (next === 'online') {
           await wakeLock.request();
         } else {
@@ -61,7 +92,7 @@ export function DriverHome({ locale }: DriverHomeProps): React.ReactElement {
         setToggling(false);
       }
     },
-    [fetcher, wakeLock, locale],
+    [fetcher, wakeLock, locale, socket, user],
   );
 
   const ar = locale === 'ar';
@@ -111,6 +142,10 @@ export function DriverHome({ locale }: DriverHomeProps): React.ReactElement {
             {ar ? 'فعّل خدمة الموقع علشان تشتغل' : 'Enable location services to go online'}
           </p>
         </div>
+      ) : null}
+
+      {pendingRequest ? (
+        <IncomingRideModal request={pendingRequest} onClose={clearRequest} locale={locale} />
       ) : null}
     </div>
   );
