@@ -2,28 +2,28 @@
 
 > **Status (May 2026):** ✅ **Migration complete.** Both PWAs are
 > feature-complete, tested, and packaged for production deployment. The
-> Flutter apps are marked deprecated and kept in-tree for reference.
+> legacy Flutter apps have been removed from the repo (their history is
+> still available in git).
 >
-> **Goal:** Replace the two Flutter mobile apps (`driver-app`, `passenger-app`)
-> with two installable Progressive Web Apps (PWAs) while keeping the existing
-> Flutter codebases in-tree as a fallback. Backend (`backend`) and
-> `admin-dashboard` are untouched in terms of contract — they are absorbed into
-> a pnpm + Turborepo monorepo.
+> **Goal (historic):** Replace the two legacy native mobile apps with two
+> installable Progressive Web Apps (PWAs). Backend (`backend`) and
+> `admin-dashboard` were absorbed into a pnpm + Turborepo monorepo with
+> no contract changes.
 
 This document was the **single source of truth** for the migration. It now
 captures the final architecture, decisions, and PR roadmap.
 
 ---
 
-## 1. Why migrate from Flutter to Web PWAs
+## 1. Why we migrated to Web PWAs
 
-| Criterion                       | Flutter (today)                    | Web PWA (target)                            |
+| Criterion                       | Native mobile (previous)           | Web PWA (current)                           |
 | ------------------------------- | ---------------------------------- | ------------------------------------------- |
 | Iteration speed                 | rebuild + reinstall per device     | hot‑reload, single URL, instant rollout     |
 | Testing surface                 | emulator + device matrix           | Playwright on real browsers, mocked sensors |
 | Customisation per‑city          | rebuild + Play/AppStore review     | edit a config, push, every client updates   |
 | Onboarding friction (passenger) | install from store, ~30 MB         | open URL, optional "Add to Home Screen"     |
-| Engineering pool                | Flutter/Dart (smaller)             | TS/React (larger)                           |
+| Engineering pool                | Mobile-specific (smaller)          | TS/React (larger)                           |
 | Existing in‑repo expertise      | admin-dashboard is already Next.js | reuses stack, no new toolchain              |
 
 Proven precedent: **m.uber.com**, **ride.lyft.com**, **Twitter Lite**, **Pinterest**,
@@ -97,8 +97,6 @@ Proven precedent: **m.uber.com**, **ride.lyft.com**, **Twitter Lite**, **Pintere
 ├── admin-dashboard/       ← EXISTING (joins workspace, unchanged otherwise)
 ├── backend/               ← EXISTING (joins workspace)
 ├── shared/                ← EXISTING TS types (re-exported by packages/api-client)
-├── driver-app/            ← EXISTING Flutter (kept, deprecated, README banner)
-├── passenger-app/         ← EXISTING Flutter (kept, deprecated, README banner)
 ├── config/                ← city configs (untouched)
 ├── docs/web-migration/    ← this directory
 ├── pnpm-workspace.yaml
@@ -241,7 +239,7 @@ excluded from this target).
 | **25** | Security review          | ZAP baseline, Snyk, CSP polish, headers audit                                                                                  |
 | **26** | Observability            | Sentry, web-vitals reporter, PostHog (optional)                                                                                |
 | **27** | Production deploy        | Docker multi‑stage builds, nginx reverse proxy, compose updates                                                                |
-| **28** | Final docs               | README updates, onboarding, deprecation banners on Flutter apps                                                                |
+| **28** | Final docs               | README updates, onboarding, deprecation banners on legacy apps                                                                 |
 
 ---
 
@@ -255,8 +253,7 @@ excluded from this target).
 5. **Tests with code.** Any PR that introduces logic ships with tests.
 6. **No new lint or TS errors.** `--max-warnings 0`.
 7. **Docs updated in‑PR.** If a decision changes, update this plan.
-8. **Flutter apps untouched** except for a `DEPRECATED.md` notice (PR 28).
-9. **Backend untouched** unless a contract gap is uncovered. Any backend change
+8. **Backend untouched** unless a contract gap is uncovered. Any backend change
    lands in its own PR with the integration that needed it.
 
 ---

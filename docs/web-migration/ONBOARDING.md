@@ -29,12 +29,10 @@ open http://localhost:3200/ar                 # driver PWA
 ```
 wasalni/
 ├── apps/
-│   ├── passenger-web/      <- Next.js 16 PWA, port 3100  (the future)
-│   └── driver-web/         <- Next.js 16 PWA, port 3200  (the future)
+│   ├── passenger-web/      <- Next.js 16 PWA, port 3100
+│   └── driver-web/         <- Next.js 16 PWA, port 3200
 ├── admin-dashboard/        <- Existing Next.js admin panel
 ├── backend/                <- Node.js + Express API
-├── passenger-app/          <- DEPRECATED Flutter app
-├── driver-app/             <- DEPRECATED Flutter app
 ├── packages/               <- 14 shared workspace packages
 │   ├── config-{tsconfig,eslint,tailwind,vitest}/  <- shared configs
 │   ├── shared-types/   types/   <- domain interfaces

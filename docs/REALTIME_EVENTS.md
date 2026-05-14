@@ -192,8 +192,8 @@ For each Trip status transition, the following events fire:
 ## Testing
 
 Backend integration tests exercise the lifecycle in `src/__tests__/trip.test.ts`.
-Passenger / driver apps should mock socket events at integration_test level
-(use `flutter_test_mock_socket` or equivalent).
+The passenger / driver web apps test socket flows via Vitest with a mocked
+`@wasalni/socket-client` and Playwright end-to-end tests (see `apps/*/e2e/`).
 
 Add new events here whenever you add an `io.on(...)`, `socket.on(...)`,
 `socket.emit(...)`, or `emit*` helper in the backend.

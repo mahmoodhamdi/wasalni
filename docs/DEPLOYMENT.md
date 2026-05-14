@@ -153,47 +153,6 @@ gcloud run deploy wasalni-admin \
 
 ---
 
-## Mobile App Deployment
-
-### Android (Passenger App)
-```bash
-cd passenger-app
-
-# Generate keystore (first time only)
-keytool -genkey -v -keystore android/app/wasalni.keystore \
-  -alias wasalni -keyalg RSA -keysize 2048 -validity 10000
-
-# Build release APK
-flutter build apk --release
-
-# Build App Bundle for Play Store
-flutter build appbundle --release
-```
-
-### Android (Driver App)
-```bash
-cd driver-app
-
-# Build release APK
-flutter build apk --release
-
-# Build App Bundle
-flutter build appbundle --release
-```
-
-### iOS
-```bash
-cd passenger-app
-
-# Build for iOS
-flutter build ios --release
-
-# Archive in Xcode for App Store submission
-open ios/Runner.xcworkspace
-```
-
----
-
 ## Database Setup
 
 ### MongoDB Indexes
