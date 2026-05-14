@@ -1,16 +1,9 @@
 import * as React from 'react';
 import { setRequestLocale, getTranslations } from 'next-intl/server';
-import { ArrowRight, MapPin, Wallet, Users } from 'lucide-react';
-import {
-  Badge,
-  Button,
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@wasalni/ui';
+import { MapPin, Wallet, Users } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@wasalni/ui';
 import type { Locale } from '@wasalni/i18n';
+import { HomeHero } from '../../components/home-hero';
 
 export default async function HomePage({
   params,
@@ -23,27 +16,7 @@ export default async function HomePage({
 
   return (
     <div className="space-y-12">
-      <section
-        aria-labelledby="hero-heading"
-        className="rounded-2xl bg-gradient-to-br from-[var(--color-brand-50)] to-[var(--color-bg-subtle)] p-8 sm:p-12 text-center"
-      >
-        <Badge variant="brand" className="mb-4">
-          {t('demoUserBadge')}
-        </Badge>
-        <h1 id="hero-heading" className="text-3xl font-bold tracking-tight sm:text-5xl">
-          {t('title')}
-        </h1>
-        <p className="mx-auto mt-4 max-w-2xl text-base text-[var(--color-fg-muted)] sm:text-lg">
-          {t('subtitle')}
-        </p>
-        <div className="mt-8 flex justify-center">
-          <Button size="lg" variant="primary" aria-label={t('cta')}>
-            {t('cta')}
-            <ArrowRight className="h-5 w-5 rtl:rotate-180" aria-hidden="true" />
-          </Button>
-        </div>
-      </section>
-
+      <HomeHero />
       <section
         aria-labelledby="features-heading"
         className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"

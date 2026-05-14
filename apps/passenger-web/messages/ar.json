@@ -9,13 +9,17 @@
     "feature2Body": "نقولك تمن الرحلة بالضبط من قبل ما تأكد. مفيش مفاجآت.",
     "feature3Title": "محفظة وكاش وكارت",
     "feature3Body": "ادفع بأي طريقة بتحب. الراحة من غير لخبطة.",
-    "demoUserBadge": "إصدار تجريبي"
+    "demoUserBadge": "إصدار تجريبي",
+    "loggedInHello": "أهلاً يا {name}",
+    "loggedInSubtitle": "احجز رحلة دلوقتي أو شوف تفاصيل حسابك"
   },
   "nav": {
     "home": "الرئيسية",
     "book": "احجز",
     "trips": "رحلاتي",
-    "profile": "حسابي"
+    "profile": "حسابي",
+    "login": "تسجيل دخول",
+    "logout": "تسجيل خروج"
   },
   "theme": {
     "toggle": "غير الوضع",
@@ -25,5 +29,13 @@
   },
   "locale": {
     "switchTo": "غير اللغة لـ {label}"
+  },
+  "register": {
+    "heading": "حساب جديد",
+    "name": "اسمك",
+    "namePlaceholder": "محمد علي",
+    "email": "بريد إلكتروني (اختياري)",
+    "emailHelp": "علشان نبعتلك إيصالات الرحلات",
+    "welcome": "أهلاً بيك في وصلني!"
   }
 }

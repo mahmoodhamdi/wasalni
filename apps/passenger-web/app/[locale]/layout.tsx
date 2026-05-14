@@ -5,7 +5,7 @@ import { setRequestLocale, getMessages, getTranslations } from 'next-intl/server
 import { notFound } from 'next/navigation';
 import { getDirection, type Locale } from '@wasalni/i18n';
 import { routing } from '../../i18n/routing';
-import { ThemeProvider } from '../../components/theme-provider';
+import { AppProviders } from '../../providers/app-providers';
 import { SiteHeader } from '../../components/site-header';
 import '../globals.css';
 
@@ -61,18 +61,16 @@ export default async function LocaleLayout({
     <html lang={locale} dir={dir} suppressHydrationWarning>
       <body className="min-h-screen bg-[var(--color-bg)] text-[var(--color-fg)] antialiased">
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <ThemeProvider>
+          <AppProviders>
             <a
               href="#main"
               className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:start-2 focus:z-50 focus:rounded-md focus:bg-[var(--color-brand-600)] focus:px-3 focus:py-1.5 focus:text-white"
-            >
-              {/* Translated by client provider; reads from a11y.skipToContent */}
-            </a>
+            />
             <SiteHeader />
             <main id="main" className="mx-auto max-w-screen-xl px-4 py-8 sm:px-6">
               {children}
             </main>
-          </ThemeProvider>
+          </AppProviders>
         </NextIntlClientProvider>
       </body>
     </html>
