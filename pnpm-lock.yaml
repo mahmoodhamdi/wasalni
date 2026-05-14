@@ -655,9 +655,15 @@ importers:
         specifier: ^4.8.3
         version: 4.8.3
     devDependencies:
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.14
       '@wasalni/config-tsconfig':
         specifier: workspace:*
         version: link:../config-tsconfig
+      react:
+        specifier: ^19.0.0
+        version: 19.2.3
       typescript:
         specifier: ^5.7.3
         version: 5.9.3
