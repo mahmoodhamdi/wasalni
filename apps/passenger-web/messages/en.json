@@ -1,0 +1,29 @@
+{
+  "home": {
+    "title": "Wasalni",
+    "subtitle": "Book a ride within your hometown, by neighbours you know.",
+    "cta": "Book a ride",
+    "feature1Title": "Drivers from your town",
+    "feature1Body": "Every driver is local and verified — your money supports your community.",
+    "feature2Title": "Up-front fare",
+    "feature2Body": "We quote the exact fare before you confirm. No surprises.",
+    "feature3Title": "Wallet, cash, or card",
+    "feature3Body": "Pay whichever way you like. Convenience without the friction.",
+    "demoUserBadge": "Preview build"
+  },
+  "nav": {
+    "home": "Home",
+    "book": "Book",
+    "trips": "Trips",
+    "profile": "Profile"
+  },
+  "theme": {
+    "toggle": "Switch theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "locale": {
+    "switchTo": "Switch language to {label}"
+  }
+}

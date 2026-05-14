@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { phoneSchema } from './common.js';
+import { phoneSchema } from './common';
 
 export const updateProfileSchema = z.object({
   name: z.string().trim().min(2).max(50).optional(),
