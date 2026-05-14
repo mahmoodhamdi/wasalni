@@ -44,7 +44,7 @@ export const getChat = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { chatId } = req.params;
+    const { chatId } = req.params as Record<string, string>;
     const userId = new Types.ObjectId(req.user!.userId);
 
     const chat = await chatService.getChatById(new Types.ObjectId(chatId), userId);
@@ -78,7 +78,7 @@ export const getTripChat = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { tripId } = req.params;
+    const { tripId } = req.params as Record<string, string>;
     const userId = new Types.ObjectId(req.user!.userId);
 
     const trip = await Trip.findById(tripId);
@@ -142,7 +142,7 @@ export const getMessages = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { chatId } = req.params;
+    const { chatId } = req.params as Record<string, string>;
     const userId = new Types.ObjectId(req.user!.userId);
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 50;
@@ -186,7 +186,7 @@ export const sendMessage = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { chatId } = req.params;
+    const { chatId } = req.params as Record<string, string>;
     const userId = new Types.ObjectId(req.user!.userId);
     const { content, type, location, mediaUrl } = req.body;
 
@@ -248,7 +248,7 @@ export const markAsRead = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { chatId } = req.params;
+    const { chatId } = req.params as Record<string, string>;
     const userId = new Types.ObjectId(req.user!.userId);
 
     // Verify user has access to this chat

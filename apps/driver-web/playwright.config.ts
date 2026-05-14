@@ -13,7 +13,7 @@ export default defineConfig({
   use: {
     baseURL: BASE_URL,
     trace: 'on-first-retry',
-    video: 'retain-on-failure',
+    video: 'off',
     screenshot: 'only-on-failure',
   },
   projects: [
@@ -21,6 +21,7 @@ export default defineConfig({
       name: 'mobile-arabic',
       use: {
         ...devices['Pixel 7'],
+        channel: 'chrome',
         locale: 'ar-EG',
         timezoneId: 'Africa/Cairo',
         geolocation: { latitude: 30.7639, longitude: 31.0438 },
@@ -31,6 +32,7 @@ export default defineConfig({
       name: 'desktop-english',
       use: {
         ...devices['Desktop Chrome'],
+        channel: 'chrome',
         viewport: { width: 1280, height: 720 },
         locale: 'en-EG',
       },

@@ -70,7 +70,7 @@ export const getAvailablePromos = async (req: Request, res: Response): Promise<v
       return;
     }
 
-    const { rideType, fare } = req.query;
+    const { rideType, fare } = req.query as Record<string, string | undefined>;
 
     const promos = await promoService.getAvailablePromos(
       new Types.ObjectId(userId),
@@ -181,7 +181,7 @@ export const updatePromo = async (req: Request, res: Response): Promise<void> =>
       return;
     }
 
-    const { promoId } = req.params;
+    const { promoId } = req.params as Record<string, string>;
     if (!Types.ObjectId.isValid(promoId)) {
       sendBadRequest(res, 'Invalid promo ID', 'معرف الكود غير صالح');
       return;
@@ -211,7 +211,7 @@ export const updatePromo = async (req: Request, res: Response): Promise<void> =>
  */
 export const deactivatePromo = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { promoId } = req.params;
+    const { promoId } = req.params as Record<string, string>;
     if (!Types.ObjectId.isValid(promoId)) {
       sendBadRequest(res, 'Invalid promo ID', 'معرف الكود غير صالح');
       return;
@@ -251,7 +251,7 @@ export const getAllPromos = async (req: Request, res: Response): Promise<void> =
  */
 export const getPromoById = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { promoId } = req.params;
+    const { promoId } = req.params as Record<string, string>;
     if (!Types.ObjectId.isValid(promoId)) {
       sendBadRequest(res, 'Invalid promo ID', 'معرف الكود غير صالح');
       return;
@@ -276,7 +276,7 @@ export const getPromoById = async (req: Request, res: Response): Promise<void> =
  */
 export const getPromoStats = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { promoId } = req.params;
+    const { promoId } = req.params as Record<string, string>;
     if (!Types.ObjectId.isValid(promoId)) {
       sendBadRequest(res, 'Invalid promo ID', 'معرف الكود غير صالح');
       return;

@@ -125,7 +125,7 @@ export const updateSavedPlace = async (
 ): Promise<void> => {
   try {
     const userId = req.user!.userId;
-    const { placeId } = req.params;
+    const { placeId } = req.params as Record<string, string>;
     const { name, address, latitude, longitude, icon } = req.body;
 
     // Validate placeId
@@ -205,7 +205,7 @@ export const deleteSavedPlace = async (
 ): Promise<void> => {
   try {
     const userId = req.user!.userId;
-    const { placeId } = req.params;
+    const { placeId } = req.params as Record<string, string>;
 
     // Validate placeId
     if (!Types.ObjectId.isValid(placeId)) {

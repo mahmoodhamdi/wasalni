@@ -23,13 +23,18 @@ const withSerwist = withSerwistInit({
  *   - Firebase Cloud Messaging endpoints
  *   - Paymob payment iframe
  */
+// In development we let the app talk to the local backend over plain http/ws
+// (port 5001 by convention). Production strips these.
+const isDev = process.env.NODE_ENV !== 'production';
+const devConnect = isDev ? ' http://localhost:* ws://localhost:* http://127.0.0.1:* ws://127.0.0.1:*' : '';
+
 const cspDirectives = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' https://www.gstatic.com",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://tiles.openfreemap.org https://*.tile.openstreetmap.org https://res.cloudinary.com",
   "font-src 'self' data:",
-  "connect-src 'self' https://tiles.openfreemap.org https://*.tile.openstreetmap.org https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com",
+  `connect-src 'self' https://tiles.openfreemap.org https://*.tile.openstreetmap.org https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com${devConnect}`,
   "worker-src 'self' blob:",
   "manifest-src 'self'",
   "frame-src 'self' https://accept.paymobsolutions.com",
@@ -37,7 +42,7 @@ const cspDirectives = [
   "base-uri 'self'",
   "form-action 'self'",
   "frame-ancestors 'none'",
-  'upgrade-insecure-requests',
+  ...(isDev ? [] : ['upgrade-insecure-requests']),
 ].join('; ');
 
 const config: NextConfig = {
