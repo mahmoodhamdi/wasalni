@@ -7,9 +7,8 @@ surrounding villages. Serves ~350 000 residents.
 
 ## Status — May 2026
 
-The platform is mid-migration from a Flutter-mobile-app model to a
-**Progressive Web App (PWA)** model. Both new apps are feature-complete,
-tested, and ready to ship behind a domain.
+Web-only platform. Both apps are feature-complete, tested, and ready to
+ship behind a domain.
 
 | Surface | Stack | Status |
 |---|---|---|
@@ -17,8 +16,6 @@ tested, and ready to ship behind a domain.
 | **driver-web** (PWA) | Next.js 16 + Tailwind 4 + Wake Lock + Serwist | ✅ Ready |
 | backend | Node.js + Express + Socket.io + MongoDB + Redis | ✅ Unchanged |
 | admin-dashboard | Next.js 16 + Tailwind | ✅ Unchanged |
-| passenger-app (Flutter) | Riverpod + flutter_map | ⚠️ DEPRECATED — see [passenger-app/DEPRECATED.md](./passenger-app/DEPRECATED.md) |
-| driver-app (Flutter) | Riverpod + geolocator | ⚠️ DEPRECATED — see [driver-app/DEPRECATED.md](./driver-app/DEPRECATED.md) |
 
 **New here?** Read [`docs/web-migration/ONBOARDING.md`](./docs/web-migration/ONBOARDING.md)
 first — it covers everything you need to be productive in 30 minutes.
@@ -68,8 +65,6 @@ wasalni/
 │   ├── socket-client/        typed socket.io wrapper + React hooks
 │   ├── auth/                 cookie session + CSRF + Next server helpers
 │   └── pwa/                  install / wake-lock / SW-update / FCM / web-vitals
-├── passenger-app/            DEPRECATED Flutter app (kept for reference)
-├── driver-app/               DEPRECATED Flutter app (kept for reference)
 ├── shared/                   Legacy TS types (re-exported by @wasalni/shared-types)
 ├── docs/web-migration/       Migration plan, deployment guide, onboarding
 ├── deploy/nginx/             Production reverse-proxy config

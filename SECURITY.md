@@ -26,8 +26,6 @@ In-scope:
 
 Out-of-scope:
 
-- The legacy `passenger-app/` and `driver-app/` Flutter codebases (slated
-  for deprecation; see `docs/web-migration/PLAN.md`)
 - Third-party services (Paymob, Firebase, OpenFreeMap, OSM, MongoDB
   Atlas, Twilio/Unifonic) — report to those vendors directly
 

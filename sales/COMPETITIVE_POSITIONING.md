@@ -125,7 +125,7 @@ This is what you'll actually compete with day-to-day.
 >  You'll have a 5-year head start."
 
 ### "What if Wasalni stops supporting the platform?"
-> "You own the source code perpetually. Worst case: hire any Node.js + Flutter
+> "You own the source code perpetually. Worst case: hire any Node.js + React
 >  developer to maintain. No vendor lock-in. The maps, SMS, and payment
 >  providers are all pluggable so you're not dependent on us either."
 

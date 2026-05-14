@@ -18,8 +18,6 @@ body:
         - driver-web (PWA)
         - admin-dashboard
         - backend / API
-        - passenger-app (legacy Flutter)
-        - driver-app (legacy Flutter)
         - infrastructure / deploy
         - docs / plan
     validations:

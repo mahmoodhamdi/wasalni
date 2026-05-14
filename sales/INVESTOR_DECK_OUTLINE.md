@@ -160,7 +160,7 @@ What competitors can't easily copy:
 Key roles to hire:
 - VP Sales (Egyptian transport industry).
 - Regional Partner (KSA).
-- Lead Engineer (Flutter).
+- Lead Engineer (Web / React).
 - Lead Engineer (Backend).
 - Head of Support (Arabic-first).
 

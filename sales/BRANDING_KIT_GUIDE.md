@@ -62,8 +62,8 @@ The repo includes `scripts/apply-city-config.sh` which reads
 
 - `backend/.env.local.city`
 - `admin-dashboard/.env.local.city`
-- `passenger-app/lib/config/city.local.dart`
-- `driver-app/lib/config/city.local.dart`
+- `apps/passenger-web/.env.local.city`
+- `apps/driver-web/.env.local.city`
 
 Run:
 
@@ -71,7 +71,7 @@ Run:
 ./scripts/apply-city-config.sh tanta
 ```
 
-Then restart the backend and rebuild the apps.
+Then restart the backend and rebuild the web apps.
 
 The YAML structure is documented in `config/cities/bagour.yaml` (the reference).
 
@@ -86,10 +86,10 @@ Place your files in `branding/<your-city>/`:
 branding/tanta/
   logo.svg               # primary logo, 1024×1024
   logo-icon.svg          # square icon variant
-  logo-icon-1024.png     # required for stores
+  logo-icon-1024.png     # required for PWA install icons
   splash.png             # 1080×1920
-  app-icon-512.png       # Android adaptive icon
-  app-icon-1024.png      # iOS app icon
+  app-icon-512.png       # PWA maskable icon
+  app-icon-1024.png      # PWA install icon
   favicon.ico            # admin dashboard
   fonts/                 # optional custom Arabic font
 ```
@@ -101,44 +101,38 @@ branding/tanta/
 ```
 
 This copies your assets to:
-- `passenger-app/assets/branding/` + updates `pubspec.yaml`
-- `driver-app/assets/branding/` + updates `pubspec.yaml`
+- `apps/passenger-web/public/branding/`
+- `apps/driver-web/public/branding/`
 - `admin-dashboard/public/branding/`
 - `admin-dashboard/app/favicon.ico`
 
 ### Step 3: Rebuild
 
 ```bash
-cd passenger-app && flutter clean && flutter build apk --release
-cd ../driver-app && flutter clean && flutter build apk --release
-cd ../admin-dashboard && npm run build
-cd ../backend && npm run build
+pnpm --filter=@wasalni/passenger-web build
+pnpm --filter=@wasalni/driver-web build
+cd admin-dashboard && pnpm build
+cd ../backend && pnpm build
 ```
 
 ### Step 4: Verify
-- Run the apps in a simulator and confirm icons + splash + colors are correct.
+- Open each PWA in a browser and confirm icons + splash + colors are correct.
 - Open admin dashboard and verify favicon + login banner.
 - Send a test OTP and check brand name in the SMS body.
 
 ---
 
-## 5. App Store Listings
+## 5. PWA / Web Listing
 
-Each app needs separate metadata per platform:
+The web apps install via "Add to Home Screen" — no store review needed.
+Make sure the PWA manifest is filled in for each app:
 
-### Google Play Store
-- Title (50 chars): "Wasalni Tanta - Tanta Rides"
-- Short description (80 chars): A clear one-line value prop.
-- Long description (4000 chars): Use [PLAY_STORE_TEMPLATE.md](./PLAY_STORE_TEMPLATE.md).
-- Screenshots: 8 per app per language (16 total per app).
-- Feature graphic: 1024×500 banner.
-
-### App Store (iOS)
-- Title (30 chars): "Wasalni Tanta"
-- Subtitle (30 chars): "City rides made easy"
-- Description: Same content as Play, formatted.
-- Screenshots: 5-10 per device size.
-- Promo text: 170 chars.
+- `name`: "Wasalni Tanta - Tanta Rides"
+- `short_name`: "Wasalni Tanta"
+- `description`: A clear one-line value prop (≤ 80 chars).
+- `theme_color`, `background_color`: from the brand kit.
+- `icons[]`: includes 192/512 standard and 512 maskable.
+- Open Graph / Twitter metadata for shared links.
 
 ---
 
@@ -159,7 +153,7 @@ When operating under license:
 For Berber, French, or other languages (e.g. Morocco, Algeria, Tunisia):
 
 1. Add the language code to `config/cities/<city>.yaml` under `locale.supported`.
-2. Translate `passenger-app/lib/l10n/` and `driver-app/lib/l10n/` ARB files.
+2. Translate `packages/i18n/messages/` files (shared by passenger-web + driver-web).
 3. Translate backend bilingual response strings.
 4. Translate admin dashboard `lib/i18n/` JSON files.
 
