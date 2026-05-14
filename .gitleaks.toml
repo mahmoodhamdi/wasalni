@@ -1,0 +1,24 @@
+# Gitleaks config: rely on the default rule set + an allowlist for known
+# safe occurrences (test fixtures, example envs, demo seeds). Tighten as
+# real secrets are added.
+
+title = "Wasalni Gitleaks"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Globally allowed paths and patterns"
+paths = [
+  '''.*\.env\.example''',
+  '''.*\.lock''',
+  '''pnpm-lock\.yaml''',
+  '''backend/src/seeds/.*\.ts''',
+  '''docs/.*''',
+]
+
+regexTarget = "match"
+regexes = [
+  # Public Firebase config keys are intentionally non-secret.
+  '''AIzaSy[A-Za-z0-9_\-]{33}''',
+]

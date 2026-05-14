@@ -1,0 +1,27 @@
+# Wasalni code owners
+#
+# Lines further down the file take precedence; the last matching pattern
+# decides reviewers. Adjust @mahmoodhamdi to a team handle when one is set up.
+
+# Default
+* @mahmoodhamdi
+
+# Web migration scope (this is the active surface)
+/docs/web-migration/      @mahmoodhamdi
+/apps/                    @mahmoodhamdi
+/packages/                @mahmoodhamdi
+
+# Backend
+/backend/                 @mahmoodhamdi
+
+# Admin
+/admin-dashboard/         @mahmoodhamdi
+
+# Legacy Flutter — slated for deprecation; minimal changes
+/driver-app/              @mahmoodhamdi
+/passenger-app/           @mahmoodhamdi
+
+# Infra / config / CI
+/.github/                 @mahmoodhamdi
+/docker-compose*.yml      @mahmoodhamdi
+/config/                  @mahmoodhamdi

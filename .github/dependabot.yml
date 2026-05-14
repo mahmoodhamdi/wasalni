@@ -1,0 +1,68 @@
+version: 2
+updates:
+  # Root and every workspace
+  - package-ecosystem: npm
+    directory: '/'
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: Africa/Cairo
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - automated
+    groups:
+      next:
+        patterns:
+          - 'next'
+          - '@next/*'
+          - 'eslint-config-next'
+      react:
+        patterns:
+          - 'react'
+          - 'react-dom'
+          - '@types/react*'
+      tailwind:
+        patterns:
+          - 'tailwindcss'
+          - '@tailwindcss/*'
+      testing:
+        patterns:
+          - 'vitest'
+          - '@vitest/*'
+          - '@testing-library/*'
+          - '@playwright/test'
+      linting:
+        patterns:
+          - 'eslint'
+          - '@eslint/*'
+          - 'typescript-eslint'
+          - 'eslint-plugin-*'
+          - 'eslint-config-*'
+          - 'prettier'
+
+  - package-ecosystem: github-actions
+    directory: '/'
+    schedule:
+      interval: weekly
+      day: monday
+    labels:
+      - ci
+      - automated
+
+  - package-ecosystem: docker
+    directory: '/backend'
+    schedule:
+      interval: monthly
+    labels:
+      - docker
+      - automated
+
+  - package-ecosystem: docker
+    directory: '/admin-dashboard'
+    schedule:
+      interval: monthly
+    labels:
+      - docker
+      - automated
