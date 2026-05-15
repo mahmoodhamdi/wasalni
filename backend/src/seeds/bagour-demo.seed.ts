@@ -15,7 +15,7 @@
  */
 
 import mongoose, { Types } from 'mongoose';
-import bcrypt from 'bcryptjs';
+// bcrypt removed — User model's pre-save hook handles hashing
 import dayjs from 'dayjs';
 import { config } from '../config';
 import { Driver, Passenger, Trip, User } from '../models';
@@ -111,7 +111,9 @@ async function clearBagourData(): Promise<void> {
 }
 
 async function seedAdmins(): Promise<void> {
-  const password = await bcrypt.hash('Demo123!@#', 10);
+  // The User pre-save hook hashes plain passwords; passing a pre-hashed
+  // value would double-hash it and break login.
+  const password = 'Demo123!@#';
   const admins = [
     { name: 'مدير عام النظام', email: 'admin@wasalni.demo', role: 'admin' },
     { name: 'مدير العمليات', email: 'ops@wasalni.demo', role: 'admin' },
@@ -130,7 +132,7 @@ async function seedAdmins(): Promise<void> {
 }
 
 async function seedDrivers(): Promise<Types.ObjectId[]> {
-  const password = await bcrypt.hash('Demo123!@#', 10);
+  const password = 'Demo123!@#';
   const driverIds: Types.ObjectId[] = [];
   let idx = 0;
 
@@ -182,7 +184,12 @@ async function seedDrivers(): Promise<Types.ObjectId[]> {
         heading: randInt(0, 359),
         vehicle: {
           type: spec.vehicleType,
-          category: spec.vehicleCategory,
+          // Driver model's `category` enum is limited to ride categories
+          // (economy/comfort/family). Tuktuks + motorbikes count as economy.
+          category:
+            spec.vehicleCategory === 'tuktuk' || spec.vehicleCategory === 'motorcycle'
+              ? 'economy'
+              : spec.vehicleCategory,
           ...vehicleInfo,
           color: rand(COLORS),
           plateNumber: spec.vehicleType === 'motorcycle' ? motorcyclePlate() : arabicPlate(),
@@ -191,7 +198,8 @@ async function seedDrivers(): Promise<Types.ObjectId[]> {
         documents: {
           nationalIdFront: 'https://placehold.co/400x300?text=NID-Front',
           nationalIdBack: 'https://placehold.co/400x300?text=NID-Back',
-          nationalIdNumber: `29${randInt(80, 99)}${randInt(10000000, 99999999)}`,
+          // 14 digits: century(2) + year(2) + month(2) + day(2) + serial(5) + checksum(1)
+          nationalIdNumber: `29${randInt(80, 99)}${String(randInt(1, 12)).padStart(2, '0')}${String(randInt(1, 28)).padStart(2, '0')}${randInt(10000, 99999)}${randInt(0, 9)}`,
           drivingLicenseFront: 'https://placehold.co/400x300?text=License',
           drivingLicenseExpiry: dayjs().add(randInt(180, 720), 'day').toDate(),
           vehicleLicenseFront: 'https://placehold.co/400x300?text=Vehicle+License',
@@ -217,7 +225,7 @@ async function seedDrivers(): Promise<Types.ObjectId[]> {
 }
 
 async function seedPassengers(): Promise<Types.ObjectId[]> {
-  const password = await bcrypt.hash('Demo123!@#', 10);
+  const password = 'Demo123!@#';
   const ids: Types.ObjectId[] = [];
   for (let i = 0; i < 80; i++) {
     const isMale = Math.random() > 0.4;
@@ -310,8 +318,20 @@ async function seedTrips(
     let dropoff = rand(BAGOUR_LANDMARKS);
     while (dropoff === pickup) dropoff = rand(BAGOUR_LANDMARKS);
 
-    const status = rand(statuses) as string;
-    const paymentMethod = rand(methods);
+    const rawStatus = rand(statuses) as string;
+    // Map seed labels to the Trip model's enum.
+    const status =
+      rawStatus === 'completed' ? 'trip_completed'
+      : rawStatus === 'in_progress' ? 'trip_started'
+      : rawStatus === 'pending' ? 'searching'
+      : rawStatus === 'disputed' ? 'cancelled'
+      : rawStatus;
+    const rawPayment = rand(methods);
+    const paymentMethod =
+      rawPayment === 'vodafone_cash' ? 'wallet'
+      : rawPayment === 'card' ? 'card'
+      : rawPayment === 'wallet' ? 'wallet'
+      : 'cash';
     const rideType = rand(rideTypes);
 
     const distanceKm = randFloat(0.5, 12);
@@ -323,14 +343,17 @@ async function seedTrips(
 
     const createdAt = dayjs().subtract(randInt(0, 30), 'day').subtract(randInt(0, 23), 'hour');
     const completedAt =
-      status === 'completed'
+      status === 'trip_completed'
         ? createdAt.add(randInt(8, 35), 'minute').toDate()
         : undefined;
 
     try {
       await Trip.create({
-        passenger: passengerIds[randInt(0, passengerIds.length - 1)],
-        driver: status !== 'pending' ? driverIds[randInt(0, driverIds.length - 1)] : undefined,
+        // Pre-set tripNumber so the pre-save hook (which counts today's
+        // trips) doesn't generate duplicates across back-dated seed rows.
+        tripNumber: `WAS-SEED-${String(i + 1).padStart(4, '0')}`,
+        passengerId: passengerIds[randInt(0, passengerIds.length - 1)],
+        driverId: status !== 'searching' ? driverIds[randInt(0, driverIds.length - 1)] : undefined,
         status,
         rideType,
         pickup: {
@@ -363,9 +386,9 @@ async function seedTrips(
           currency: 'EGP',
         },
         paymentMethod,
-        paymentStatus: status === 'completed' ? 'paid' : 'pending',
+        paymentStatus: status === 'trip_completed' ? 'paid' : 'pending',
         rating:
-          status === 'completed'
+          status === 'trip_completed'
             ? {
                 passengerRating: randInt(3, 5),
                 driverRating: randInt(3, 5),
