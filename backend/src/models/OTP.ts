@@ -176,9 +176,10 @@ otpSchema.statics.canSendNew = async function (
 
   const timeSinceLastOtp =
     (Date.now() - lastOtp.createdAt.getTime()) / 1000;
-  const minWaitTime = 60; // 60 seconds between OTPs
+  // 60s between OTPs in prod; disabled in dev so demos don't stall.
+  const minWaitTime = process.env.NODE_ENV === 'production' ? 60 : 0;
 
-  if (timeSinceLastOtp < minWaitTime) {
+  if (minWaitTime > 0 && timeSinceLastOtp < minWaitTime) {
     return {
       canSend: false,
       waitSeconds: Math.ceil(minWaitTime - timeSinceLastOtp),
