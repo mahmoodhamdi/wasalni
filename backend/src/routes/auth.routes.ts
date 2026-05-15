@@ -21,10 +21,13 @@ import { authenticate } from '../middleware/auth.middleware';
 
 const router = Router();
 
-// Rate limiters
+// Rate limiters — relaxed in development so demos/local testing don't
+// trip them. Production values still protect against abuse.
+const IS_DEV = process.env.NODE_ENV !== 'production';
+
 const otpLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 5,
+  windowMs: IS_DEV ? 60 * 1000 : 60 * 60 * 1000, // dev: 1 min, prod: 1 hour
+  max: IS_DEV ? 100 : 5,
   message: {
     success: false,
     message: 'Too many OTP requests, please try again later',
@@ -33,8 +36,8 @@ const otpLimiter = rateLimit({
 });
 
 const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10,
+  windowMs: IS_DEV ? 60 * 1000 : 15 * 60 * 1000, // dev: 1 min, prod: 15 min
+  max: IS_DEV ? 100 : 10,
   message: {
     success: false,
     message: 'Too many login attempts, please try again later',
