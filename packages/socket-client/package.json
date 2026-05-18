@@ -23,7 +23,7 @@
     "socket.io-client": "^4.8.3"
   },
   "peerDependencies": {
-    "react": "^19.0.0"
+    "react": "^19.2.6"
   },
   "peerDependenciesMeta": {
     "react": {
@@ -35,7 +35,7 @@
     "@vitest/coverage-v8": "^2.1.8",
     "@wasalni/config-tsconfig": "workspace:*",
     "@wasalni/config-vitest": "workspace:*",
-    "react": "^19.0.0",
+    "react": "^19.2.6",
     "typescript": "^5.7.3",
     "vitest": "^2.1.8"
   }

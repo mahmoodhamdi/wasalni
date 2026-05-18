@@ -44,7 +44,7 @@
     "@wasalni/config-tsconfig": "workspace:*",
     "@wasalni/config-vitest": "workspace:*",
     "next": "16.1.1",
-    "react": "^19.0.0",
+    "react": "^19.2.6",
     "typescript": "^5.7.3",
     "vitest": "^2.1.8",
     "zustand": "^5.0.9"
