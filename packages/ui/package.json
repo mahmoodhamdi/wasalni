@@ -25,23 +25,23 @@
     "tailwind-merge": "^2.6.0"
   },
   "peerDependencies": {
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
     "tailwindcss": "^4.0.0"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.6.4",
     "@testing-library/react": "^16.1.0",
     "@testing-library/user-event": "^14.5.2",
-    "@types/react": "^19.0.0",
+    "@types/react": "^19.2.15",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.3.4",
     "@vitest/coverage-v8": "^2.1.8",
     "@wasalni/config-tsconfig": "workspace:*",
     "@wasalni/config-vitest": "workspace:*",
     "jsdom": "^26.0.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
     "typescript": "^5.7.3",
     "vitest": "^2.1.8"
   }
