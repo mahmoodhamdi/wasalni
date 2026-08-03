@@ -21,7 +21,7 @@
   },
   "peerDependencies": {
     "firebase": "^10.0.0",
-    "react": "^19.0.0",
+    "react": "^19.2.8",
     "web-vitals": "^4.0.0"
   },
   "peerDependenciesMeta": {
@@ -33,10 +33,10 @@
     }
   },
   "devDependencies": {
-    "@types/react": "^19.0.0",
+    "@types/react": "^19.2.18",
     "@wasalni/config-tsconfig": "workspace:*",
     "firebase": "^10.14.1",
-    "react": "^19.0.0",
+    "react": "^19.2.8",
     "typescript": "^5.7.3",
     "web-vitals": "^4.2.4"
   }
